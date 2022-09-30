@@ -1,0 +1,11 @@
+package idris2-go
+
+depends = idris2, network
+
+modules = Go.Token.Position,
+  Go.Token
+
+main = Main
+executable = idris2-go
+sourcedir = "src"
+
