@@ -150,7 +150,7 @@ precedence = \case
   MkShr => 5
   MkAnd => 5
   MkAndNot => 5
-  _ => 7
+  _ => last
 
 public export
 data Keyword

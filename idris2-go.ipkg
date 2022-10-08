@@ -2,8 +2,10 @@ package idris2-go
 
 depends = idris2, network
 
-modules = Go.Token.Position,
-  Go.Token
+modules = Data.HList,
+  Go.Token.Position,
+  Go.Token,
+  Go.AST
 
 main = Main
 executable = idris2-go
