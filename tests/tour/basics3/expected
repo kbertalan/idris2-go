@@ -1,0 +1,14 @@
+1/1: Building Basics3 (Basics3.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func main() {
+	fmt.Println(math.Pi)
+}
