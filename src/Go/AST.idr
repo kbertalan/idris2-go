@@ -298,6 +298,7 @@ record AssignmentStatement ls rs where
   constructor MkAssignmentStatement
   left : HList ls
   tokenPos : Maybe Position
+  token : Operator
   right : HList rs
 
 public export

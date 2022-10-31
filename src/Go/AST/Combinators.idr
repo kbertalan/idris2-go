@@ -147,7 +147,35 @@ export
   BinaryExpression e1 e2
 (/+/) e1 e2 = MkBinaryExpression e1 Nothing MkAdd e2
 
-infixl 6 /+/
+export
+(/-/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/-/) e1 e2 = MkBinaryExpression e1 Nothing MkSub e2
+
+export
+(/*/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/*/) e1 e2 = MkBinaryExpression e1 Nothing MkMul e2
+
+export
+(///) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(///) e1 e2 = MkBinaryExpression e1 Nothing MkQuo e2
+
+infixl 6 /+/, /-/
+infixl 5 /*/, ///
 
 export
 (/:=/) :
@@ -158,6 +186,17 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/:=/) ls rs = MkAssignmentStatement ls Nothing rs
+(/:=/) ls rs = MkAssignmentStatement ls Nothing MkDefine rs
 
-infix 7 /:=/
+export
+(/=/) :
+  All Expression ls =>
+  All Expression rs =>
+  NonEmpty ls =>
+  NonEmpty rs =>
+  HList ls ->
+  HList rs ->
+  AssignmentStatement ls rs
+(/=/) ls rs = MkAssignmentStatement ls Nothing MkAssign rs
+
+infix 7 /:=/, /=/

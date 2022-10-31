@@ -1,0 +1,7 @@
+package test
+
+depends = idris2-go
+modules = Basics7
+main = Basics7
+executable = test
+opts = "--no-color --console-width 0"

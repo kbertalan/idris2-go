@@ -207,8 +207,11 @@ implementation All Printer ps => All Printer rs => Printer (BlockStatement sts) 
       printReturnTypes fl = case fl.list of
         [] => print file fl
         [x] => do
+          let parens = 2 <= length x.names
           pPutStr " "
+          when parens $ pPutStr "("
           print file fl
+          when parens $ pPutStr ")"
         xs => do
           pPutStr " ("
           print file fl
@@ -254,7 +257,15 @@ implementation All Printer ds => Printer (Go.File ds) where
 export
 implementation Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
   print file bo = do
-    print file bo.first
-    pPutStr $ show bo.operator
-    print file bo.last
+      let spaces = when (prefersSpaces bo.operator) $ pPutStr " "
+      print file bo.first
+      spaces
+      pPutStr $ show bo.operator
+      spaces
+      print file bo.last
+    where
+      prefersSpaces : Operator -> Bool
+      prefersSpaces = \case
+        MkPeriod => False
+        _ => True
 
