@@ -59,6 +59,14 @@ param :
 param f t = MkField Nothing [identifier f] (Just t) Nothing Nothing
 
 export
+params :
+  Expression t =>
+  List String ->
+  t ->
+  Field t
+params fs t = MkField Nothing (identifier <$> fs) (Just t) Nothing Nothing
+
+export
 type :
   Expression t =>
   t ->
