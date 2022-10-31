@@ -1,9 +1,10 @@
 module Go.AST.Combinators
 
 import public Data.List
+import public Data.List1
 import public Data.List.Quantifiers
 import public Go.AST
-import Go.Token
+import public Go.Token
 
 export
 data Package = MkPackage String
@@ -107,8 +108,30 @@ func :
 func name ps rs sts = MkFuncDeclaration Nothing (fieldList []) name (funcType [] ps rs) (block sts)
 
 export
+vars :
+  NonEmpty es =>
+  All Specification es =>
+  HList es ->
+  GenericDeclaration MkVar es
+vars es = MkGenericDeclaration Nothing Nothing Var Nothing es Nothing
+
+export
+var :
+  Expression t =>
+  All Expression es =>
+  List1 Identifier ->
+  Maybe t ->
+  HList es ->
+  ValueSpec t es
+var is t es = MkValueSpec Nothing is t es Nothing
+
+export
 expr : Expression e => e -> ExpressionStatement e
 expr e = MkExpressionStatement e
+
+export
+decl : Declaration d => d -> DeclarationStatement d
+decl d = MkDeclarationStatement d
 
 export
 return :

@@ -2,6 +2,7 @@ module Go.AST.Printer
 
 import Control.Monad.Either
 import Data.List
+import Data.List1
 import Data.List.Quantifiers
 import Go.AST as Go
 import Go.Token
@@ -52,6 +53,8 @@ printIndent {indent = (MkIndent i)} =
   let str = concat $ replicate i "\t"
   in pPutStr str
 
+-- Expression
+
 export
 implementation Printer Identifier where
   print file i = pPutStr i.name
@@ -63,15 +66,6 @@ implementation Printer BasicLiteral where
                   MkString => "\"\{bl.value}\""
                   _ => bl.value
     in pPutStr value
-
-export
-implementation Printer ImportSpec where
-  print file is = case is.name of
-    Nothing => print file is.path
-    Just i => do
-      print file i
-      pPutStr " "
-      print file is.path
 
 export
 implementation Printer f => All Printer as => Printer (CallExpression f as e) where
@@ -94,10 +88,62 @@ implementation Printer f => All Printer as => Printer (CallExpression f as e) wh
         many xs
 
 export
+implementation Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
+  print file bo = do
+      let spaces = when (prefersSpaces bo.operator) $ pPutStr " "
+      print file bo.first
+      spaces
+      pPutStr $ show bo.operator
+      spaces
+      print file bo.last
+    where
+      prefersSpaces : Operator -> Bool
+      prefersSpaces = \case
+        MkPeriod => False
+        _ => True
+
+-- Spec
+
+export
+implementation Printer ImportSpec where
+  print file is = case is.name of
+    Nothing => print file is.path
+    Just i => do
+      print file i
+      pPutStr " "
+      print file is.path
+
+export
+implementation Printer t => All Printer es => Printer (ValueSpec t es) where
+  print file vs = do
+      printNames $ List1.forget vs.names
+      case vs.type of
+        Nothing => pure ()
+        Just t => do
+          pPutStr " "
+          print file t
+    where
+      printNames : List Identifier -> PrinterMonad io ()
+      printNames [] = pure ()
+      printNames [x] = print file x
+      printNames (x::xs) = do
+          print file x
+          pPutStr ", "
+          printNames xs
+
+-- Statements
+
+export
 implementation Printer e => Printer (ExpressionStatement e) where
   print file es = do
     printIndent
     print file es.expression
+
+export
+implementation Printer d => Printer (DeclarationStatement d) where
+  print file d = do
+    printIndent
+    print file d.declaration
 
 export
 implementation All Printer sts => Printer (BlockStatement sts) where
@@ -190,6 +236,7 @@ implementation All Printer ts => Printer (FieldList ts) where
         pPutStr ", "
         many xs {ps = ps}
 
+-- Declarations
 
 export
 implementation All Printer ps => All Printer rs => Printer (BlockStatement sts) => All Field rs => Printer (FuncDeclaration rcs ts ps rs sts) where
@@ -216,6 +263,36 @@ implementation All Printer ps => All Printer rs => Printer (BlockStatement sts) 
           pPutStr " ("
           print file fl
           pPutStr ")"
+
+export
+implementation All Printer es => Show (GenericDeclarationToken k) => Printer (GenericDeclaration k es) where
+  print file gd = do
+      let multiple = hasMany gd.specs
+      pPutStr $ show gd.token
+      pPutStr " "
+      when multiple $ pPutStr "(\n"
+      many (if multiple then increaseIndent indent else indent) gd.specs
+      when multiple $ pPutStr ")"
+      printNewLine
+    where
+      hasMany : {0 ts : List Type} -> HList ts -> Bool
+      hasMany [] = False
+      hasMany [_] = False
+      hasMany _ = True
+
+      many : {0 ts : List Type} -> {auto ps : All Printer ts} -> Indent -> HList ts -> PrinterMonad io ()
+      many _ [] = pure ()
+      many {ps = [p]} _ [x] = print {indent} file x
+      many {ps = [p1,p2]} i [x,y] = do
+        print {indent=i} file x
+        printNewLine
+        print {indent=i} file y
+      many {ps = (p::ps)} i (x::xs) = do
+        print {indent=i} file x
+        printNewLine
+        many i xs
+
+-- File
 
 export
 implementation All Printer ds => Printer (Go.File ds) where
@@ -253,19 +330,4 @@ implementation All Printer ds => Printer (Go.File ds) where
             print file spec
             printNewLine
           pPutStr ")\n"
-
-export
-implementation Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
-  print file bo = do
-      let spaces = when (prefersSpaces bo.operator) $ pPutStr " "
-      print file bo.first
-      spaces
-      pPutStr $ show bo.operator
-      spaces
-      print file bo.last
-    where
-      prefersSpaces : Operator -> Bool
-      prefersSpaces = \case
-        MkPeriod => False
-        _ => True
 

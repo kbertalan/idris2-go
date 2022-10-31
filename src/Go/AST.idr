@@ -868,14 +868,14 @@ record ValueSpec e es where
   comment : Maybe CommentGroup
 
 public export
-implementation Expression e => Node (ValueSpec e []) where
+implementation Expression e => All Expression es => Node (ValueSpec e es) where
   pos vs = pos $ head vs.names
   end vs = end =<< vs.type
 
-public export
-implementation Expression e => NonEmpty es => Last l es => Expression l => All Expression es => Node (ValueSpec e es) where
-  pos vs = pos $ head vs.names
-  end vs = end {a = l} (last vs.values) <|> (end =<< vs.type) <|> end (last vs.names)
+-- public export
+-- implementation Expression e => NonEmpty es => Last l es => Expression l => All Expression es => Node (ValueSpec e es) where
+--   pos vs = pos $ head vs.names
+--   end vs = end {a = l} (last vs.values) <|> (end =<< vs.type) <|> end (last vs.names)
 
 public export
 implementation Node (ValueSpec e es) => Specification (ValueSpec e es) where
@@ -921,6 +921,22 @@ data GenericDeclarationToken : Keyword -> Type where
   Var : GenericDeclarationToken MkVar
 
 public export
+implementation Show (GenericDeclarationToken MkImport) where
+  show _ = show MkImport
+
+public export
+implementation Show (GenericDeclarationToken MkConst) where
+  show _ = show MkConst
+
+public export
+implementation Show (GenericDeclarationToken MkType) where
+  show _ = show MkType
+
+public export
+implementation Show (GenericDeclarationToken MkVar) where
+  show _ = show MkVar
+
+public export
 record GenericDeclaration t xs where
   constructor MkGenericDeclaration
   doc : Maybe CommentGroup
@@ -931,12 +947,17 @@ record GenericDeclaration t xs where
   rparen : Maybe Position
 
 public export
-implementation NonEmpty xs => All Specification xs => Last l xs => Specification l => Node (GenericDeclaration t xs) where
+implementation NonEmpty xs => All Specification xs => Node (GenericDeclaration t xs) where
   pos gd = gd.tokenPos
-  end gd = gd.rparen <|> end {a = l} (last gd.specs)
+  end gd = gd.rparen
+
+-- public export
+-- implementation NonEmpty xs => All Specification xs => Last l xs => Specification l => Node (GenericDeclaration t xs) where
+--   pos gd = gd.tokenPos
+--   end gd = gd.rparen <|> end {a = l} (last gd.specs)
 
 public export
-implementation Node (GenericDeclaration t xs) => Specification (GenericDeclaration t xs) where
+implementation Node (GenericDeclaration t xs) => Declaration (GenericDeclaration t xs) where
 
 public export
 record FuncDeclaration rcs ts ps rs sts where
