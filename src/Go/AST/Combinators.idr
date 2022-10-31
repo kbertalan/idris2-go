@@ -35,6 +35,12 @@ string :
 string str = MkBasicLiteral Nothing MkString str
 
 export
+int :
+  Int ->
+  BasicLiteral
+int i = MkBasicLiteral Nothing MkInt $ show i
+
+export
 import' :
   (path : String) ->
   ImportSpec
@@ -90,4 +96,15 @@ call :
   HList args ->
   CallExpression fn args BadExpression
 call fn args = MkCallExpression fn Nothing args Nothing Nothing
+
+export
+(/./) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/./) e1 e2 = MkBinaryExpression e1 Nothing MkPeriod e2
+
+infixl 7 /./
 

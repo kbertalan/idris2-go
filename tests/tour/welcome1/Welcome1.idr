@@ -11,7 +11,7 @@ main = do
               (package "main")
               [import' "fmt"]
               [func (identifier "main") [] void [
-                expr $ call (identifier "fmt.Println") [string "Hello,   "]
+                expr $ call (identifier "fmt" /./ identifier "Println") [string "Hello,   "]
               ]]
   putStrLn "printing source:\n"
   Right () <- runEitherT $ Go.print stdout src

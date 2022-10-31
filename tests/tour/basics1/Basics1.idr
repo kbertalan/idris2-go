@@ -1,4 +1,4 @@
-module Welcome4
+module Basics1
 
 import Control.Monad.Either
 import Go.AST.Printer as Go
@@ -7,14 +7,13 @@ import System.File
 
 main : IO ()
 main = do
-  let src = file "sandbox.go"
+  let src = file "packages.go"
               (package "main")
               [ import' "fmt"
-              , import' "time"
+              , import' "math/rand"
               ]
               [func (identifier "main") [] void 
-                [ expr $ call (identifier "fmt" /./ identifier "Println") [string "Welcome to the playground!"]
-                , expr $ call (identifier "fmt" /./ identifier "Println") [string "The time is", call (identifier "time.Now") []]
+                [ expr $ call (identifier "fmt" /./ identifier "Println") [string "My favorite number is", call (identifier "rand" /./ identifier "Intn") [int 10]]
                 ]
               ]
   putStrLn "printing source:\n"

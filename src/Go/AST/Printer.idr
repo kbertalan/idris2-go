@@ -211,3 +211,10 @@ implementation All Printer ds => Printer (Go.File ds) where
             printNewLine
           pPutStr ")\n"
 
+export
+implementation Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
+  print file bo = do
+    print file bo.first
+    pPutStr $ show bo.operator
+    print file bo.last
+
