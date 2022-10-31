@@ -1,0 +1,14 @@
+1/1: Building Basics2 (Basics2.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import (
+	"fmt"
+	"math"
+)
+
+func main() {
+	fmt.Printf("Now you have %g problems.\n", math.Sqrt(7))
+}
