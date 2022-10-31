@@ -301,9 +301,14 @@ record AssignmentStatement ls rs where
   right : HList rs
 
 public export
-implementation All Expression ls => All Expression rs => Expression l => NonEmpty rs => Last r rs => Expression r => Node (AssignmentStatement (l::ls) rs) where
-  pos as = pos $ head as.left
-  end as = end {a = r} $ last as.right
+implementation All Expression ls => All Expression rs => NonEmpty ls => NonEmpty rs => Node (AssignmentStatement ls rs) where
+  pos as = Nothing
+  end as = Nothing
+
+-- public export
+-- implementation All Expression ls => All Expression rs => Expression l => NonEmpty rs => Last r rs => Expression r => Node (AssignmentStatement (l::ls) rs) where
+--   pos as = pos $ head as.left
+--   end as = end {a = r} $ last as.right
 
 public export
 implementation Node (AssignmentStatement ls rs) => Statement (AssignmentStatement ls rs) where

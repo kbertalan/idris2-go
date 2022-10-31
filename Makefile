@@ -30,5 +30,5 @@ test: install test-build
 	make -C tests test
 
 dev-test:
-	find . -name *.idr | INTERACTIVE="" entr make test
+	find . -name *.idr | threads=4 INTERACTIVE="" entr make test
 

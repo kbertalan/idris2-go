@@ -1,5 +1,6 @@
 module Go.AST.Combinators
 
+import public Data.List
 import public Data.List.Quantifiers
 import public Go.AST
 import Go.Token
@@ -147,3 +148,16 @@ export
 (/+/) e1 e2 = MkBinaryExpression e1 Nothing MkAdd e2
 
 infixl 6 /+/
+
+export
+(/:=/) :
+  All Expression ls =>
+  All Expression rs =>
+  NonEmpty ls =>
+  NonEmpty rs =>
+  HList ls ->
+  HList rs ->
+  AssignmentStatement ls rs
+(/:=/) ls rs = MkAssignmentStatement ls Nothing rs
+
+infix 7 /:=/
