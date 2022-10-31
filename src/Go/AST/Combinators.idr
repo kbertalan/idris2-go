@@ -51,6 +51,21 @@ void : All Field []
 void = []
 
 export
+param :
+  Expression t =>
+  String ->
+  t ->
+  Field t
+param f t = MkField Nothing [identifier f] (Just t) Nothing Nothing
+
+export
+type :
+  Expression t =>
+  t ->
+  Field t
+type t = MkField Nothing [] (Just t) Nothing Nothing
+
+export
 fieldList :
   All Field xs ->
   FieldList xs
@@ -77,8 +92,7 @@ func :
   All Field ps ->
   All Field rs ->
   { 0 sts : List Type } ->
-  { auto 0 stsOk1 : All Statement sts } ->
-  { auto 0 stsOk2 : Statement (BlockStatement sts) } ->
+  { auto 0 ok : All Statement sts } ->
   HList sts ->
   FuncDeclaration [] [] ps rs sts
 func name ps rs sts = MkFuncDeclaration Nothing (fieldList []) name (funcType [] ps rs) (block sts)
@@ -86,6 +100,13 @@ func name ps rs sts = MkFuncDeclaration Nothing (fieldList []) name (funcType []
 export
 expr : Expression e => e -> ExpressionStatement e
 expr e = MkExpressionStatement e
+
+export
+return :
+  All Expression es =>
+  HList es ->
+  ReturnStatement es
+return es = MkReturnStatement Nothing es
 
 export
 call :
@@ -108,3 +129,13 @@ export
 
 infixl 7 /./
 
+export
+(/+/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/+/) e1 e2 = MkBinaryExpression e1 Nothing MkAdd e2
+
+infixl 6 /+/

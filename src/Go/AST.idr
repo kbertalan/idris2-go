@@ -78,17 +78,17 @@ record FieldList (ts : List Type) where
   closing : Maybe Position
 
 public export 
-implementation Node (FieldList []) where
+implementation All Field ts => Node (FieldList ts) where
   pos = (.opening)
   end = (.closing)
 
-public export
-implementation Last l (t::ts) => Node (Field t) => Node (Field l) => Node (FieldList (t::ts)) where
-  pos fl = fl.opening
-           <|> pos (head fl.list)
-
-  end fl = map (+1) fl.closing
-           <|> end {a = Field l} (last fl.list)
+-- public export
+-- implementation Last l (t::ts) => Node (Field t) => Node (Field l) => Node (FieldList (t::ts)) where
+--   pos fl = fl.opening
+--            <|> pos (head fl.list)
+--
+--   end fl = map (+1) fl.closing
+--            <|> end {a = Field l} (last fl.list)
 
 -- field list numFields
 
@@ -380,14 +380,14 @@ record ReturnStatement rs where
   results : HList rs
 
 public export
-implementation Node (ReturnStatement []) where
+implementation All Expression rs => Node (ReturnStatement rs) where
   pos rs = rs.returnPos
   end rs = map (+6) rs.returnPos -- length of 'return'
 
-public export
-implementation Last l (r::rs) => Expression l => All Expression (r::rs) => Node (ReturnStatement (r::rs)) where
-  pos rs = rs.returnPos
-  end rs = end {a = l} $ last rs.results
+-- public export
+-- implementation Last l (r::rs) => Expression l => All Expression (r::rs) => Node (ReturnStatement (r::rs)) where
+--   pos rs = rs.returnPos
+--   end rs = end {a = l} $ last rs.results
 
 public export
 implementation Node (ReturnStatement rs) => Statement (ReturnStatement rs) where

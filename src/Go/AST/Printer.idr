@@ -117,12 +117,33 @@ implementation All Printer sts => Printer (BlockStatement sts) where
         many xs {ps}
 
 export
+implementation All Printer es => Printer (ReturnStatement es) where
+  print file rs = do
+      printIndent
+      pPutStr "return"
+      many rs.results
+    where
+      many : {0 es : List Type} -> {auto ps : All Printer es} -> HList es -> PrinterMonad io ()
+      many [] = pure ()
+      many {ps = [p]} [x] = do
+        pPutStr " "
+        print file x
+      many {ps = (p::ps)} (x::xs) = do
+        pPutStr " "
+        print file x
+        pPutStr ","
+        many xs
+
+
+export
 implementation Printer t => Printer (Field t) where
   print file f = do
     printNames f.names
     case f.type of
       Nothing => pure ()
-      Just t => print file t
+      Just t => do
+        pPutStr " "
+        print file t
     where
       printNames : List Identifier -> PrinterMonad io ()
       printNames [] = pure ()
