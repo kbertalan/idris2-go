@@ -101,16 +101,20 @@ implementation Printer e => Printer (ExpressionStatement e) where
 
 export
 implementation All Printer sts => Printer (BlockStatement sts) where
-  print file {indent = i} bs @{ps} = do
+  print file bs @{ps} = do
       pPutStr " {\n"
       many bs.statements {ps}
       pPutStr "}\n"
     where
       many : { 0 sts : List Type } -> { ps : All Printer sts } -> HList sts -> PrinterMonad io ()
       many [] = printNewLine
-      many {ps = (p::ps)} (x::xs) = do
-        print file {indent = increaseIndent i} x
+      many {ps = [p]} [x] = do
+        print file {indent = increaseIndent indent} x
         printNewLine
+      many {ps = (p::ps)} (x::xs) = do
+        print file {indent = increaseIndent indent} x
+        printNewLine
+        many xs {ps}
 
 export
 implementation Printer t => Printer (Field t) where
@@ -202,7 +206,7 @@ implementation All Printer ds => Printer (Go.File ds) where
         xs => do
           pPutStr "import (\n"
           ignore $ for xs $ \spec => do
-            pPutStr "\t" { io = io }
+            printIndent {indent = increaseIndent indent}
             print file spec
             printNewLine
           pPutStr ")\n"

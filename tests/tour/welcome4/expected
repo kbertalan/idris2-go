@@ -1,0 +1,15 @@
+1/1: Building Welcome4 (Welcome4.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	fmt.Println("Welcome to the playground!")
+	fmt.Println("The time is", time.Now())
+}
