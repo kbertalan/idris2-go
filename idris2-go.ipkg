@@ -1,14 +1,14 @@
 package idris2-go
 
-depends = idris2, network
+depends = idris2
 
 modules = Data.List.Last,
   Data.List.All,
   Go.Token.Position,
   Go.Token,
-  Go.AST
+  Go.AST,
+  Go.AST.Combinators,
+  Go.AST.Printer
 
-main = Main
-executable = idris2-go
 sourcedir = "src"
 

@@ -15,9 +15,13 @@ interface Node a where
   end : a -> Maybe Position
 
 interface Node a => Expression a where
+  constructor MkExpression
 interface Node a => Statement a where
+  constructor MkStatement
 interface Node a => Specification a where
+  constructor MkSpecification
 interface Node a => Declaration a where
+  constructor MkDeclaration
 
 public export
 record Comment where
@@ -127,12 +131,12 @@ record FunctionType ts ps rs where
   results : FieldList rs
 
 public export
-implementation Node (FieldList ts) => Node(FieldList ps) => Node(FieldList rs) => Node (FunctionType ts ps rs) where
+implementation Node (FieldList ts) => Node (FieldList ps) => Node (FieldList rs) => Node (FunctionType ts ps rs) where
   pos ft = ft.func <|> pos ft.params
   end ft = end ft.results <|> end ft.params
 
 public export
-implementation Node (FieldList ts) => Node(FieldList ps) => Node(FieldList rs) => Expression (FunctionType ts ps rs) where
+implementation Node (FieldList ts) => Node (FieldList ps) => Node (FieldList rs) => Expression (FunctionType ts ps rs) where
 
 public export
 record InterfaceType ts where
@@ -418,14 +422,19 @@ record BlockStatement sts where
   rbrace : Maybe Position
 
 public export
-implementation Node (BlockStatement []) where
+implementation All Statement sts => Node (BlockStatement sts) where
   pos bs = bs.lbrace
-  end bs = map (+1) bs.rbrace <|> map (+1) bs.lbrace
+  end bs = map (+1) bs.rbrace
 
-public export
-implementation NonEmpty sts => Last l sts => Statement l => All Statement sts => Node (BlockStatement sts) where
-  pos bs = bs.lbrace
-  end bs = map (+1) bs.rbrace <|> (end {a = l} $ last bs.statements)
+-- public export
+-- implementation Node (BlockStatement []) where
+--   pos bs = bs.lbrace
+--   end bs = map (+1) bs.rbrace <|> map (+1) bs.lbrace
+--
+-- public export
+-- implementation NonEmpty sts => Last l sts => Statement l => All Statement sts => Node (BlockStatement sts) where
+--   pos bs = bs.lbrace
+--   end bs = map (+1) bs.rbrace <|> (end {a = l} $ last bs.statements)
 
 public export
 implementation Node (BlockStatement sts) => Statement (BlockStatement sts) where
@@ -830,14 +839,14 @@ public export
 record ImportSpec where
   constructor MkImportSpec
   doc : Maybe CommentGroup
-  name : Identifier
+  name : Maybe Identifier
   path : BasicLiteral
   comment : Maybe CommentGroup
   endPos : Maybe Position
 
 public export
 implementation Node ImportSpec where
-  pos is = pos is.name <|> pos is.path
+  pos is = (pos =<< is.name) <|> pos is.path
   end is = is.endPos <|> pos is.path
 
 public export
@@ -943,7 +952,7 @@ implementation Node (FuncDeclaration rcs ts ps rs sts) => Declaration (FuncDecla
 public export
 record File ds where
   constructor MkFile
-  doc : CommentGroup
+  doc : Maybe CommentGroup
   package : Maybe Position
   name : Identifier
   decls : HList ds

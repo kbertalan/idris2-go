@@ -1,0 +1,11 @@
+1/1: Building Welcome1 (Welcome1.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("Hello,   ")
+}
