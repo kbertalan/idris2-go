@@ -2,6 +2,7 @@ module Go.AST.Printer
 
 import Control.Monad.Either
 import Data.List
+import Data.List.All
 import Data.List1
 import Data.List.Quantifiers
 import Go.AST as Go
@@ -134,10 +135,6 @@ implementation Printer t => All Printer es => Printer (ValueSpec t es) where
           pPutStr ", "
           printNames xs
 
-      null : {0 ts : List Type } -> HList ts -> Bool
-      null [] = True
-      null _ = False
-
       printValues : { 0 ts : List Type } -> {auto ps : All Printer ts } -> HList ts -> PrinterMonad io ()
       printValues [] = pure ()
       printValues {ps = [p]} [x] = print file x
@@ -226,10 +223,6 @@ implementation Printer t => Printer (Field t) where
       printNames : List Identifier -> PrinterMonad io ()
       printNames [] = pure ()
       printNames [x] = print file x
-      printNames [x,y] = do
-        print file x
-        pPutStr ", "
-        print file y
       printNames (x::xs) = do
         print file x
         pPutStr ", "
@@ -242,10 +235,6 @@ implementation All Printer ts => Printer (FieldList ts) where
       many : { 0 ts : List Type } -> { ps : All Printer ts } -> All Field ts -> PrinterMonad io ()
       many [] = pure ()
       many {ps = (p::ps)} [x] = print file x
-      many {ps = [p1,p2]} [x,y] = do
-        print file x
-        pPutStr ", "
-        print file y
       many {ps = (p::ps)} (x::xs) = do
         print file x
         pPutStr ", "
@@ -298,10 +287,6 @@ implementation All Printer es => Show (GenericDeclarationToken k) => Printer (Ge
       many : {0 ts : List Type} -> {auto ps : All Printer ts} -> Indent -> HList ts -> PrinterMonad io ()
       many _ [] = pure ()
       many {ps = [p]} _ [x] = print {indent} file x
-      many {ps = [p1,p2]} i [x,y] = do
-        print {indent=i} file x
-        printNewLine
-        print {indent=i} file y
       many {ps = (p::ps)} i (x::xs) = do
         print {indent=i} file x
         printNewLine
