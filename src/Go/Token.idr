@@ -2,7 +2,6 @@ module Go.Token
 
 import public Data.Fin
 import Data.List
-import public Go.Token.Position
 
 public export
 data Literal

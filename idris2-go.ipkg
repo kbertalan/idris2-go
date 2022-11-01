@@ -2,9 +2,8 @@ package idris2-go
 
 depends = idris2
 
-modules = Data.List.Last,
-  Data.List.All,
-  Go.Token.Position,
+modules = Data.List.All,
+  Data.List.Last,
   Go.Token,
   Go.AST,
   Go.AST.Combinators,

@@ -17,7 +17,7 @@ export
 identifier :
   String ->
   Identifier
-identifier name = MkIdentifier Nothing name
+identifier name = MkIdentifier name
 
 export
 file :
@@ -28,25 +28,25 @@ file :
   List ImportSpec ->
   HList ds ->
   File ds
-file name (MkPackage pkg) imports decls = MkFile Nothing Nothing (identifier pkg) decls Nothing Nothing imports [] []
+file name (MkPackage pkg) imports decls = MkFile Nothing (identifier pkg) decls imports [] []
 
 export
 string :
   String ->
   BasicLiteral
-string str = MkBasicLiteral Nothing MkString str
+string str = MkBasicLiteral MkString str
 
 export
 int :
   Int ->
   BasicLiteral
-int i = MkBasicLiteral Nothing MkInt $ show i
+int i = MkBasicLiteral MkInt $ show i
 
 export
 bool :
   Bool ->
   BasicLiteral
-bool b = MkBasicLiteral Nothing MkIdentifier $ case b of
+bool b = MkBasicLiteral MkIdentifier $ case b of
                                                 True => "true"
                                                 False => "false"
 
@@ -54,7 +54,7 @@ export
 import' :
   (path : String) ->
   ImportSpec
-import' path = MkImportSpec Nothing Nothing (string path) Nothing Nothing
+import' path = MkImportSpec Nothing Nothing (string path) Nothing
 
 export
 void : All Field []
@@ -87,7 +87,7 @@ export
 fieldList :
   All Field xs ->
   FieldList xs
-fieldList xs = MkFieldList Nothing xs Nothing
+fieldList xs = MkFieldList xs
 
 export
 funcType :
@@ -95,14 +95,14 @@ funcType :
   All Field ps ->
   All Field rs ->
   FunctionType ts ps rs
-funcType ts ps rs = MkFunctionType Nothing (fieldList ts) (fieldList ps) (fieldList rs)
+funcType ts ps rs = MkFunctionType (fieldList ts) (fieldList ps) (fieldList rs)
 
 export
 block :
   { auto 0 ok : All Statement sts } ->
   HList sts ->
   BlockStatement sts
-block sts = MkBlockStatement Nothing sts Nothing
+block sts = MkBlockStatement sts
 
 export
 func :
@@ -121,7 +121,7 @@ vars :
   All Specification es =>
   HList es ->
   GenericDeclaration MkVar es
-vars es = MkGenericDeclaration Nothing Nothing Var Nothing es Nothing
+vars es = MkGenericDeclaration Nothing Var es
 
 export
 var :
@@ -146,7 +146,7 @@ return :
   All Expression es =>
   HList es ->
   ReturnStatement es
-return es = MkReturnStatement Nothing es
+return es = MkReturnStatement es
 
 export
 call :
@@ -156,7 +156,7 @@ call :
   { auto 0 argsOk : All Expression args } ->
   HList args ->
   CallExpression fn args BadExpression
-call fn args = MkCallExpression fn Nothing args Nothing Nothing
+call fn args = MkCallExpression fn args Nothing
 
 export
 (/./) :
@@ -165,7 +165,7 @@ export
   e1 ->
   e2 ->
   BinaryExpression e1 e2
-(/./) e1 e2 = MkBinaryExpression e1 Nothing MkPeriod e2
+(/./) e1 e2 = MkBinaryExpression e1 MkPeriod e2
 
 infixl 7 /./
 
@@ -176,7 +176,7 @@ export
   e1 ->
   e2 ->
   BinaryExpression e1 e2
-(/+/) e1 e2 = MkBinaryExpression e1 Nothing MkAdd e2
+(/+/) e1 e2 = MkBinaryExpression e1 MkAdd e2
 
 export
 (/-/) :
@@ -185,7 +185,7 @@ export
   e1 ->
   e2 ->
   BinaryExpression e1 e2
-(/-/) e1 e2 = MkBinaryExpression e1 Nothing MkSub e2
+(/-/) e1 e2 = MkBinaryExpression e1 MkSub e2
 
 export
 (/*/) :
@@ -194,7 +194,7 @@ export
   e1 ->
   e2 ->
   BinaryExpression e1 e2
-(/*/) e1 e2 = MkBinaryExpression e1 Nothing MkMul e2
+(/*/) e1 e2 = MkBinaryExpression e1 MkMul e2
 
 export
 (///) :
@@ -203,7 +203,7 @@ export
   e1 ->
   e2 ->
   BinaryExpression e1 e2
-(///) e1 e2 = MkBinaryExpression e1 Nothing MkQuo e2
+(///) e1 e2 = MkBinaryExpression e1 MkQuo e2
 
 infixl 6 /+/, /-/
 infixl 5 /*/, ///
@@ -217,7 +217,7 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/:=/) ls rs = MkAssignmentStatement ls Nothing MkDefine rs
+(/:=/) ls rs = MkAssignmentStatement ls MkDefine rs
 
 export
 (/=/) :
@@ -228,6 +228,6 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/=/) ls rs = MkAssignmentStatement ls Nothing MkAssign rs
+(/=/) ls rs = MkAssignmentStatement ls MkAssign rs
 
 infix 7 /:=/, /=/
