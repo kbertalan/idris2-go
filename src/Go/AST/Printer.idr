@@ -122,6 +122,9 @@ implementation Printer t => All Printer es => Printer (ValueSpec t es) where
         Just t => do
           pPutStr " "
           print file t
+      when (not $ null vs.values) $ do
+        pPutStr " = "
+        printValues vs.values
     where
       printNames : List Identifier -> PrinterMonad io ()
       printNames [] = pure ()
@@ -130,6 +133,18 @@ implementation Printer t => All Printer es => Printer (ValueSpec t es) where
           print file x
           pPutStr ", "
           printNames xs
+
+      null : {0 ts : List Type } -> HList ts -> Bool
+      null [] = True
+      null _ = False
+
+      printValues : { 0 ts : List Type } -> {auto ps : All Printer ts } -> HList ts -> PrinterMonad io ()
+      printValues [] = pure ()
+      printValues {ps = [p]} [x] = print file x
+      printValues {ps = (p::ps)} (x::xs) = do
+        print file x
+        pPutStr ", "
+        printValues xs
 
 -- Statements
 

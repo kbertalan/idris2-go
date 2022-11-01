@@ -43,6 +43,14 @@ int :
 int i = MkBasicLiteral Nothing MkInt $ show i
 
 export
+bool :
+  Bool ->
+  BasicLiteral
+bool b = MkBasicLiteral Nothing MkIdentifier $ case b of
+                                                True => "true"
+                                                False => "false"
+
+export
 import' :
   (path : String) ->
   ImportSpec
