@@ -272,11 +272,14 @@ export
 implementation All Printer es => Show (GenericDeclarationToken k) => Printer (GenericDeclaration k es) where
   print file gd = do
       let multiple = hasMany gd.specs
+          inci = if multiple then increaseIndent indent else indent
       pPutStr $ show gd.token
       pPutStr " "
-      when multiple $ pPutStr "(\n"
-      many (if multiple then increaseIndent indent else indent) gd.specs
-      when multiple $ pPutStr ")"
+      when multiple $ do
+        pPutStr "(\n"
+        printIndent {indent=inci}
+      many inci gd.specs
+      when multiple $ pPutStr "\n)"
       printNewLine
     where
       hasMany : {0 ts : List Type} -> HList ts -> Bool
@@ -286,10 +289,11 @@ implementation All Printer es => Show (GenericDeclarationToken k) => Printer (Ge
 
       many : {0 ts : List Type} -> {auto ps : All Printer ts} -> Indent -> HList ts -> PrinterMonad io ()
       many _ [] = pure ()
-      many {ps = [p]} _ [x] = print {indent} file x
+      many {ps = [p]} i [x] = print {indent=i} file x
       many {ps = (p::ps)} i (x::xs) = do
         print {indent=i} file x
         printNewLine
+        printIndent {indent=i}
         many i xs
 
 -- File

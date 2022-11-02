@@ -43,12 +43,18 @@ int :
 int i = MkBasicLiteral MkInt $ show i
 
 export
+imag :
+  Int ->
+  BasicLiteral
+imag i = MkBasicLiteral MkImag "\{show i}i"
+
+export
 bool :
   Bool ->
   BasicLiteral
 bool b = MkBasicLiteral MkIdentifier $ case b of
-                                                True => "true"
-                                                False => "false"
+                                        True => "true"
+                                        False => "false"
 
 export
 import' :
@@ -205,8 +211,26 @@ export
   BinaryExpression e1 e2
 (///) e1 e2 = MkBinaryExpression e1 MkQuo e2
 
-infixl 6 /+/, /-/
-infixl 5 /*/, ///
+export
+(/<</) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/<</) e1 e2 = MkBinaryExpression e1 MkShl e2
+
+export
+(/>>/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/>>/) e1 e2 = MkBinaryExpression e1 MkShr e2
+
+infixl 4 /+/, /-/
+infixl 5 /*/, ///, /<</, />>/
 
 export
 (/:=/) :
