@@ -1,4 +1,4 @@
-1/1: Building Basics9 (Basics9.idr)
+1/1: Building Basics10 (Basics10.idr)
 Now compiling the executable: test
 printing source:
 
@@ -6,10 +6,11 @@ package main
 
 import "fmt"
 
-var i, j int = 1, 2
-
 func main() {
+	var i, j int = 1, 2
+
+	k := 3
 	var c, python, java = true, false, "no!"
 
-	fmt.Println(i, j, c, python, java)
+	fmt.Println(i, j, k, c, python, java)
 }
