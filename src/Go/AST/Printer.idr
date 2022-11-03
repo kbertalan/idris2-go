@@ -147,37 +147,37 @@ implementation Printer t => All Printer es => Printer (ValueSpec t es) where
 
 export
 implementation Printer e => Printer (ExpressionStatement e) where
-  print file es = do
-    printIndent
-    print file es.expression
+  print file es = print file es.expression
 
 export
 implementation Printer d => Printer (DeclarationStatement d) where
-  print file d = do
-    printIndent
-    print file d.declaration
+  print file d = print file d.declaration
 
 export
 implementation All Printer sts => Printer (BlockStatement sts) where
   print file bs @{ps} = do
       pPutStr " {\n"
       many bs.statements {ps}
-      pPutStr "}\n"
+      pPutStr "}"
     where
+      inci : Indent
+      inci = increaseIndent indent
+
       many : { 0 sts : List Type } -> { ps : All Printer sts } -> HList sts -> PrinterMonad io ()
       many [] = printNewLine
       many {ps = [p]} [x] = do
-        print file {indent = increaseIndent indent} x
+        printIndent {indent = inci}
+        print {indent = inci} file x
         printNewLine
       many {ps = (p::ps)} (x::xs) = do
-        print file {indent = increaseIndent indent} x
+        printIndent {indent = inci}
+        print {indent = inci} file x
         printNewLine
         many xs {ps}
 
 export
 implementation All Printer ls => All Printer rs => Printer (AssignmentStatement ls rs) where
   print file as = do
-      printIndent
       many as.left
       pPutStr " := "
       many as.right
@@ -194,7 +194,6 @@ implementation All Printer ls => All Printer rs => Printer (AssignmentStatement 
 export
 implementation All Printer es => Printer (ReturnStatement es) where
   print file rs = do
-      printIndent
       pPutStr "return"
       many rs.results
     where
@@ -280,7 +279,6 @@ implementation All Printer es => Show (GenericDeclarationToken k) => Printer (Ge
         printIndent {indent=inci}
       many inci gd.specs
       when multiple $ pPutStr "\n)"
-      printNewLine
     where
       hasMany : {0 ts : List Type} -> HList ts -> Bool
       hasMany [] = False
@@ -304,21 +302,28 @@ implementation All Printer ds => Printer (Go.File ds) where
     printIndent
     printPackage f.name
     printNewLine
+    printNewLine
     printIndent
     printImports f.imports
+    printNewLine
+    printNewLine
+    printIndent
     printDecls f.decls
+    printNewLine
 
     where
       printDecls : { 0 ds : List Type } -> { auto ps : All Printer ds } -> HList ds -> PrinterMonad io ()
       printDecls {ds = []} Nil = pure ()
+      printDecls {ds = [x]} {ps = [p]} [d] = print file d
       printDecls {ds = x::xs} {ps = p::ps} (d::ds) = do
-        printNewLine
         print file d @{p}
+        printNewLine
+        printNewLine
         printIndent
         printDecls ds
 
       printPackage : Identifier -> PrinterMonad io ()
-      printPackage i = pPutStr "package \{i.name}\n"
+      printPackage i = pPutStr "package \{i.name}"
 
       printImports : List ImportSpec -> PrinterMonad io ()
       printImports = \case
@@ -326,12 +331,11 @@ implementation All Printer ds => Printer (Go.File ds) where
         [x] => do
           pPutStr "import "
           print file x
-          printNewLine
         xs => do
           pPutStr "import (\n"
           ignore $ for xs $ \spec => do
             printIndent {indent = increaseIndent indent}
             print file spec
             printNewLine
-          pPutStr ")\n"
+          pPutStr ")"
 
