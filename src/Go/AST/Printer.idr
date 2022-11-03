@@ -101,19 +101,20 @@ implementation Printer f => All Printer as => Printer (CallExpression f as e) wh
         many xs
 
 export
+implementation Printer e => Printer (SelectorExpression e) where
+  print file se = do
+    print file se.expression
+    pPutStr "."
+    print file se.selector
+
+export
 implementation Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
   print file bo = do
-      let spaces = when (prefersSpaces bo.operator) $ pPutStr " "
       print file bo.first
-      spaces
+      pPutStr " "
       pPutStr $ show bo.operator
-      spaces
+      pPutStr " "
       print file bo.last
-    where
-      prefersSpaces : Operator -> Bool
-      prefersSpaces = \case
-        MkPeriod => False
-        _ => True
 
 -- Spec
 

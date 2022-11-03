@@ -12,9 +12,9 @@ main = do
               [ import' "fmt"
               , import' "time"
               ]
-              [func (identifier "main") [] void 
-                [ expr $ call (identifier "fmt" /./ identifier "Println") [string "Welcome to the playground!"]
-                , expr $ call (identifier "fmt" /./ identifier "Println") [string "The time is", call (identifier "time.Now") []]
+              [ func (id' "main") [] void
+                [ expr $ call (id' "fmt" /./ "Println") [string "Welcome to the playground!"]
+                , expr $ call (id' "fmt" /./ "Println") [string "The time is", call (id' "time.Now") []]
                 ]
               ]
   putStrLn "printing source:\n"

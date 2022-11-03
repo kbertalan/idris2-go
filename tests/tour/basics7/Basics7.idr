@@ -11,13 +11,13 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [
-                func (identifier "split") [param "sum" $ identifier "int"] [params ["x", "y"] (identifier "int")]
-                [ [identifier "x"] /=/ [identifier "sum" /*/ int 4 /// int 9]
-                , [identifier "y"] /=/ [identifier "sum" /-/ identifier "x"]
+                func (id' "split") [field ["sum"] $ id' "int"] [field ["x", "y"] $ id' "int"]
+                [ [id' "x"] /=/ [id' "sum" /*/ int 4 /// int 9]
+                , [id' "y"] /=/ [id' "sum" /-/ id' "x"]
                 , return []
                 ]
-              , func (identifier "main") [] void
-                [ expr $ call (identifier "fmt" /./ identifier "Println") [call (identifier "split") [int 17]]
+              , func (id' "main") [] void
+                [ expr $ call (id' "fmt" /./ "Println") [call (id' "split") [int 17]]
                 ]
               ]
   putStrLn "printing source:\n"

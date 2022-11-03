@@ -1,6 +1,5 @@
 module Basics13
 
-import Data.List1
 import Control.Monad.Either
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
@@ -13,17 +12,17 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (identifier "main") [] void
-                [ decl $ vars [ var (identifier "x" ::: [identifier "y"]) (Just $ identifier "int") [int 3, int 4] ]
-                , decl $ vars [ var (singleton $ identifier "f") (Just $ identifier "float64") [
-                    call (identifier "math" /./ identifier "Sqrt") [
-                      call (identifier "float64") [ identifier "x" /*/ identifier "x" /+/ identifier "y" /*/ identifier "y" ]
+              [ func (id' "main") [] void
+                [ decl $ vars [ var [id' "x", id' "y"] (Just $ id' "int") [int 3, int 4] ]
+                , decl $ vars [ var [id' "f"] (Just $ id' "float64") [
+                    call (id' "math" /./ "Sqrt") [
+                      call (id' "float64") [ id' "x" /*/ id' "x" /+/ id' "y" /*/ id' "y" ]
                     ]
                   ] ]
-                , decl $ vars [ var (singleton $ identifier "z") (Just $ identifier "uint") [
-                    call (identifier "uint") [identifier "f"]
+                , decl $ vars [ var [id' "z"] (Just $ id' "uint") [
+                    call (id' "uint") [id' "f"]
                   ] ]
-                , expr $ call (identifier "fmt" /./ identifier "Println") [identifier "x", identifier "y", identifier "z"]
+                , expr $ call (id' "fmt" /./ "Println") [id' "x", id' "y", id' "z"]
                 ]
               ]
   putStrLn "printing source:\n"

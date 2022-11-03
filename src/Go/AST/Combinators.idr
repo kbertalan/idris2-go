@@ -58,6 +58,12 @@ identifier :
 identifier name = MkIdentifier name
 
 export
+id' :
+  String ->
+  Identifier
+id' name = MkIdentifier name
+
+export
 file :
   { ds : List Type } ->
   { auto 0 ok : All Declaration ds } ->
@@ -111,27 +117,18 @@ void : All Field []
 void = []
 
 export
-param :
-  Expression t =>
-  String ->
-  t ->
-  Field t
-param f t = MkField Nothing [identifier f] (Just t) Nothing Nothing
-
-export
-params :
+field :
   Expression t =>
   List String ->
   t ->
   Field t
-params fs t = MkField Nothing (identifier <$> fs) (Just t) Nothing Nothing
+field fs t = MkField Nothing (identifier <$> fs) (Just t) Nothing Nothing
 
 export
-type :
-  Expression t =>
-  t ->
-  Field t
-type t = MkField Nothing [] (Just t) Nothing Nothing
+field' :
+  List String ->
+  Field BadExpression
+field' fs = MkField Nothing (identifier <$> fs) (Maybe BadExpression `the` Nothing) Nothing Nothing
 
 export
 fieldList :
@@ -196,11 +193,12 @@ export
 var :
   Expression t =>
   All Expression es =>
-  List1 Identifier ->
+  (is : List Identifier) ->
+  {auto 0 ok : NonEmpty is} ->
   Maybe t ->
   HList es ->
   ValueSpec t es
-var is t es = MkValueSpec Nothing is t es Nothing
+var (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
 
 export
 expr : Expression e => e -> ExpressionStatement e
@@ -229,12 +227,11 @@ call fn args = MkCallExpression fn args Nothing
 
 export
 (/./) :
-  Expression e1 =>
-  Expression e2 =>
-  e1 ->
-  e2 ->
-  BinaryExpression e1 e2
-(/./) e1 e2 = MkBinaryExpression e1 MkPeriod e2
+  Expression e =>
+  e ->
+  String ->
+  SelectorExpression e
+(/./) e f = MkSelectorExpression e $ id' f
 
 infixl 7 /./
 

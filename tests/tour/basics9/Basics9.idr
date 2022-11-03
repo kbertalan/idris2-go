@@ -1,13 +1,9 @@
 module Basics9
 
-import Data.List1
 import Control.Monad.Either
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
 import System.File
-
-fromList' : ( ls : List a ) -> { auto 0 ok : NonEmpty ls } -> List1 a
-fromList' (x::xs) = x ::: xs
 
 main : IO ()
 main = do
@@ -15,13 +11,13 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ vars
-                [ var (fromList' $ map identifier ["i", "j"]) (Just $ identifier "int") [int 1, int 2]
+                [ var (map id' ["i", "j"]) (Just $ id' "int") [int 1, int 2]
                 ]
-              , func (identifier "main") [] void
+              , func (id' "main") [] void
                 [ decl $ vars
-                  [ var (fromList' $ map identifier ["c", "python", "java"]) (Maybe Identifier `the` Nothing) [bool True, bool False, string "no!"]
+                  [ var (map id' ["c", "python", "java"]) (Maybe Identifier `the` Nothing) [bool True, bool False, string "no!"]
                     ]
-                , expr $ call (identifier "fmt" /./ identifier "Println") [identifier "i", identifier "j", identifier "c", identifier "python", identifier "java"]
+                , expr $ call (id' "fmt" /./ "Println") [id' "i", id' "j", id' "c", id' "python", id' "java"]
                 ]
               ]
   putStrLn "printing source:\n"

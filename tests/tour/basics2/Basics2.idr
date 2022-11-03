@@ -12,8 +12,8 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [func (identifier "main") [] void 
-                [ expr $ call (identifier "fmt" /./ identifier "Printf") [string "Now you have %g problems.\\n", call (identifier "math" /./ identifier "Sqrt") [int 7]]
+              [ func (id' "main") [] void
+                [ expr $ call (id' "fmt" /./ "Printf") [string "Now you have %g problems.\\n", call (id' "math" /./ "Sqrt") [int 7]]
                 ]
               ]
   putStrLn "printing source:\n"

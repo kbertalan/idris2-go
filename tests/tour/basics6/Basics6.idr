@@ -11,11 +11,11 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [
-                func (identifier "swap") [params ["x", "y"] (identifier "string")] [type $ identifier "string", type $ identifier "string"]
-                [ return [ identifier "y" , identifier "x" ] ]
-              , func (identifier "main") [] void
-                [ [identifier "a", identifier "b"] /:=/ [call (identifier "swap") [string "hello", string "world"]]
-                , expr $ call (identifier "fmt" /./ identifier "Println") [ identifier "a", identifier "b" ]
+                func (id' "swap") [field ["x", "y"] $ id' "string"] [field [] $ id' "string", field [] $ id' "string"]
+                [ return [ id' "y" , id' "x" ] ]
+              , func (id' "main") [] void
+                [ [id' "a", id' "b"] /:=/ [call (id' "swap") [string "hello", string "world"]]
+                , expr $ call (id' "fmt" /./ "Println") [ id' "a", id' "b" ]
                 ]
               ]
   putStrLn "printing source:\n"

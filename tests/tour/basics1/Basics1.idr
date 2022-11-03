@@ -12,8 +12,8 @@ main = do
               [ import' "fmt"
               , import' "math/rand"
               ]
-              [func (identifier "main") [] void 
-                [ expr $ call (identifier "fmt" /./ identifier "Println") [string "My favorite number is", call (identifier "rand" /./ identifier "Intn") [int 10]]
+              [ func (id' "main") [] void
+                [ expr $ call (id' "fmt" /./ "Println") [string "My favorite number is", call (id' "rand" /./ "Intn") [int 10]]
                 ]
               ]
   putStrLn "printing source:\n"

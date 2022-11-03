@@ -1,6 +1,5 @@
 module Basics14
 
-import Data.List1
 import Control.Monad.Either
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
@@ -11,9 +10,9 @@ main = do
   let src = file "type-conversions.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (identifier "main") [] void
-                [ [identifier "v"] /:=/ [int 42] |> comment " change me!"
-                , expr $ call (identifier "fmt" /./ identifier "Printf") [string "v is of type %T\\n", identifier "v"]
+              [ func (id' "main") [] void
+                [ [id' "v"] /:=/ [int 42] |> comment " change me!"
+                , expr $ call (id' "fmt" /./ "Printf") [string "v is of type %T\\n", id' "v"]
                 ]
               ]
   putStrLn "printing source:\n"
