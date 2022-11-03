@@ -7,6 +7,28 @@ import public Go.AST
 import public Go.Token
 
 export
+(|>) : a -> (a -> b) -> b
+(|>) a fn = fn a
+
+infixl 1 |>
+
+public export
+interface Commentable a where
+  setComments : CommentGroup -> a -> a
+
+export
+comment : Commentable a => String -> a -> a
+comment str = setComments $ MkCommentGroup $ singleton $ MkComment str
+
+export
+comments : Commentable a => (cs : List String) -> {auto 0 ok : NonEmpty cs} -> a -> a
+comments (x::xs) = setComments $ MkCommentGroup $ map MkComment (x:::xs)
+
+export
+implementation Commentable (AssignmentStatement ls rs) where
+  setComments cg = { comment := Just cg }
+
+export
 data Package = MkPackage String
 
 export
@@ -241,7 +263,7 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/:=/) ls rs = MkAssignmentStatement ls MkDefine rs
+(/:=/) ls rs = MkAssignmentStatement ls MkDefine rs Nothing
 
 export
 (/=/) :
@@ -252,6 +274,6 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/=/) ls rs = MkAssignmentStatement ls MkAssign rs
+(/=/) ls rs = MkAssignmentStatement ls MkAssign rs Nothing
 
 infix 7 /:=/, /=/

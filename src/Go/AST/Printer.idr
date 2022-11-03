@@ -181,6 +181,12 @@ implementation All Printer ls => All Printer rs => Printer (AssignmentStatement 
       many as.left
       pPutStr " := "
       many as.right
+      case as.comment of
+        Nothing => pure ()
+        Just (MkCommentGroup cs) => do
+          pPutStr " "
+          printComments $ forget cs
+          when (1 < length cs) printNewLine
     where
       many : {0 es : List Type} -> {auto ps : All Printer es} -> HList es -> PrinterMonad io ()
       many [] = pure ()
@@ -190,6 +196,18 @@ implementation All Printer ls => All Printer rs => Printer (AssignmentStatement 
         print file x
         pPutStr ", "
         many xs
+
+      printComments : List Comment -> PrinterMonad io ()
+      printComments [] = pure ()
+      printComments [x] = do
+          pPutStr "//"
+          pPutStr x.text
+      printComments (x::xs) = do
+          pPutStr "//"
+          pPutStr x.text
+          printNewLine
+          printIndent
+          printComments xs
 
 export
 implementation All Printer es => Printer (ReturnStatement es) where

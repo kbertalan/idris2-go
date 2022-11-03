@@ -225,6 +225,7 @@ record AssignmentStatement ls rs where
   left : HList ls
   token : Operator
   right : HList rs
+  comment : Maybe CommentGroup
 
 public export
 implementation All Expression ls => All Expression rs => NonEmpty ls => NonEmpty rs => Node (AssignmentStatement ls rs) where

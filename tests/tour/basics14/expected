@@ -1,0 +1,12 @@
+1/1: Building Basics14 (Basics14.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import "fmt"
+
+func main() {
+	v := 42 // change me!
+	fmt.Printf("v is of type %T\n", v)
+}
