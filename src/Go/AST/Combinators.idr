@@ -28,6 +28,22 @@ export
 implementation Commentable (AssignmentStatement ls rs) where
   setComments cg = { comment := Just cg }
 
+public export
+interface Documentable a where
+  setDocs : CommentGroup -> a -> a
+
+export
+doc : Documentable a => String -> a -> a
+doc str = setDocs $ MkCommentGroup $ singleton $ MkComment str
+
+export
+docs : Documentable a => (ds : List String) -> {auto 0 ok : NonEmpty ds} -> a -> a
+docs (d::ds) = setDocs $ MkCommentGroup $ map MkComment (d:::ds)
+
+export
+implementation Documentable (ValueSpec ls rs) where
+  setDocs ds = { doc := Just ds }
+
 export
 data Package = MkPackage String
 

@@ -54,6 +54,18 @@ printIndent {indent = (MkIndent i)} =
   let str = concat $ replicate i "\t"
   in pPutStr str
 
+printComments : HasIO io => {auto file : File} -> {auto indent : Indent} -> List Comment -> PrinterMonad io ()
+printComments [] = pure ()
+printComments [x] = do
+    pPutStr "//"
+    pPutStr x.text
+printComments (x::xs) = do
+    pPutStr "//"
+    pPutStr x.text
+    printNewLine
+    printIndent
+    printComments xs
+
 -- Expression
 
 export
@@ -117,6 +129,12 @@ implementation Printer ImportSpec where
 export
 implementation Printer t => All Printer es => Printer (ValueSpec t es) where
   print file vs = do
+      case vs.doc of
+        Nothing => pure ()
+        Just (MkCommentGroup cs) => do
+          printComments $ forget cs
+          printNewLine
+          printIndent
       printNames $ List1.forget vs.names
       case vs.type of
         Nothing => pure ()
@@ -196,18 +214,6 @@ implementation All Printer ls => All Printer rs => Printer (AssignmentStatement 
         print file x
         pPutStr ", "
         many xs
-
-      printComments : List Comment -> PrinterMonad io ()
-      printComments [] = pure ()
-      printComments [x] = do
-          pPutStr "//"
-          pPutStr x.text
-      printComments (x::xs) = do
-          pPutStr "//"
-          pPutStr x.text
-          printNewLine
-          printIndent
-          printComments xs
 
 export
 implementation All Printer es => Printer (ReturnStatement es) where

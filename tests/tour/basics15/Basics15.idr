@@ -8,7 +8,7 @@ import System.File
 
 main : IO ()
 main = do
-  let src = file "constants"
+  let src = file "constants.go"
               (package "main")
               [ import' "fmt" ]
               [ consts [ const' [identifier "Pi"] (Maybe Identifier `the` Nothing) [float 3.14] ]
