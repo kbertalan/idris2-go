@@ -65,6 +65,12 @@ int :
 int i = MkBasicLiteral MkInt $ show i
 
 export
+float :
+  Double ->
+  BasicLiteral
+float f = MkBasicLiteral MkFloat $ show f
+
+export
 imag :
   Int ->
   BasicLiteral
@@ -142,6 +148,25 @@ func :
   HList sts ->
   FuncDeclaration [] [] ps rs sts
 func name ps rs sts = MkFuncDeclaration Nothing (fieldList []) name (funcType [] ps rs) (block sts)
+
+export
+consts :
+  NonEmpty es =>
+  All Specification es =>
+  HList es ->
+  GenericDeclaration MkConst es
+consts es = MkGenericDeclaration Nothing Const es
+
+export
+const' :
+  Expression t =>
+  All Expression es =>
+  (is : List Identifier) ->
+  {auto 0 ok : NonEmpty is} ->
+  Maybe t ->
+  HList es ->
+  ValueSpec t es
+const' (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
 
 export
 vars :

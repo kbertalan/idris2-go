@@ -1,0 +1,17 @@
+1/1: Building Basics15 (Basics15.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import "fmt"
+
+const Pi = 3.14
+
+func main() {
+	const World = "世界"
+	fmt.Println("Hello", World)
+	fmt.Println("Happy", Pi, "Day")
+	const Truth = true
+	fmt.Println("Go rules?", Truth)
+}
