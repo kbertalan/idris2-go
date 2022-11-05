@@ -239,6 +239,9 @@ implementation Printer i => Printer c => Printer p => Printer (BlockStatement st
     pPutStr "for"
     case (fs.init, fs.condition, fs.post) of
       (Nothing, Nothing, Nothing) => pure ()
+      (Nothing, Just c, Nothing) => do
+        pPutStr " "
+        print file c
       _ => do
         pPutStr " "
         maybe (pure ()) (print file) fs.init

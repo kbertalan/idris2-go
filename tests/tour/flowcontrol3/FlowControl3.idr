@@ -1,4 +1,4 @@
-module FlowControl2
+module FlowControl3
 
 import Control.Monad.Either
 import Go.AST.Printer as Go
@@ -7,7 +7,7 @@ import System.File
 
 main : IO ()
 main = do
-  let src = file "numeric-constants.go"
+  let src = file "for-is-gos-while.go"
               (package "main")
               [ import' "fmt" ]
               [ func (id' "main") [] void

@@ -7,7 +7,7 @@ import System.File
 
 main : IO ()
 main = do
-  let src = file "numeric-constants.go"
+  let src = file "for.go"
               (package "main")
               [ import' "fmt" ]
               [ func (id' "main") [] void
