@@ -184,6 +184,7 @@ implementation Statement t => Statement (LabeledStatement t) where
 public export
 record ExpressionStatement e where
   constructor MkExpressionStatement
+  doc : Maybe CommentGroup
   expression : e
 
 public export
@@ -359,21 +360,24 @@ public export
 implementation All Expression es => NonEmpty sts => All Statement sts => Node (CaseClause es sts) where
 
 public export
+implementation Node (CaseClause es sts) => Statement (CaseClause es sts) where
+
+public export
 data IsCaseClause : Type -> Type where
   ItIsCaseClause : IsCaseClause (CaseClause es sts)
 
 public export
-record SwitchStatement s e sts where
+record SwitchStatement i e sts where
   constructor MkSwitchStatement
-  init : Maybe s
+  init : Maybe i
   tag : Maybe e
   body : BlockStatement sts
 
 public export
-implementation Statement s => Expression e => Node (BlockStatement sts) => All IsCaseClause sts => Node (SwitchStatement e s sts) where
+implementation Statement i => Expression e => Node (BlockStatement sts) => All IsCaseClause sts => Node (SwitchStatement i e sts) where
 
 public export
-implementation Node (SwitchStatement e s sts) => Statement (SwitchStatement e s sts) where
+implementation Node (SwitchStatement i e sts) => Statement (SwitchStatement i e sts) where
 
 public export
 record TypeSwitchStatement s a sts where

@@ -180,7 +180,14 @@ implementation Printer BadStatement where
 
 export
 implementation Printer e => Printer (ExpressionStatement e) where
-  print file es = print file es.expression
+  print file es = do
+    case es.doc of
+      Nothing => pure ()
+      Just cg => do
+        printComments $ forget cg.comments
+        printNewLine
+        printIndent
+    print file es.expression
 
 export
 implementation Printer d => Printer (DeclarationStatement d) where
@@ -276,6 +283,71 @@ implementation Printer i => Printer c => Printer (BlockStatement sts) => Printer
       Just e => do
         pPutStr " else "
         print file e
+
+export
+implementation Printer i => Printer e => All Printer sts => Printer (SwitchStatement i e sts) where
+  print file ss = do
+      pPutStr "switch "
+      case ss.init of
+        Nothing => pure ()
+        Just i => do
+          print file i
+          pPutStr "; "
+      case ss.tag of
+        Nothing => pure ()
+        Just e => do
+          print file e
+          pPutStr " "
+      pPutStr "{"
+      printBody ss.body.statements
+      printNewLine
+      printIndent
+      pPutStr "}"
+    where
+      printBody : { 0 sts : List Type } -> {auto ps : All Printer sts } -> HList sts -> PrinterMonad io ()
+      printBody [] = pure ()
+      printBody {ps = [p]} [x] = do
+        printNewLine
+        printIndent
+        print file x
+      printBody {ps = (p::ps)} (x::xs) = do
+        printNewLine
+        printIndent
+        print file x
+        printBody xs
+
+export
+implementation All Printer es => All Printer sts => Printer (CaseClause es sts) where
+  print file cc = do
+      case cc.list of
+        [] => pPutStr "default"
+        _ => pPutStr "case "
+      printList cc.list
+      pPutStr ":"
+      printBody cc.body
+    where
+      printList : {0 ts : List Type} -> {auto ps : All Printer ts} -> HList ts -> PrinterMonad io ()
+      printList [] = pure ()
+      printList {ps = [p]} [x] = print file x
+      printList {ps = p::ps} (x::xs) = do
+        print file x
+        pPutStr ", "
+        printList xs
+
+      inci : Indent
+      inci = increaseIndent indent
+
+      printBody : {0 ts : List Type} -> {auto ps : All Printer ts} -> HList ts -> PrinterMonad io ()
+      printBody [] = pure ()
+      printBody {ps = [p]} [x] = do
+        printNewLine
+        printIndent {indent = inci}
+        print {indent = inci} file x
+      printBody {ps = p::ps} (x::xs) = do
+        printNewLine
+        printIndent {indent = inci}
+        print {indent = inci} file x
+        printList xs
 
 export
 implementation All Printer es => Printer (ReturnStatement es) where

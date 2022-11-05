@@ -45,6 +45,10 @@ implementation Documentable (ValueSpec ls rs) where
   setDocs ds = { doc := Just ds }
 
 export
+implementation Documentable (ExpressionStatement e) where
+  setDocs ds = { doc := Just ds }
+
+export
 implementation Documentable (ReturnStatement rs) where
   setDocs ds = { doc := Just ds }
 
@@ -206,7 +210,7 @@ var (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
 
 export
 expr : Expression e => e -> ExpressionStatement e
-expr e = MkExpressionStatement e
+expr e = MkExpressionStatement Nothing e
 
 export
 decl : Declaration d => d -> DeclarationStatement d
@@ -291,6 +295,46 @@ ifsE :
   e ->
   IfStatement i c sts e
 ifsE i c sts e = MkIfStatement (Just i) c (MkBlockStatement sts) (Just e)
+
+export
+switchs :
+  Statement i =>
+  Expression e =>
+  All Statement sts =>
+  All IsCaseClause sts =>
+  i ->
+  e ->
+  HList sts ->
+  SwitchStatement i e sts
+switchs i e sts = MkSwitchStatement (Just i) (Just e) (MkBlockStatement sts)
+
+export
+switch :
+  Expression e =>
+  All Statement sts =>
+  All IsCaseClause sts =>
+  e ->
+  HList sts ->
+  SwitchStatement BadStatement e sts
+switch e sts = MkSwitchStatement Nothing (Just e) (MkBlockStatement sts)
+
+export
+case' :
+  All Expression es =>
+  All Statement sts =>
+  NonEmpty sts =>
+  HList es ->
+  HList sts ->
+  CaseClause es sts
+case' es sts = MkCaseClause es sts
+
+export
+default' :
+  All Statement sts =>
+  NonEmpty sts =>
+  HList sts ->
+  CaseClause [] sts
+default' sts = MkCaseClause [] sts
 
 export
 call :
