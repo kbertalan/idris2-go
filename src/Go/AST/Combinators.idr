@@ -245,6 +245,50 @@ while :
 while c sts = MkForStatement Nothing (Just c) Nothing $ MkBlockStatement sts
 
 export
+if' :
+  Expression c =>
+  All Statement sts =>
+  c ->
+  HList sts ->
+  IfStatement BadStatement c sts BadStatement
+if' c sts = MkIfStatement Nothing c (MkBlockStatement sts) Nothing
+
+export
+ifs :
+  Statement i =>
+  Expression c =>
+  All Statement sts =>
+  i ->
+  c ->
+  HList sts ->
+  IfStatement i c sts BadStatement
+ifs i c sts = MkIfStatement (Just i) c (MkBlockStatement sts) Nothing
+
+export
+ifE :
+  Expression c =>
+  All Statement sts =>
+  Statement e =>
+  c ->
+  HList sts ->
+  e ->
+  IfStatement BadStatement c sts e
+ifE c sts e = MkIfStatement Nothing c (MkBlockStatement sts) (Just e)
+
+export
+ifsE :
+  Statement i =>
+  Expression c =>
+  All Statement sts =>
+  Statement e =>
+  i ->
+  c ->
+  HList sts ->
+  e ->
+  IfStatement i c sts e
+ifsE i c sts e = MkIfStatement (Just i) c (MkBlockStatement sts) (Just e)
+
+export
 call :
   Expression fn =>
   fn ->
@@ -267,6 +311,13 @@ dec :
   e ->
   IncDecStatement e MkDec
 dec e = MkIncDecStatement e Dec
+
+export
+minus' :
+  Expression e =>
+  e ->
+  UnaryExpression e
+minus' e = MkUnaryExpression MkSub e
 
 export
 (/./) :

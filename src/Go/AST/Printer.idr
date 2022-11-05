@@ -112,6 +112,12 @@ implementation Printer e => Printer (SelectorExpression e) where
     print file se.selector
 
 export
+implementation Printer e => Printer (UnaryExpression e) where
+  print file ue = do
+    pPutStr $ show ue.operator
+    print file ue.expression
+
+export
 implementation Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
   print file bo = do
       print file bo.first
@@ -254,6 +260,25 @@ implementation Printer i => Printer c => Printer p => Printer (BlockStatement st
     print file fs.body
 
 export
+implementation Printer i => Printer c => Printer (BlockStatement sts) => Printer e => Printer (IfStatement i c sts e) where
+  print file is = do
+    pPutStr "if"
+    case is.init of
+      Nothing => pure ()
+      Just i => do
+        pPutStr " "
+        print file i
+    pPutStr " "
+    print file is.condition
+    pPutStr " "
+    print file is.body
+    case is.elseBranch of
+      Nothing => pure ()
+      Just e => do
+        pPutStr " else "
+        print file e
+
+export
 implementation All Printer es => Printer (ReturnStatement es) where
   print file rs = do
       pPutStr "return"
@@ -270,6 +295,7 @@ implementation All Printer es => Printer (ReturnStatement es) where
         pPutStr ","
         many xs
 
+-- Fields
 
 export
 implementation Printer t => Printer (Field t) where

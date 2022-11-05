@@ -1,0 +1,7 @@
+package test
+
+depends = idris2-go
+modules = FlowControl5
+main = FlowControl5
+executable = test
+opts = "--no-color --console-width 0"
