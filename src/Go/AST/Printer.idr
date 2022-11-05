@@ -192,7 +192,7 @@ implementation All Printer sts => Printer (BlockStatement sts) where
       inci = increaseIndent indent
 
       many : { 0 sts : List Type } -> { ps : All Printer sts } -> HList sts -> PrinterMonad io ()
-      many [] = printNewLine
+      many [] = pure ()
       many {ps = [p]} [x] = do
         printIndent {indent = inci}
         print {indent = inci} file x
