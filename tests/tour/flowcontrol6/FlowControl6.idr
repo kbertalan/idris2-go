@@ -1,4 +1,4 @@
-module FlowControl5
+module FlowControl6
 
 import Control.Monad.Either
 import Go.AST.Printer as Go
@@ -7,23 +7,20 @@ import System.File
 
 main : IO ()
 main = do
-  let src = file "if.go"
+  let src = file "if-with-a-short-statement.go"
               (package "main")
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id' "sqrt") [field ["x"] $ id' "float64"] [field [] $ id' "string"]
-                [ if' (id' "x" /</ int 0)
-                  [ return [ call (id' "sqrt") [ minus' $ id' "x" ] /+/ string "i" ] ]
-                , return [ call (id' "fmt" /./ "Sprint")
-                    [ call (id' "math" /./ "Sqrt") [id' "x"]
-                    ]
-                  ]
+              [ func (id' "pow") [field ["x","n","lim"] $ id' "float64"] [field [] $ id' "float64"]
+                [ ifs ([id' "v"] /:=/ [call (id' "math" /./ "Pow") [id' "x", id' "n"]]) (id' "v" /</ id' "lim")
+                  [ return [ id' "v" ] ]
+                , return [ id' "lim" ]
                 ]
               , func (id' "main") [] void
                 [ expr $ call (id' "fmt" /./ "Println")
-                  [ call (id' "sqrt") [int 2]
-                  , call (id' "sqrt") [int $ -4]
+                  [ call (id' "pow") [int 3, int 2, int 10]
+                  , call (id' "pow") [int 3, int 3, int 20]
                   ]
                 ]
               ]

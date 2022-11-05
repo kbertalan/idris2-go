@@ -262,13 +262,12 @@ implementation Printer i => Printer c => Printer p => Printer (BlockStatement st
 export
 implementation Printer i => Printer c => Printer (BlockStatement sts) => Printer e => Printer (IfStatement i c sts e) where
   print file is = do
-    pPutStr "if"
+    pPutStr "if "
     case is.init of
       Nothing => pure ()
       Just i => do
-        pPutStr " "
         print file i
-    pPutStr " "
+        pPutStr "; "
     print file is.condition
     pPutStr " "
     print file is.body
