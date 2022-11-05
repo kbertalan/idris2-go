@@ -69,6 +69,10 @@ printComments (x::xs) = do
 -- Expression
 
 export
+implementation Printer BadExpression where
+  print file be = pPutStr "/* Evaluated BadExpression */"
+
+export
 implementation Printer Identifier where
   print file i = pPutStr i.name
 
@@ -163,6 +167,10 @@ implementation Printer t => All Printer es => Printer (ValueSpec t es) where
         printValues xs
 
 -- Statements
+
+export
+implementation Printer BadStatement where
+  print file be = pPutStr "/* Evaluated BadStatement */"
 
 export
 implementation Printer e => Printer (ExpressionStatement e) where
