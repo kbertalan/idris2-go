@@ -216,6 +216,35 @@ return :
 return es = MkReturnStatement es
 
 export
+for' :
+  Statement i =>
+  Expression c =>
+  Statement p =>
+  All Statement sts =>
+  i ->
+  c ->
+  p ->
+  HList sts ->
+  ForStatement i c p sts
+for' i c p sts = MkForStatement (Just i) (Just c) (Just p) (MkBlockStatement sts)
+
+export
+forever :
+  All Statement sts =>
+  HList sts ->
+  ForStatement BadStatement BadExpression BadStatement sts
+forever sts = MkForStatement Nothing Nothing Nothing $ MkBlockStatement sts
+
+export
+while :
+  Expression c =>
+  All Statement sts =>
+  c ->
+  HList sts ->
+  ForStatement BadStatement c BadStatement sts
+while c sts = MkForStatement Nothing (Just c) Nothing $ MkBlockStatement sts
+
+export
 call :
   Expression fn =>
   fn ->
@@ -226,6 +255,20 @@ call :
 call fn args = MkCallExpression fn args Nothing
 
 export
+inc :
+  Expression e =>
+  e ->
+  IncDecStatement e MkInc
+inc e = MkIncDecStatement e Inc
+
+export
+dec :
+  Expression e =>
+  e ->
+  IncDecStatement e MkDec
+dec e = MkIncDecStatement e Dec
+
+export
 (/./) :
   Expression e =>
   e ->
@@ -233,7 +276,63 @@ export
   SelectorExpression e
 (/./) e f = MkSelectorExpression e $ id' f
 
-infixl 7 /./
+infixl 3 /./
+
+export
+(/==/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/==/) e1 e2 = MkBinaryExpression e1 MkEql e2
+
+export
+(/!=/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/!=/) e1 e2 = MkBinaryExpression e1 MkNotEql e2
+
+export
+(/</) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/</) e1 e2 = MkBinaryExpression e1 MkLess e2
+
+export
+(/<=/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/<=/) e1 e2 = MkBinaryExpression e1 MkLessThanOrEqual e2
+
+export
+(/>/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/>/) e1 e2 = MkBinaryExpression e1 MkGreater e2
+
+export
+(/>=/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/>=/) e1 e2 = MkBinaryExpression e1 MkGreaterThanOrEqual e2
+
+infixl 7 /==/, /!=/, /</, /<=/, />/, />=/
 
 export
 (/+/) :
@@ -252,6 +351,8 @@ export
   e2 ->
   BinaryExpression e1 e2
 (/-/) e1 e2 = MkBinaryExpression e1 MkSub e2
+
+infixl 8 /+/, /-/
 
 export
 (/*/) :
@@ -289,8 +390,7 @@ export
   BinaryExpression e1 e2
 (/>>/) e1 e2 = MkBinaryExpression e1 MkShr e2
 
-infixl 4 /+/, /-/
-infixl 5 /*/, ///, /<</, />>/
+infixl 9 /*/, ///, /<</, />>/
 
 export
 (/:=/) :
@@ -314,4 +414,26 @@ export
   AssignmentStatement ls rs
 (/=/) ls rs = MkAssignmentStatement ls MkAssign rs Nothing
 
-infix 7 /:=/, /=/
+export
+(/+=/) :
+  All Expression ls =>
+  All Expression rs =>
+  NonEmpty ls =>
+  NonEmpty rs =>
+  HList ls ->
+  HList rs ->
+  AssignmentStatement ls rs
+(/+=/) ls rs = MkAssignmentStatement ls MkAddAssign rs Nothing
+
+export
+(/-=/) :
+  All Expression ls =>
+  All Expression rs =>
+  NonEmpty ls =>
+  NonEmpty rs =>
+  HList ls ->
+  HList rs ->
+  AssignmentStatement ls rs
+(/-=/) ls rs = MkAssignmentStatement ls MkSubAssign rs Nothing
+
+infixl 4 /:=/, /=/, /+=/, /-=/

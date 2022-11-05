@@ -208,6 +208,14 @@ data IncOrDec : Operator -> Type where
   Dec : IncOrDec MkDec
 
 public export
+implementation Show (IncOrDec MkInc) where
+  show _ = show MkInc
+
+public export
+implementation Show (IncOrDec MkDec) where
+  show _ = show MkDec
+
+public export
 record IncDecStatement e o where
   constructor MkIncDecStatement
   expression : e

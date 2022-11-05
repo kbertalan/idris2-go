@@ -175,8 +175,9 @@ implementation Printer d => Printer (DeclarationStatement d) where
 export
 implementation All Printer sts => Printer (BlockStatement sts) where
   print file bs @{ps} = do
-      pPutStr " {\n"
+      pPutStr "{\n"
       many bs.statements {ps}
+      printIndent
       pPutStr "}"
     where
       inci : Indent
@@ -198,7 +199,9 @@ export
 implementation All Printer ls => All Printer rs => Printer (AssignmentStatement ls rs) where
   print file as = do
       many as.left
-      pPutStr " := "
+      pPutStr " "
+      pPutStr $ show as.token
+      pPutStr " "
       many as.right
       case as.comment of
         Nothing => pure ()
@@ -215,6 +218,29 @@ implementation All Printer ls => All Printer rs => Printer (AssignmentStatement 
         print file x
         pPutStr ", "
         many xs
+
+export
+implementation Show (IncOrDec o) => Printer e => Printer (IncDecStatement e o) where
+  print file ids = do
+    print file ids.expression
+    pPutStr $ show ids.token
+
+export
+implementation Printer i => Printer c => Printer p => Printer (BlockStatement sts) => Printer (ForStatement i c p sts) where
+  print file fs = do
+    pPutStr "for"
+    case (fs.init, fs.condition, fs.post) of
+      (Nothing, Nothing, Nothing) => pure ()
+      _ => do
+        pPutStr " "
+        maybe (pure ()) (print file) fs.init
+        pPutStr "; "
+        maybe (pure ()) (print file) fs.condition
+        pPutStr "; "
+        maybe (pure ()) (print file) fs.post
+
+    pPutStr " "
+    print file fs.body
 
 export
 implementation All Printer es => Printer (ReturnStatement es) where
@@ -275,6 +301,7 @@ implementation All Printer ps => All Printer rs => Printer (BlockStatement sts) 
     print file fd.type.params
     pPutStr ")"
     printReturnTypes fd.type.results
+    pPutStr " "
     print file fd.body
 
     where
