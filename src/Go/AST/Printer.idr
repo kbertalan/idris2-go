@@ -280,6 +280,12 @@ implementation Printer i => Printer c => Printer (BlockStatement sts) => Printer
 export
 implementation All Printer es => Printer (ReturnStatement es) where
   print file rs = do
+      case rs.doc of
+        Nothing => pure ()
+        Just ds => do
+          printComments $ forget ds.comments
+          printNewLine
+          printIndent
       pPutStr "return"
       many rs.results
     where

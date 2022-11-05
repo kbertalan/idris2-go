@@ -22,7 +22,9 @@ public export
 implementation Node Comment where
 
 public export
-data CommentGroup = MkCommentGroup (List1 Comment)
+record CommentGroup where
+  constructor MkCommentGroup
+  comments : List1 Comment
 
 public export
 implementation Node CommentGroup where
@@ -294,6 +296,7 @@ implementation Node (CallExpression f as e) => Statement (DeferStatement f as e)
 public export
 record ReturnStatement rs where
   constructor MkReturnStatement
+  doc : Maybe CommentGroup
   results : HList rs
 
 public export

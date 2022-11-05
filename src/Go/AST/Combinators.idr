@@ -45,6 +45,10 @@ implementation Documentable (ValueSpec ls rs) where
   setDocs ds = { doc := Just ds }
 
 export
+implementation Documentable (ReturnStatement rs) where
+  setDocs ds = { doc := Just ds }
+
+export
 data Package = MkPackage String
 
 export
@@ -213,7 +217,7 @@ return :
   All Expression es =>
   HList es ->
   ReturnStatement es
-return es = MkReturnStatement es
+return es = MkReturnStatement Nothing es
 
 export
 for' :
