@@ -1,0 +1,25 @@
+1/1: Building FlowControl10 (FlowControl10.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	fmt.Println("When's Sunday?")
+	today := time.Now().Weekday()
+	switch time.Saturday {
+	case today + 0:
+		fmt.Println("Today.")
+	case today + 1:
+		fmt.Println("Tomorrow.")
+	case today + 2:
+		fmt.Println("In two days.")
+	default:
+		fmt.Printf("Too far away.")
+	}
+}
