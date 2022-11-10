@@ -25,7 +25,7 @@ comments : Commentable a => (cs : List String) -> {auto 0 ok : NonEmpty cs} -> a
 comments (x::xs) = setComments $ MkCommentGroup $ map MkComment (x:::xs)
 
 export
-implementation Commentable (AssignmentStatement ls rs) where
+implementation All Expression ls => All Expression rs => NonEmpty ls => NonEmpty rs => Commentable (AssignmentStatement ls rs) where
   setComments cg = { comment := Just cg }
 
 public export
@@ -41,15 +41,15 @@ docs : Documentable a => (ds : List String) -> {auto 0 ok : NonEmpty ds} -> a ->
 docs (d::ds) = setDocs $ MkCommentGroup $ map MkComment (d:::ds)
 
 export
-implementation Documentable (ValueSpec ls rs) where
+implementation Expression ls => All Expression rs => Documentable (ValueSpec ls rs) where
   setDocs ds = { doc := Just ds }
 
 export
-implementation Documentable (ExpressionStatement e) where
+implementation Expression e => Documentable (ExpressionStatement e) where
   setDocs ds = { doc := Just ds }
 
 export
-implementation Documentable (ReturnStatement rs) where
+implementation All Expression rs => Documentable (ReturnStatement rs) where
   setDocs ds = { doc := Just ds }
 
 export

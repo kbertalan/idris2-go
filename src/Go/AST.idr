@@ -53,7 +53,7 @@ public export
 implementation Expression t => Node (Field t) where
 
 public export
-record FieldList (ts : List Type) where
+record FieldList ts where
   constructor MkFieldList
   list : All Field ts
 
@@ -242,7 +242,7 @@ public export
 implementation All Expression ls => All Expression rs => NonEmpty ls => NonEmpty rs => Node (AssignmentStatement ls rs) where
 
 public export
-implementation Node (AssignmentStatement ls rs) => Statement (AssignmentStatement ls rs) where
+implementation All Expression ls => All Expression rs => NonEmpty ls => NonEmpty rs => Node (AssignmentStatement ls rs) => Statement (AssignmentStatement ls rs) where
 
 -- early definiton of Ellipsis
 public export
@@ -277,10 +277,10 @@ record GoStatement f as e where
 
 
 public export
-implementation Node (CallExpression f as e) => Node (GoStatement f as e) where
+implementation Expression f => All Expression as => Expression e => Node (GoStatement f as e) where
 
 public export
-implementation Node (CallExpression f as e) => Statement (GoStatement f as e) where
+implementation Expression f => All Expression as => Expression e => Node (CallExpression f as e) => Statement (GoStatement f as e) where
 
 public export
 record DeferStatement f as e where
@@ -289,10 +289,10 @@ record DeferStatement f as e where
 
 
 public export
-implementation Node (CallExpression f as e) => Node (DeferStatement f as e) where
+implementation Expression f => All Expression as => Expression e => Node (CallExpression f as e) => Node (DeferStatement f as e) where
 
 public export
-implementation Node (CallExpression f as e) => Statement (DeferStatement f as e) where
+implementation Expression f => All Expression as => Expression e => Node (CallExpression f as e) => Statement (DeferStatement f as e) where
 
 public export
 record ReturnStatement rs where
@@ -304,7 +304,7 @@ public export
 implementation All Expression rs => Node (ReturnStatement rs) where
 
 public export
-implementation Node (ReturnStatement rs) => Statement (ReturnStatement rs) where
+implementation All Expression rs => Node (ReturnStatement rs) => Statement (ReturnStatement rs) where
 
 public export
 data BranchStatementToken : Keyword -> Type where
@@ -314,7 +314,7 @@ data BranchStatementToken : Keyword -> Type where
   IsFallthrough : BranchStatementToken MkFallthrough
 
 public export
-record BranchStatement kw where
+record BranchStatement (kw : Keyword) where
   constructor MkBranchStatement
   token : BranchStatementToken kw
   label : Maybe Identifier
@@ -334,7 +334,7 @@ public export
 implementation All Statement sts => Node (BlockStatement sts) where
 
 public export
-implementation Node (BlockStatement sts) => Statement (BlockStatement sts) where
+implementation All Statement sts => Node (BlockStatement sts) => Statement (BlockStatement sts) where
 
 public export
 record IfStatement i c sts e where
@@ -345,10 +345,10 @@ record IfStatement i c sts e where
   elseBranch : Maybe e
 
 public export
-implementation Statement i => Expression c => Statement (BlockStatement sts) => Statement e => Node (IfStatement i c sts e) where
+implementation Statement i => Expression c => All Statement sts => Statement (BlockStatement sts) => Statement e => Node (IfStatement i c sts e) where
 
 public export
-implementation Node (IfStatement i c sts e) => Statement (IfStatement i c sts e) where
+implementation Statement i => Expression c => All Statement sts => Node (IfStatement i c sts e) => Statement (IfStatement i c sts e) where
 
 public export
 record CaseClause es sts where
@@ -360,11 +360,11 @@ public export
 implementation All Expression es => NonEmpty sts => All Statement sts => Node (CaseClause es sts) where
 
 public export
-implementation Node (CaseClause es sts) => Statement (CaseClause es sts) where
+implementation All Expression es => NonEmpty sts => All Statement sts => Node (CaseClause es sts) => Statement (CaseClause es sts) where
 
 public export
 data IsCaseClause : Type -> Type where
-  ItIsCaseClause : IsCaseClause (CaseClause es sts)
+  ItIsCaseClause : All Expression es => NonEmpty sts => All Statement sts => IsCaseClause (CaseClause es sts)
 
 public export
 record SwitchStatement i e sts where
@@ -374,27 +374,27 @@ record SwitchStatement i e sts where
   body : BlockStatement sts
 
 public export
-implementation Statement i => Expression e => Node (BlockStatement sts) => All IsCaseClause sts => Node (SwitchStatement i e sts) where
+implementation Statement i => Expression e => All Statement sts => Node (BlockStatement sts) => All IsCaseClause sts => Node (SwitchStatement i e sts) where
 
 public export
-implementation Node (SwitchStatement i e sts) => Statement (SwitchStatement i e sts) where
+implementation Statement i => Expression e => All Statement sts => All IsCaseClause sts => Node (SwitchStatement i e sts) => Statement (SwitchStatement i e sts) where
 
 public export
-record TypeSwitchStatement s a sts where
+record TypeSwitchStatement i a sts where
   constructor MkTypeSwitchStatement
-  init : Maybe s
+  init : Maybe i
   assign : a
   body : BlockStatement sts
 
 public export
-implementation Statement s => Statement a => Node (BlockStatement sts) => All IsCaseClause sts => Node (TypeSwitchStatement e a sts) where
+implementation Statement i => Statement a => All Statement sts => Node (BlockStatement sts) => All IsCaseClause sts => Node (TypeSwitchStatement i a sts) where
 
 public export
-implementation Node (TypeSwitchStatement e a sts) => Statement (TypeSwitchStatement e a sts) where
+implementation Statement i => Statement a => All Statement sts => Node (TypeSwitchStatement i a sts) => Statement (TypeSwitchStatement i a sts) where
 
 public export
 data IsSendStatement : Type -> Type where
-  ItIsSendStatement : IsSendStatement (SendStatement _ _)
+  ItIsSendStatement : Expression c => Expression v => IsSendStatement (SendStatement c v)
 
 public export
 record CommClause s sts where
@@ -406,15 +406,18 @@ public export
 implementation IsSendStatement s => All Statement sts => Node (CommClause s sts) where
 
 public export
+implementation IsSendStatement s => All Statement sts => Node (CommClause s sts) => Statement (CommClause s sts) where
+
+public export
 record SelectStatement sts where
   constructor MkSelectStatement
   body : BlockStatement sts
 
 public export
-implementation Node (BlockStatement sts) => Node (SelectStatement sts) where
+implementation All Statement sts => Node (BlockStatement sts) => Node (SelectStatement sts) where
 
 public export
-implementation Node (SelectStatement sts) => Statement (SelectStatement sts) where
+implementation All Statement sts => Node (SelectStatement sts) => Statement (SelectStatement sts) where
 
 public export
 record ForStatement i c p sts where
@@ -425,15 +428,10 @@ record ForStatement i c p sts where
   body : BlockStatement sts
 
 public export
-implementation Statement i => Expression c => Statement p => Node (BlockStatement sts) => Node (ForStatement i c p sts) where
+implementation Statement i => Expression c => Statement p => All Statement sts => Node (BlockStatement sts) => Node (ForStatement i c p sts) where
 
 public export
-implementation Node (ForStatement i c p sts) => Statement (ForStatement i c p sts) where
-
-public export
-rangeWithKey : Type -> Type -> Type
-rangeWithKey () _ = ()
-rangeWithKey _ a = a
+implementation Statement i => Expression c => Statement p => All Statement sts => Node (ForStatement i c p sts) => Statement (ForStatement i c p sts) where
 
 public export
 data AssignOrDefine : Operator -> Type where
@@ -441,25 +439,45 @@ data AssignOrDefine : Operator -> Type where
   ItIsDefine : AssignOrDefine MkDefine
 
 public export
-record RangeStatement k v a e sts where
-  constructor MkRangeStatement
+record KeyValueRangeStatement k v a e sts where
+  constructor MkKeyValueRangeStatement
   key : k
-  value : rangeWithKey k v
-  token : rangeWithKey k (AssignOrDefine a)
+  value : v
+  token : AssignOrDefine a
   expression : e
   body : BlockStatement sts
 
 public export
-implementation Node (BlockStatement sts) => Expression e => Node (RangeStatement () v a e sts) where
+implementation Expression k => Expression v => AssignOrDefine a => Expression e => All Statement sts => Node (KeyValueRangeStatement k v a e sts) where
 
 public export
-implementation Expression k => Expression v => Expression e => Node (BlockStatement sts) => Node (RangeStatement k (Maybe v) a e sts) where
+implementation Expression k => Expression v => AssignOrDefine a => Expression e => All Statement sts => Node (KeyValueRangeStatement k v a e sts) => Statement (KeyValueRangeStatement k v a e sts) where
 
 public export
-implementation Node (RangeStatement k v a e sts) => Statement (RangeStatement k v a e sts) where
+record ValueRangeStatement v a e sts where
+  constructor MkValueRangeStatement
+  value : v
+  token : AssignOrDefine a
+  expression : e
+  body : BlockStatement sts
 
 public export
-implementation Node (BlockStatement sts) => Node (RangeStatement k v a e sts) where
+implementation Expression v => AssignOrDefine a => Expression e => All Statement sts => Node (ValueRangeStatement v a e sts) where
+
+public export
+implementation Expression v => AssignOrDefine a => Expression e => All Statement sts => Node (ValueRangeStatement v a e sts) => Statement (ValueRangeStatement v a e sts) where
+
+public export
+record RangeStatement e sts where
+  constructor MkRangeStatement
+  expression : e
+  body : BlockStatement sts
+
+public export
+implementation Expression e => All Statement sts => Node (RangeStatement e sts) where
+
+public export
+implementation Expression e => All Statement sts => Node (RangeStatement e sts) => Statement (RangeStatement e sts) where
 
 --- Expressions
 
@@ -504,10 +522,10 @@ record FunctionLiteral ts ps rs sts where
   body : BlockStatement sts
 
 public export
-implementation Expression (FunctionType ts ps rs) => Node (BlockStatement sts) => Node (FunctionLiteral ts ps rs sts) where
+implementation All Statement sts => Expression (FunctionType ts ps rs) => Node (BlockStatement sts) => Node (FunctionLiteral ts ps rs sts) where
 
 public export
-implementation Expression (FunctionType ts ps rs) => Node (BlockStatement sts) => Expression (FunctionLiteral ts ps rs sts) where
+implementation All Statement sts => Expression (FunctionType ts ps rs) => Node (BlockStatement sts) => Expression (FunctionLiteral ts ps rs sts) where
 
 public export
 record CompositeLiteral t es where
@@ -561,7 +579,7 @@ public export
 record IndexListExpression e is where
   constructor MkIndexListExpression
   expression : e
-  indices : All Expression is
+  indices : HList is
 
 public export
 implementation Expression e => All Expression is => Node (IndexListExpression e is) where
@@ -673,7 +691,7 @@ implementation Expression e => All Expression es => Node (ValueSpec e es) where
 
 
 public export
-implementation Node (ValueSpec e es) => Specification (ValueSpec e es) where
+implementation Expression e => All Expression es => Node (ValueSpec e es) => Specification (ValueSpec e es) where
 
 public export
 record TypeSpec fs e where
@@ -688,7 +706,7 @@ public export
 implementation Expression e => Node (FieldList fs) => Node (TypeSpec fs e) where
 
 public export
-implementation Node (TypeSpec fs e) => Specification (TypeSpec fs e) where
+implementation Expression e => Node (TypeSpec fs e) => Specification (TypeSpec fs e) where
 
 -- declarations
 
@@ -726,7 +744,7 @@ implementation Show (GenericDeclarationToken MkVar) where
   show _ = show MkVar
 
 public export
-record GenericDeclaration t xs where
+record GenericDeclaration (t : Keyword) xs where
   constructor MkGenericDeclaration
   doc : Maybe CommentGroup
   token : GenericDeclarationToken t
@@ -736,7 +754,7 @@ public export
 implementation NonEmpty xs => All Specification xs => Node (GenericDeclaration t xs) where
 
 public export
-implementation Node (GenericDeclaration t xs) => Declaration (GenericDeclaration t xs) where
+implementation NonEmpty xs => All Specification xs => Node (GenericDeclaration t xs) => Declaration (GenericDeclaration t xs) where
 
 public export
 record FuncDeclaration rcs ts ps rs sts where
@@ -748,10 +766,10 @@ record FuncDeclaration rcs ts ps rs sts where
   body : BlockStatement sts
 
 public export
-implementation Node (FieldList rcs) => Expression (FunctionType ts ps rs) => Statement (BlockStatement sts) => Node (FuncDeclaration rcs ts ps rs sts) where
+implementation All Statement sts => Node (FieldList rcs) => Expression (FunctionType ts ps rs) => Statement (BlockStatement sts) => Node (FuncDeclaration rcs ts ps rs sts) where
 
 public export
-implementation Node (FuncDeclaration rcs ts ps rs sts) => Declaration (FuncDeclaration rcs ts ps rs sts) where
+implementation All Statement sts => Node (FuncDeclaration rcs ts ps rs sts) => Declaration (FuncDeclaration rcs ts ps rs sts) where
 
 public export
 record File ds where
