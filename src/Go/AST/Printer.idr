@@ -251,7 +251,6 @@ implementation Expression f => All Expression as => Expression e => Printer (Cal
   print file ds = do
     pPutStr "defer "
     print file ds.call
-    printNewLine
 
 export
 implementation Statement i => Expression c => Statement p => All Statement sts => Printer i => Printer c => Printer p => Printer (BlockStatement sts) => Printer (ForStatement i c p sts) where

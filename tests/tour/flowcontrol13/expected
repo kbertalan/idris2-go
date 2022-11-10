@@ -1,0 +1,15 @@
+1/1: Building FlowControl13 (FlowControl13.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import "fmt"
+
+func main() {
+	fmt.Println("counting")
+	for i := 0; i < 10; i++ {
+		defer fmt.Println(i)
+	}
+	fmt.Println("done")
+}
