@@ -23,7 +23,7 @@ main = do
                   , case' [id' "today" /+/ int 2]
                     [ expr $ call (id' "fmt" /./ "Println") [string "In two days."] ]
                   , default'
-                    [ expr (call (id' "fmt" /./ "Printf") [string "Too far away."]) ]
+                    [ expr (call (id' "fmt" /./ "Println") [string "Too far away."]) ]
                   ]
                 ]
               ]

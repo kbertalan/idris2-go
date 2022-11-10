@@ -20,6 +20,6 @@ func main() {
 	case today + 2:
 		fmt.Println("In two days.")
 	default:
-		fmt.Printf("Too far away.")
+		fmt.Println("Too far away.")
 	}
 }

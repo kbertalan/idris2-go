@@ -313,6 +313,14 @@ switch :
 switch e sts = MkSwitchStatement Nothing (Just e) (MkBlockStatement sts)
 
 export
+switch' :
+  All Statement sts =>
+  All IsCaseClause sts =>
+  HList sts ->
+  SwitchStatement BadStatement BadExpression sts
+switch' sts = MkSwitchStatement Nothing Nothing (MkBlockStatement sts)
+
+export
 case' :
   All Expression es =>
   All Statement sts =>

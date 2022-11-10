@@ -1,0 +1,22 @@
+1/1: Building FlowControl11 (FlowControl11.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	t := time.Now()
+	switch {
+	case t.Hour() < 12:
+		fmt.Println("Good morning!")
+	case t.Hour() < 17:
+		fmt.Println("Good afternoon.")
+	default:
+		fmt.Println("Good evening.")
+	}
+}
