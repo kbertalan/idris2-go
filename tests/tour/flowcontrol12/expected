@@ -1,0 +1,13 @@
+1/1: Building FlowControl12 (FlowControl12.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import "fmt"
+
+func main() {
+	defer fmt.Println("world")
+
+	fmt.Println("hello")
+}

@@ -211,6 +211,12 @@ decl : Declaration d => d -> DeclarationStatement d
 decl d = MkDeclarationStatement d
 
 export
+defer :
+  CallExpression f as e ->
+  DeferStatement f as e
+defer c = MkDeferStatement c
+
+export
 return :
   All Expression es =>
   HList es ->
