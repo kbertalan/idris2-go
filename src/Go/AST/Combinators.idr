@@ -121,12 +121,12 @@ import' :
 import' path = MkImportSpec Nothing Nothing (string path) Nothing
 
 export
-void : All Field []
+void : FieldList []
 void = []
 
 export
 field :
-  Expression t =>
+  GoType t =>
   List String ->
   t ->
   Field t
@@ -135,22 +135,16 @@ field fs t = MkField Nothing (identifier <$> fs) (Just t) Nothing Nothing
 export
 field' :
   List String ->
-  Field BadExpression
-field' fs = MkField Nothing (identifier <$> fs) (Maybe BadExpression `the` Nothing) Nothing Nothing
-
-export
-fieldList :
-  All Field xs ->
-  FieldList xs
-fieldList xs = MkFieldList xs
+  Field BadType
+field' fs = MkField Nothing (identifier <$> fs) (Maybe BadType `the` Nothing) Nothing Nothing
 
 export
 funcType :
-  All Field ts ->
-  All Field ps ->
-  All Field rs ->
+  FieldList ts ->
+  FieldList ps ->
+  FieldList rs ->
   FunctionType ts ps rs
-funcType ts ps rs = MkFunctionType (fieldList ts) (fieldList ps) (fieldList rs)
+funcType ts ps rs = MkFunctionType ts ps rs
 
 export
 block :
@@ -162,13 +156,13 @@ block sts = MkBlockStatement sts
 export
 func :
   (name : Identifier) ->
-  All Field ps ->
-  All Field rs ->
+  FieldList ps ->
+  FieldList rs ->
   { 0 sts : List Type } ->
   { auto 0 ok : All Statement sts } ->
   HList sts ->
   FuncDeclaration [] [] ps rs sts
-func name ps rs sts = MkFuncDeclaration Nothing (fieldList []) name (funcType [] ps rs) (block sts)
+func name ps rs sts = MkFuncDeclaration Nothing [] name (funcType [] ps rs) (block sts)
 
 export
 consts :

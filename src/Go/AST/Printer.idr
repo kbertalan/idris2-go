@@ -375,7 +375,7 @@ implementation All Expression rs => All Printer rs => Printer (ReturnStatement r
 -- Fields
 
 export
-implementation Printer t => Printer (Field t) where
+implementation GoType t => Printer t => Printer (Field t) where
   print file f = do
     printNames f.names
     case f.type of
@@ -394,9 +394,9 @@ implementation Printer t => Printer (Field t) where
 
 export
 implementation All Printer ts => Printer (FieldList ts) where
-  print file fl @{ps} = many fl.list {ps = ps}
+  print file fl @{ps} = many fl {ps = ps}
     where
-      many : { 0 ts : List Type } -> { ps : All Printer ts } -> All Field ts -> PrinterMonad io ()
+      many : { 0 ts : List Type } -> { ps : All Printer ts } -> FieldList ts -> PrinterMonad io ()
       many [] = pure ()
       many {ps = (p::ps)} [x] = print file x
       many {ps = (p::ps)} (x::xs) = do
@@ -407,7 +407,7 @@ implementation All Printer ts => Printer (FieldList ts) where
 -- Declarations
 
 export
-implementation All Statement sts => All Printer ps => All Printer rs => Printer (BlockStatement sts) => All Field rs => Printer (FuncDeclaration rcs ts ps rs sts) where
+implementation All Statement sts => All Printer ps => All Printer rs => Printer (BlockStatement sts) => Printer (FuncDeclaration rcs ts ps rs sts) where
   print file fd = do
     pPutStr "func "
     pPutStr fd.name.name
@@ -420,7 +420,7 @@ implementation All Statement sts => All Printer ps => All Printer rs => Printer 
 
     where
       printReturnTypes : FieldList rs -> PrinterMonad io ()
-      printReturnTypes fl = case fl.list of
+      printReturnTypes fl = case fl of
         [] => print file fl
         [x] => do
           let parens = 2 <= length x.names
