@@ -136,6 +136,7 @@ record ExpressionStatement e where
   constructor MkExpressionStatement
   doc : Maybe CommentGroup
   expression : e
+  comment : Maybe CommentGroup
 
 public export
 implementation Expression e => Statement (ExpressionStatement e) where
@@ -471,7 +472,7 @@ implementation Expression e => Expression t => Expression (TypeAssertExpression 
 
 public export
 record StarExpression e where
-  constructor MkStarExpresison
+  constructor MkStarExpression
   expression : e
 
 public export

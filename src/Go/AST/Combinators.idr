@@ -28,6 +28,10 @@ export
 implementation All Expression ls => All Expression rs => NonEmpty ls => NonEmpty rs => Commentable (AssignmentStatement ls rs) where
   setComments cg = { comment := Just cg }
 
+export
+implementation Expression e => Commentable (ExpressionStatement e) where
+  setComments cg = { comment := Just cg }
+
 public export
 interface Documentable a where
   setDocs : CommentGroup -> a -> a
@@ -204,7 +208,7 @@ var (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
 
 export
 expr : Expression e => e -> ExpressionStatement e
-expr e = MkExpressionStatement Nothing e
+expr e = MkExpressionStatement Nothing e Nothing
 
 export
 decl : Declaration d => d -> DeclarationStatement d
@@ -543,4 +547,21 @@ export
   AssignmentStatement ls rs
 (/-=/) ls rs = MkAssignmentStatement ls MkSubAssign rs Nothing
 
-infixl 4 /:=/, /=/, /+=/, /-=/
+infixl 7 /:=/, /=/, /+=/, /-=/
+
+export
+(/&/) :
+  Expression e =>
+  e ->
+  UnaryExpression e
+(/&/) e = MkUnaryExpression MkAnd e
+
+export
+star :
+  Expression e =>
+  e ->
+  StarExpression e
+star e = MkStarExpression e
+
+prefix 4 /&/
+

@@ -118,6 +118,12 @@ implementation Expression e => Printer e => Printer (UnaryExpression e) where
     print file ue.expression
 
 export
+implementation Expression e => Printer e => Printer (StarExpression e) where
+  print file se = do
+    pPutStr "*"
+    print file se.expression
+
+export
 implementation Expression e1 => Expression e2 => Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
   print file bo = do
       print file bo.first
@@ -188,6 +194,11 @@ implementation Expression e => Printer e => Printer (ExpressionStatement e) wher
         printNewLine
         printIndent
     print file es.expression
+    case es.comment of
+      Nothing => pure ()
+      Just cg => do
+        pPutStr " "
+        printComments $ forget cg.comments
 
 export
 implementation Declaration d => Printer d => Printer (DeclarationStatement d) where
