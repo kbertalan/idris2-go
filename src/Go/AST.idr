@@ -58,6 +58,9 @@ public export
 implementation Expression (StructType ts) where
 
 public export
+implementation GoType (StructType ts) where
+
+public export
 record FunctionType ts ps rs where
   constructor MkFunctionType
   typeParams : FieldList ts
@@ -68,12 +71,18 @@ public export
 implementation Expression (FunctionType ts ps rs) where
 
 public export
+implementation GoType (FunctionType ts ps rs) where
+
+public export
 record InterfaceType ts where
   constructor MkInterfaceType
   methods : FieldList ts
 
 public export
 implementation Expression (InterfaceType ts) where
+
+public export
+implementation GoType (InterfaceType ts) where
 
 public export
 record MapType k v where
@@ -406,14 +415,13 @@ public export
 implementation All Statement sts => Expression (FunctionType ts ps rs) => Expression (FunctionLiteral ts ps rs sts) where
 
 public export
-record CompositeLiteral t es where
+record CompositLiteral t es where
   constructor MkCompositLiteral
   type : Maybe t
   expressions : HList es
-  incomplete : Bool
 
 public export
-implementation Expression t => All Expression es => Expression (CompositeLiteral t es) where
+implementation Expression t => All Expression es => Expression (CompositLiteral t es) where
 
 public export
 record ParenExpression e where
@@ -536,7 +544,7 @@ record TypeSpec fs e where
   constructor MkTypeSpec
   doc : Maybe CommentGroup
   name : Identifier
-  typeParams : Maybe $ FieldList fs
+  typeParams : FieldList fs
   type : e
   comment : Maybe CommentGroup
 

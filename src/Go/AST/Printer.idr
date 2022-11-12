@@ -85,6 +85,49 @@ implementation Printer BasicLiteral where
     in pPutStr value
 
 export
+implementation Printer t => All Printer es => Printer (CompositLiteral t es) where
+  print file cl = do
+      case cl.type of
+        Nothing => pure ()
+        Just t => print file t
+      case cl.expressions of
+        x1::x2::x3::xs => do
+          pPutStr "{"
+          multiLine cl.expressions
+          printNewLine
+          printIndent
+          pPutStr "}"
+        _ => do
+          pPutStr "{"
+          singleLine cl.expressions
+          pPutStr "}"
+    where
+      singleLine : {0 ts : List Type} -> {auto ps : All Printer ts} -> HList ts -> PrinterMonad io ()
+      singleLine [] = pure ()
+      singleLine {ps = [p]} [x] = print file x
+      singleLine {ps = (p::ps)} (x::xs) = do
+        print file x
+        pPutStr ", "
+        singleLine xs
+
+      inci : Indent
+      inci = increaseIndent indent
+
+      multiLine : {0 ts : List Type} -> {auto ps : All Printer ts} -> HList ts -> PrinterMonad io ()
+      multiLine [] = pure ()
+      multiLine {ps = [p]} [x] = do
+        printNewLine
+        printIndent {indent = inci}
+        print {indent = inci} file x
+        pPutStr ","
+      multiLine {ps = (p::ps)} (x::xs) = do
+        printNewLine
+        printIndent {indent = inci}
+        print {indent = inci} file x
+        pPutStr ","
+        multiLine xs
+
+export
 implementation Expression f => All Expression as => Expression e => Printer f => All Printer as => Printer (CallExpression f as e) where
   print file ce = do
       print file ce.function
@@ -142,6 +185,19 @@ implementation Printer ImportSpec where
       print file i
       pPutStr " "
       print file is.path
+
+export
+implementation Printer (FieldList ts) => Printer t => Printer (TypeSpec ts t) where
+  print file ts = do
+    print file ts.name
+    case ts.typeParams of
+      [] => pure ()
+      xs => do
+        pPutStr "["
+        print file xs
+        pPutStr "]"
+    pPutStr " "
+    print file ts.type
 
 export
 implementation Expression t => All Expression es => Printer t => All Printer es => Printer (ValueSpec t es) where
@@ -411,15 +467,36 @@ implementation GoType t => Printer t => Printer (Field t) where
 
 export
 implementation All Printer ts => Printer (FieldList ts) where
-  print file fl @{ps} = many fl {ps = ps}
+  print file fl = many fl
     where
-      many : { 0 ts : List Type } -> { ps : All Printer ts } -> FieldList ts -> PrinterMonad io ()
+      many : { 0 ts : List Type } -> {auto ps : All Printer ts } -> FieldList ts -> PrinterMonad io ()
       many [] = pure ()
       many {ps = (p::ps)} [x] = print file x
       many {ps = (p::ps)} (x::xs) = do
         print file x
         pPutStr ", "
         many xs {ps = ps}
+
+-- Type
+
+export
+implementation All Printer es => Printer (FieldList es) => Printer (StructType es) where
+  print file st = do
+      pPutStr "struct {\n"
+      many st.fields
+      printIndent
+      pPutStr "}" 
+    where
+      inci : Indent
+      inci = increaseIndent indent
+
+      many : { 0 ts : List Type } -> {auto ps : All Printer ts} -> FieldList ts -> PrinterMonad io ()
+      many [] = pure ()
+      many {ps = (p::ps)} (x::xs) = do
+        printIndent {indent = inci}
+        print {indent = inci} file x
+        pPutStr "\n"
+        many xs
 
 -- Declarations
 

@@ -119,6 +119,22 @@ bool b = MkBasicLiteral MkIdentifier $ case b of
                                         False => "false"
 
 export
+composite :
+  Expression t =>
+  All Expression es =>
+  t ->
+  HList es ->
+  CompositLiteral t es
+composite t es = MkCompositLiteral (Just t) es
+
+export
+composite' :
+  All Expression es =>
+  HList es ->
+  CompositLiteral BadExpression es
+composite' es = MkCompositLiteral Nothing es
+
+export
 import' :
   (path : String) ->
   ImportSpec
@@ -142,20 +158,13 @@ field' :
   Field BadType
 field' fs = MkField Nothing (identifier <$> fs) (Maybe BadType `the` Nothing) Nothing Nothing
 
-export
-funcType :
-  FieldList ts ->
-  FieldList ps ->
-  FieldList rs ->
-  FunctionType ts ps rs
-funcType ts ps rs = MkFunctionType ts ps rs
+-- Types
 
 export
-block :
-  { auto 0 ok : All Statement sts } ->
-  HList sts ->
-  BlockStatement sts
-block sts = MkBlockStatement sts
+struct :
+  FieldList ts ->
+  StructType ts
+struct = MkStructType
 
 export
 func :
@@ -166,7 +175,24 @@ func :
   { auto 0 ok : All Statement sts } ->
   HList sts ->
   FuncDeclaration [] [] ps rs sts
-func name ps rs sts = MkFuncDeclaration Nothing [] name (funcType [] ps rs) (block sts)
+func name ps rs sts = MkFuncDeclaration Nothing [] name (MkFunctionType [] ps rs) (MkBlockStatement sts)
+
+export
+types :
+  NonEmpty es =>
+  All Specification es =>
+  HList es ->
+  GenericDeclaration MkType es
+types es = MkGenericDeclaration Nothing Type' es
+
+export
+type :
+  GoType t =>
+  String ->
+  FieldList ts ->
+  t ->
+  TypeSpec ts t
+type name typeParams t = MkTypeSpec Nothing (id' name) typeParams t Nothing
 
 export
 consts :
@@ -205,6 +231,13 @@ var :
   HList es ->
   ValueSpec t es
 var (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
+
+export
+block :
+  All Statement ts =>
+  HList ts ->
+  BlockStatement ts
+block = MkBlockStatement
 
 export
 expr : Expression e => e -> ExpressionStatement e
