@@ -36,6 +36,7 @@ tourOfGo = MkTestPool "Tour of Go" [] Nothing
   , "tour/moretypes1"
   , "tour/moretypes2"
   , "tour/moretypes3"
+  , "tour/moretypes4"
   ]
 
 main : IO ()

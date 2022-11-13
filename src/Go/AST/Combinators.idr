@@ -105,6 +105,17 @@ float :
 float f = MkBasicLiteral MkFloat $ show f
 
 export
+exp :
+  Double ->
+  Int ->
+  BasicLiteral
+exp f e = MkBasicLiteral MkFloat $ concat [floored, "e", show e]
+  where
+    floored : String
+    floored = if f == floor f then show $ the Int $ cast $ floor f
+                              else show f
+
+export
 imag :
   Int ->
   BasicLiteral
