@@ -163,6 +163,26 @@ implementation Expression e => Expression i => Printer e => Printer i => Printer
     pPutStr "]"
 
 export
+implementation Expression (SliceExpression e l h m) => Printer e => Printer l => Printer h => Printer m => Printer (SliceExpression e l h m) where
+  print file se = do
+    print file se.expression
+    pPutStr "["
+    case se.low of
+      Nothing => pPutStr ":"
+      Just l => do
+        print file l
+        pPutStr ":"
+    case se.high of
+      Nothing => pure ()
+      Just h => print file h
+    case se.max of
+      Nothing => pure ()
+      Just m => do
+        pPutStr ":"
+        print file m
+    pPutStr "]"
+
+export
 implementation Expression e => Printer e => Printer (UnaryExpression e) where
   print file ue = do
     pPutStr $ show ue.operator
@@ -526,7 +546,7 @@ export
 implementation Printer l => Printer e => Printer (ArrayType l e) where
   print file at = do
     pPutStr "["
-    print file at.length
+    maybe (pure ()) (print file) at.length
     pPutStr "]"
     print file at.element
 

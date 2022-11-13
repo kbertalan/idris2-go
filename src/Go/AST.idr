@@ -43,7 +43,7 @@ data FieldList : (ts : List Type) -> Type where
 public export
 record ArrayType l e where
   constructor MkArrayType
-  length : l
+  length : Maybe l
   element : e
 
 public export

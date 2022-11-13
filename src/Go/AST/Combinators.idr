@@ -188,7 +188,14 @@ array :
   l ->
   t ->
   ArrayType l t
-array l t = MkArrayType l t
+array l t = MkArrayType (Just l) t
+
+export
+array' :
+  GoType t =>
+  t ->
+  ArrayType BadExpression t
+array' t = MkArrayType Nothing t
 
 export
 func :
@@ -432,6 +439,55 @@ index :
   i ->
   IndexExpression e i
 index e i = MkIndexExpression e i
+
+export
+slice :
+  Expression e =>
+  Expression l =>
+  Expression h =>
+  Expression m =>
+  e ->
+  l ->
+  h ->
+  m ->
+  SliceExpression e l h m
+slice e l h m = MkSliceExpression e (Just l) (Just h) (Just m)
+
+export
+sliceLH :
+  Expression e =>
+  Expression l =>
+  Expression h =>
+  e ->
+  l ->
+  h ->
+  SliceExpression e l h BadExpression
+sliceLH e l h = MkSliceExpression e (Just l) (Just h) Nothing
+
+export
+sliceL :
+  Expression e =>
+  Expression l =>
+  e ->
+  l ->
+  SliceExpression e l BadExpression BadExpression
+sliceL e l = MkSliceExpression e (Just l) Nothing Nothing
+
+export
+sliceH :
+  Expression e =>
+  Expression h =>
+  e ->
+  h ->
+  SliceExpression e BadExpression h BadExpression
+sliceH e h = MkSliceExpression e Nothing (Just h) Nothing
+
+export
+slice' :
+  Expression e =>
+  e ->
+  SliceExpression e BadExpression BadExpression BadExpression
+slice' e = MkSliceExpression e Nothing Nothing Nothing
 
 export
 inc :
