@@ -50,6 +50,9 @@ public export
 implementation Expression l => Expression e => Expression (ArrayType l e) where
 
 public export
+implementation Expression l => GoType e => GoType (ArrayType l e) where
+
+public export
 record StructType ts where
   constructor MkStructType
   fields : FieldList ts
@@ -528,16 +531,16 @@ public export
 implementation Specification ImportSpec where
 
 public export
-record ValueSpec e es where
+record ValueSpec t es where
   constructor MkValueSpec
   doc : Maybe CommentGroup
   names : List1 Identifier
-  type : Maybe e
+  type : Maybe t
   values : HList es
   comment : Maybe CommentGroup
 
 public export
-implementation Expression e => All Expression es => Specification (ValueSpec e es) where
+implementation GoType t => All Expression es => Specification (ValueSpec t es) where
 
 public export
 record TypeSpec fs e where

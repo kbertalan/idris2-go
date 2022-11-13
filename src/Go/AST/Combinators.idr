@@ -33,7 +33,7 @@ implementation Expression e => Commentable (ExpressionStatement e) where
   setComments cg = { comment := Just cg }
 
 export
-implementation Expression e => All Expression es => Commentable (ValueSpec e es) where
+implementation GoType e => All Expression es => Commentable (ValueSpec e es) where
   setComments cg = { comment := Just cg }
 
 public export
@@ -182,6 +182,15 @@ struct :
 struct = MkStructType
 
 export
+array :
+  Expression l =>
+  GoType t =>
+  l ->
+  t ->
+  ArrayType l t
+array l t = MkArrayType l t
+
+export
 func :
   (name : Identifier) ->
   FieldList ps ->
@@ -242,19 +251,19 @@ var' :
   (is : List Identifier) ->
   {auto 0 ok : NonEmpty is} ->
   HList es ->
-  ValueSpec BadExpression es
+  ValueSpec BadType es
 var' (i::is) es = MkValueSpec Nothing (i:::is) Nothing es Nothing
 
 export
 var :
-  Expression t =>
+  GoType t =>
   All Expression es =>
   (is : List Identifier) ->
   {auto 0 ok : NonEmpty is} ->
-  Maybe t ->
+  t ->
   HList es ->
   ValueSpec t es
-var (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
+var (i::is) t es = MkValueSpec Nothing (i:::is) (Just t) es Nothing
 
 export
 block :
@@ -414,6 +423,15 @@ call :
   HList args ->
   CallExpression fn args BadExpression
 call fn args = MkCallExpression fn args Nothing
+
+export
+index :
+  Expression e =>
+  Expression i =>
+  e ->
+  i ->
+  IndexExpression e i
+index e i = MkIndexExpression e i
 
 export
 inc :

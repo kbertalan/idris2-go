@@ -155,6 +155,14 @@ implementation Expression e => Printer e => Printer (SelectorExpression e) where
     print file se.selector
 
 export
+implementation Expression e => Expression i => Printer e => Printer i => Printer (IndexExpression e i) where
+  print file ie = do
+    print file ie.expression
+    pPutStr "["
+    print file ie.index
+    pPutStr "]"
+
+export
 implementation Expression e => Printer e => Printer (UnaryExpression e) where
   print file ue = do
     pPutStr $ show ue.operator
@@ -207,7 +215,7 @@ implementation Printer (FieldList ts) => Printer t => Printer (TypeSpec ts t) wh
     print file ts.type
 
 export
-implementation Expression t => All Expression es => Printer t => All Printer es => Printer (ValueSpec t es) where
+implementation GoType t => All Expression es => Printer t => All Printer es => Printer (ValueSpec t es) where
   print file vs = do
       case vs.doc of
         Nothing => pure ()
@@ -492,6 +500,10 @@ implementation All Printer ts => Printer (FieldList ts) where
 -- Type
 
 export
+implementation Printer BadType where
+  print file bt = pPutStr "/* Evaluating Bad Type */"
+
+export
 implementation All Printer es => Printer (FieldList es) => Printer (StructType es) where
   print file st = do
       pPutStr "struct {\n"
@@ -509,6 +521,14 @@ implementation All Printer es => Printer (FieldList es) => Printer (StructType e
         print {indent = inci} file x
         pPutStr "\n"
         many xs
+
+export
+implementation Printer l => Printer e => Printer (ArrayType l e) where
+  print file at = do
+    pPutStr "["
+    print file at.length
+    pPutStr "]"
+    print file at.element
 
 -- Declarations
 

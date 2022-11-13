@@ -12,11 +12,11 @@ main = do
               [ import' "fmt" ]
               [ func (id' "main") [] void
                 [ decl $ vars
-                  [ var (map id' ["i", "j"]) (Just $ id' "int") [int 1, int 2]
+                  [ var (map id' ["i", "j"]) (id' "int") [int 1, int 2]
                   ]
                 , [id' "k"] /:=/ [int 3]
                 , decl $ vars
-                  [ var (map id' ["c", "python", "java"]) (Maybe Identifier `the` Nothing) [bool True, bool False, string "no!"]
+                  [ var' (map id' ["c", "python", "java"]) [bool True, bool False, string "no!"]
                     ]
                 , expr $ call (id' "fmt" /./ "Println") [id' "i", id' "j", id' "k", id' "c", id' "python", id' "java"]
                 ]

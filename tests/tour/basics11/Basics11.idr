@@ -13,9 +13,9 @@ main = do
               , import' "math/cmplx"
               ]
               [ vars
-                [ var [id' "ToBe"] (Just $ id' "bool") [bool False]
-                , var [id' "MaxInt"] (Just $ id' "uint64") [int 1 /<</ int 64 /-/ int 1]
-                , var [id' "z"] (Just $ id' "complex128") [call (id' "cmplx" /./ "Sqrt") [int (-5) /+/ imag 12]]
+                [ var [id' "ToBe"] (id' "bool") [bool False]
+                , var [id' "MaxInt"] (id' "uint64") [int 1 /<</ int 64 /-/ int 1]
+                , var [id' "z"] (id' "complex128") [call (id' "cmplx" /./ "Sqrt") [int (-5) /+/ imag 12]]
                 ]
               , func (id' "main") [] void
                 [ expr $ call (id' "fmt" /./ "Printf") [string "Type: %T Value: %v\\n", id' "ToBe", id' "ToBe"]
