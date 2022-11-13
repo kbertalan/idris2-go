@@ -1,0 +1,18 @@
+1/1: Building MoreTypes3 (MoreTypes3.idr)
+Now compiling the executable: test
+printing source:
+
+package main
+
+import "fmt"
+
+type Vertex struct {
+	X int
+	Y int
+}
+
+func main() {
+	v := Vertex{1, 2}
+	v.X = 4
+	fmt.Println(v.X)
+}
