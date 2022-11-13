@@ -32,6 +32,10 @@ export
 implementation Expression e => Commentable (ExpressionStatement e) where
   setComments cg = { comment := Just cg }
 
+export
+implementation Expression e => All Expression es => Commentable (ValueSpec e es) where
+  setComments cg = { comment := Just cg }
+
 public export
 interface Documentable a where
   setDocs : CommentGroup -> a -> a
@@ -233,6 +237,15 @@ vars :
 vars es = MkGenericDeclaration Nothing Var es
 
 export
+var' :
+  All Expression es =>
+  (is : List Identifier) ->
+  {auto 0 ok : NonEmpty is} ->
+  HList es ->
+  ValueSpec BadExpression es
+var' (i::is) es = MkValueSpec Nothing (i:::is) Nothing es Nothing
+
+export
 var :
   Expression t =>
   All Expression es =>
@@ -431,7 +444,16 @@ export
   SelectorExpression e
 (/./) e f = MkSelectorExpression e $ id' f
 
-infixl 3 /./
+export
+(/:/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  KeyValueExpression e1 e2
+(/:/) e1 e2 = MkKeyValueExpression e1 e2
+
+infixl 3 /./, /:/
 
 export
 (/==/) :

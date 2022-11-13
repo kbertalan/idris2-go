@@ -175,6 +175,13 @@ implementation Expression e1 => Expression e2 => Printer e1 => Printer e2 => Pri
       pPutStr " "
       print file bo.last
 
+export
+implementation Expression e1 => Expression e2 => Printer e1 => Printer e2 => Printer (KeyValueExpression e1 e2) where
+  print file kve = do
+    print file kve.key
+    pPutStr ": "
+    print file kve.value
+
 -- Spec
 
 export
@@ -217,6 +224,11 @@ implementation Expression t => All Expression es => Printer t => All Printer es 
       when (not $ null vs.values) $ do
         pPutStr " = "
         printValues vs.values
+      case vs.comment of
+        Nothing => pure ()
+        Just cg => do
+          pPutStr " "
+          printComments $ forget cg.comments
     where
       printNames : List Identifier -> PrinterMonad io ()
       printNames [] = pure ()
