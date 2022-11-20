@@ -187,6 +187,7 @@ implementation Expression e => Statement (IncDecStatement e o) where
 public export
 record AssignmentStatement ls rs where
   constructor MkAssignmentStatement
+  doc : Maybe CommentGroup
   left : HList ls
   token : Operator
   right : HList rs

@@ -326,6 +326,12 @@ implementation Statement (BlockStatement sts) => All Printer sts => Printer (Blo
 export
 implementation Statement (AssignmentStatement ls rs) => All Printer ls => All Printer rs => Printer (AssignmentStatement ls rs) where
   print file as = do
+      case as.doc of
+        Nothing => pure ()
+        Just (MkCommentGroup cs) => do
+          printComments $ forget cs
+          printNewLine
+          printIndent
       many as.left
       pPutStr " "
       pPutStr $ show as.token

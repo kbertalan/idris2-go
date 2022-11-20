@@ -49,6 +49,10 @@ docs : Documentable a => (ds : List String) -> {auto 0 ok : NonEmpty ds} -> a ->
 docs (d::ds) = setDocs $ MkCommentGroup $ map MkComment (d:::ds)
 
 export
+implementation Statement (AssignmentStatement ls rs) => Documentable (AssignmentStatement ls rs) where
+  setDocs ds = { doc := Just ds }
+
+export
 implementation Specification (ValueSpec ls rs) => Documentable (ValueSpec ls rs) where
   setDocs ds = { doc := Just ds }
 
@@ -652,7 +656,7 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/:=/) ls rs = MkAssignmentStatement ls MkDefine rs Nothing
+(/:=/) ls rs = MkAssignmentStatement Nothing ls MkDefine rs Nothing
 
 export
 (/=/) :
@@ -663,7 +667,7 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/=/) ls rs = MkAssignmentStatement ls MkAssign rs Nothing
+(/=/) ls rs = MkAssignmentStatement Nothing ls MkAssign rs Nothing
 
 export
 (/+=/) :
@@ -674,7 +678,7 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/+=/) ls rs = MkAssignmentStatement ls MkAddAssign rs Nothing
+(/+=/) ls rs = MkAssignmentStatement Nothing ls MkAddAssign rs Nothing
 
 export
 (/-=/) :
@@ -685,7 +689,7 @@ export
   HList ls ->
   HList rs ->
   AssignmentStatement ls rs
-(/-=/) ls rs = MkAssignmentStatement ls MkSubAssign rs Nothing
+(/-=/) ls rs = MkAssignmentStatement Nothing ls MkSubAssign rs Nothing
 
 infixl 7 /:=/, /=/, /+=/, /-=/
 
