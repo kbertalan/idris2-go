@@ -85,7 +85,7 @@ implementation Printer BasicLiteral where
     in pPutStr value
 
 export
-implementation Printer t => All Printer es => Printer (CompositLiteral t es) where
+implementation Expression (CompositLiteral t es) => Printer t => All Printer es => Printer (CompositLiteral t es) where
   print file cl = do
       case cl.type of
         Nothing => pure ()
@@ -128,7 +128,7 @@ implementation Printer t => All Printer es => Printer (CompositLiteral t es) whe
         multiLine xs
 
 export
-implementation Expression f => All Expression as => Expression e => Printer f => All Printer as => Printer (CallExpression f as e) where
+implementation Expression (CallExpression f as e) => Printer f => All Printer as => Printer (CallExpression f as e) where
   print file ce = do
       print file ce.function
       pPutStr "("
@@ -148,14 +148,14 @@ implementation Expression f => All Expression as => Expression e => Printer f =>
         many xs
 
 export
-implementation Expression e => Printer e => Printer (SelectorExpression e) where
+implementation Expression (SelectorExpression e) => Printer e => Printer (SelectorExpression e) where
   print file se = do
     print file se.expression
     pPutStr "."
     print file se.selector
 
 export
-implementation Expression e => Expression i => Printer e => Printer i => Printer (IndexExpression e i) where
+implementation Expression (IndexExpression e i) => Printer e => Printer i => Printer (IndexExpression e i) where
   print file ie = do
     print file ie.expression
     pPutStr "["
@@ -183,19 +183,19 @@ implementation Expression (SliceExpression e l h m) => Printer e => Printer l =>
     pPutStr "]"
 
 export
-implementation Expression e => Printer e => Printer (UnaryExpression e) where
+implementation Expression (UnaryExpression e) => Printer e => Printer (UnaryExpression e) where
   print file ue = do
     pPutStr $ show ue.operator
     print file ue.expression
 
 export
-implementation Expression e => Printer e => Printer (StarExpression e) where
+implementation Expression (StarExpression e) => Printer e => Printer (StarExpression e) where
   print file se = do
     pPutStr "*"
     print file se.expression
 
 export
-implementation Expression e1 => Expression e2 => Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
+implementation Expression (BinaryExpression e1 e2) => Printer e1 => Printer e2 => Printer (BinaryExpression e1 e2) where
   print file bo = do
       print file bo.first
       pPutStr " "
@@ -204,7 +204,7 @@ implementation Expression e1 => Expression e2 => Printer e1 => Printer e2 => Pri
       print file bo.last
 
 export
-implementation Expression e1 => Expression e2 => Printer e1 => Printer e2 => Printer (KeyValueExpression e1 e2) where
+implementation Expression (KeyValueExpression e1 e2) => Printer e1 => Printer e2 => Printer (KeyValueExpression e1 e2) where
   print file kve = do
     print file kve.key
     pPutStr ": "
@@ -222,7 +222,7 @@ implementation Printer ImportSpec where
       print file is.path
 
 export
-implementation Printer (FieldList ts) => Printer t => Printer (TypeSpec ts t) where
+implementation Specification (TypeSpec ts t) => Printer (FieldList ts) => Printer t => Printer (TypeSpec ts t) where
   print file ts = do
     print file ts.name
     case ts.typeParams of
@@ -235,7 +235,7 @@ implementation Printer (FieldList ts) => Printer t => Printer (TypeSpec ts t) wh
     print file ts.type
 
 export
-implementation GoType t => All Expression es => Printer t => All Printer es => Printer (ValueSpec t es) where
+implementation Specification (ValueSpec t es) => Printer t => All Printer es => Printer (ValueSpec t es) where
   print file vs = do
       case vs.doc of
         Nothing => pure ()
@@ -281,7 +281,7 @@ implementation Printer BadStatement where
   print file be = pPutStr "/* Evaluated BadStatement */"
 
 export
-implementation Expression e => Printer e => Printer (ExpressionStatement e) where
+implementation Statement (ExpressionStatement e) => Printer e => Printer (ExpressionStatement e) where
   print file es = do
     case es.doc of
       Nothing => pure ()
@@ -297,11 +297,11 @@ implementation Expression e => Printer e => Printer (ExpressionStatement e) wher
         printComments $ forget cg.comments
 
 export
-implementation Declaration d => Printer d => Printer (DeclarationStatement d) where
+implementation Statement (DeclarationStatement d) => Printer d => Printer (DeclarationStatement d) where
   print file d = print file d.declaration
 
 export
-implementation All Statement sts => All Printer sts => Printer (BlockStatement sts) where
+implementation Statement (BlockStatement sts) => All Printer sts => Printer (BlockStatement sts) where
   print file bs @{stss} @{ps} = do
       pPutStr "{\n"
       many bs.statements {ps}
@@ -324,7 +324,7 @@ implementation All Statement sts => All Printer sts => Printer (BlockStatement s
         many xs {ps}
 
 export
-implementation All Expression ls => All Expression rs => NonEmpty ls => NonEmpty rs => All Printer ls => All Printer rs => Printer (AssignmentStatement ls rs) where
+implementation Statement (AssignmentStatement ls rs) => All Printer ls => All Printer rs => Printer (AssignmentStatement ls rs) where
   print file as = do
       many as.left
       pPutStr " "
@@ -348,19 +348,19 @@ implementation All Expression ls => All Expression rs => NonEmpty ls => NonEmpty
         many xs
 
 export
-implementation Expression e => Show (IncOrDec o) => Printer e => Printer (IncDecStatement e o) where
+implementation Statement (IncDecStatement e o) => Show (IncOrDec o) => Printer e => Printer (IncDecStatement e o) where
   print file ids = do
     print file ids.expression
     pPutStr $ show ids.token
 
 export
-implementation Expression f => All Expression as => Expression e => Printer (CallExpression f as e) => Printer (DeferStatement f as e) where
+implementation Statement (DeferStatement f as e) => Printer (CallExpression f as e) => Printer (DeferStatement f as e) where
   print file ds = do
     pPutStr "defer "
     print file ds.call
 
 export
-implementation Statement i => Expression c => Statement p => All Statement sts => Printer i => Printer c => Printer p => Printer (BlockStatement sts) => Printer (ForStatement i c p sts) where
+implementation Statement (ForStatement i c p sts) => Printer i => Printer c => Printer p => Printer (BlockStatement sts) => Printer (ForStatement i c p sts) where
   print file fs = do
     pPutStr "for"
     case (fs.init, fs.condition, fs.post) of
@@ -380,7 +380,7 @@ implementation Statement i => Expression c => Statement p => All Statement sts =
     print file fs.body
 
 export
-implementation Statement i => Expression c => All Statement sts => Printer i => Printer c => Printer (BlockStatement sts) => Printer e => Printer (IfStatement i c sts e) where
+implementation Statement (IfStatement i c sts e) => Printer i => Printer c => Printer (BlockStatement sts) => Printer e => Printer (IfStatement i c sts e) where
   print file is = do
     pPutStr "if "
     case is.init of
@@ -398,7 +398,7 @@ implementation Statement i => Expression c => All Statement sts => Printer i => 
         print file e
 
 export
-implementation Statement i => Expression e => All Statement sts => All IsCaseClause sts => Printer i => Printer e => All Printer sts => Printer (SwitchStatement i e sts) where
+implementation Statement (SwitchStatement i e sts) => Printer i => Printer e => All Printer sts => Printer (SwitchStatement i e sts) where
   print file ss = do
       pPutStr "switch "
       case ss.init of
@@ -430,7 +430,7 @@ implementation Statement i => Expression e => All Statement sts => All IsCaseCla
         printBody xs
 
 export
-implementation All Expression es => NonEmpty sts => All Statement sts => All Printer es => All Printer sts => Printer (CaseClause es sts) where
+implementation Statement (CaseClause es sts) => All Printer es => All Printer sts => Printer (CaseClause es sts) where
   print file cc = do
       case cc.list of
         [] => pPutStr "default"
@@ -463,7 +463,7 @@ implementation All Expression es => NonEmpty sts => All Statement sts => All Pri
         printList xs
 
 export
-implementation All Expression rs => All Printer rs => Printer (ReturnStatement rs) where
+implementation Statement (ReturnStatement rs) => All Printer rs => Printer (ReturnStatement rs) where
   print file rs = do
       case rs.doc of
         Nothing => pure ()
@@ -524,7 +524,7 @@ implementation Printer BadType where
   print file bt = pPutStr "/* Evaluating Bad Type */"
 
 export
-implementation All Printer es => Printer (FieldList es) => Printer (StructType es) where
+implementation Expression (StructType es) => All Printer es => Printer (FieldList es) => Printer (StructType es) where
   print file st = do
       pPutStr "struct {\n"
       many st.fields
@@ -543,7 +543,7 @@ implementation All Printer es => Printer (FieldList es) => Printer (StructType e
         many xs
 
 export
-implementation Printer l => Printer e => Printer (ArrayType l e) where
+implementation Expression (ArrayType l e) => Printer l => Printer e => Printer (ArrayType l e) where
   print file at = do
     pPutStr "["
     maybe (pure ()) (print file) at.length
@@ -553,7 +553,7 @@ implementation Printer l => Printer e => Printer (ArrayType l e) where
 -- Declarations
 
 export
-implementation All Statement sts => All Printer ps => All Printer rs => Printer (BlockStatement sts) => Printer (FuncDeclaration rcs ts ps rs sts) where
+implementation Declaration (FuncDeclaration rcs ts ps rs sts) => All Printer ps => All Printer rs => Printer (BlockStatement sts) => Printer (FuncDeclaration rcs ts ps rs sts) where
   print file fd = do
     pPutStr "func "
     pPutStr fd.name.name
@@ -580,7 +580,7 @@ implementation All Statement sts => All Printer ps => All Printer rs => Printer 
           pPutStr ")"
 
 export
-implementation NonEmpty es => All Specification es => All Printer es => Show (GenericDeclarationToken k) => Printer (GenericDeclaration k es) where
+implementation Declaration (GenericDeclaration k es) => All Printer es => Show (GenericDeclarationToken k) => Printer (GenericDeclaration k es) where
   print file gd = do
       let multiple = hasMany gd.specs
           inci = if multiple then increaseIndent indent else indent
