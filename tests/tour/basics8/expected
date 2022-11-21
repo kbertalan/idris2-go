@@ -12,3 +12,7 @@ func main() {
 	var i int
 	fmt.Println(i, c, python, java)
 }
+
+running generated program:
+
+0 false false false

@@ -613,9 +613,9 @@ public export
 record File ds {auto 0 dsd : All Declaration ds} where
   constructor MkFile
   doc : Maybe CommentGroup
-  name : Identifier
+  name : String
+  packageName : Identifier
   decls : HList ds
-  -- scope : Scope
   imports : List ImportSpec
   unresolved : List Identifier
   comments : List CommentGroup

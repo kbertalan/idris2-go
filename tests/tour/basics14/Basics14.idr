@@ -1,9 +1,7 @@
 module Basics14
 
-import Control.Monad.Either
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
-import System.File
 
 main : IO ()
 main = do
@@ -15,8 +13,8 @@ main = do
                 , expr $ call (id' "fmt" /./ "Printf") [string "v is of type %T\\n", id' "v"]
                 ]
               ]
-  putStrLn "printing source:\n"
-  Right () <- runEitherT $ Go.print stdout src
+
+  Right () <- printFile "build/go" src
     | Left e => putStrLn $ show e
   pure ()
 

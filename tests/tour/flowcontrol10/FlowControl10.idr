@@ -1,13 +1,11 @@
 module FlowControl10
 
-import Control.Monad.Either
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
-import System.File
 
 main : IO ()
 main = do
-  let src = file "switch-evaulation-order.go"
+  let src = file "switch-evaluation-order.go"
               (package "main")
               [ import' "fmt"
               , import' "time"
@@ -27,8 +25,8 @@ main = do
                   ]
                 ]
               ]
-  putStrLn "printing source:\n"
-  Right () <- runEitherT $ Go.print stdout src
+
+  Right () <- printFile "build/go" src
     | Left e => putStrLn $ show e
   pure ()
 

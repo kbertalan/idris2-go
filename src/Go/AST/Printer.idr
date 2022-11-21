@@ -618,7 +618,7 @@ export
 implementation All Declaration ds => All Printer ds => Printer (Go.File ds) where
   print file f = do
     printIndent
-    printPackage f.name
+    printPackage f.packageName
     printNewLine
     printNewLine
     printIndent
@@ -656,4 +656,10 @@ implementation All Declaration ds => All Printer ds => Printer (Go.File ds) wher
             print file spec
             printNewLine
           pPutStr ")"
+
+export
+printFile : HasIO io => All Declaration ds => Printer (Go.File ds) => (folder : String) -> Go.File ds -> io (Either PrintError ())
+printFile folder f = do
+  withFile "\{folder}/\{f.name}" WriteTruncate (pure . PrintFileError) $ \h =>
+    runEitherT $ print h f
 

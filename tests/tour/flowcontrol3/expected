@@ -13,3 +13,7 @@ func main() {
 	}
 	fmt.Println(sum)
 }
+
+running generated program:
+
+1024

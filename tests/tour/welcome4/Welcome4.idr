@@ -1,9 +1,7 @@
 module Welcome4
 
-import Control.Monad.Either
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
-import System.File
 
 main : IO ()
 main = do
@@ -17,8 +15,9 @@ main = do
                 , expr $ call (id' "fmt" /./ "Println") [string "The time is", call (id' "time.Now") []]
                 ]
               ]
-  putStrLn "printing source:\n"
-  Right () <- runEitherT $ Go.print stdout src
+
+
+  Right () <- printFile "build/go" src
     | Left e => putStrLn $ show e
   pure ()
 

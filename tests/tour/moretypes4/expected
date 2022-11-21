@@ -17,3 +17,7 @@ func main() {
 	p.X = 1e9
 	fmt.Println(v)
 }
+
+running generated program:
+
+{1000000000 2}

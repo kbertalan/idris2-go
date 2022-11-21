@@ -15,3 +15,9 @@ func main() {
 	const Truth = true
 	fmt.Println("Go rules?", Truth)
 }
+
+running generated program:
+
+Hello 世界
+Happy 3.14 Day
+Go rules? true

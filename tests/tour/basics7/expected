@@ -15,3 +15,7 @@ func split(sum int) (x, y int) {
 func main() {
 	fmt.Println(split(17))
 }
+
+running generated program:
+
+7 10

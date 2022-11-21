@@ -14,3 +14,7 @@ type Vertex struct {
 func main() {
 	fmt.Println(Vertex{1, 2})
 }
+
+running generated program:
+
+{1 2}

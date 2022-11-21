@@ -15,3 +15,7 @@ func main() {
 	var z uint = uint(f)
 	fmt.Println(x, y, z)
 }
+
+running generated program:
+
+3 4 5

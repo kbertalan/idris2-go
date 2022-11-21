@@ -22,3 +22,9 @@ func main() {
 	s = s[1:]
 	fmt.Println(s)
 }
+
+running generated program:
+
+[3 5 7]
+[3 5]
+[5]

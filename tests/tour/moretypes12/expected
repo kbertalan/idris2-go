@@ -13,3 +13,8 @@ func main() {
 		fmt.Println("nil!")
 	}
 }
+
+running generated program:
+
+[] 0 0
+nil!

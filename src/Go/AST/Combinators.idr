@@ -92,7 +92,7 @@ file :
   List ImportSpec ->
   HList ds ->
   File ds
-file name (MkPackage pkg) imports decls = MkFile Nothing (identifier pkg) decls imports [] []
+file name (MkPackage pkg) imports decls = MkFile Nothing name (identifier pkg) decls imports [] []
 
 export
 string :

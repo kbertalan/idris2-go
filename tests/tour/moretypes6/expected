@@ -22,3 +22,9 @@ func main() {
 	}
 	fmt.Println(primes)
 }
+
+running generated program:
+
+Hello World
+[Hello World]
+[2 3 5 7 11 13]

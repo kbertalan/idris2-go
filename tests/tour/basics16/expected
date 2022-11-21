@@ -27,3 +27,9 @@ func main() {
 	fmt.Println(needFloat(Small))
 	fmt.Println(needFloat(Big))
 }
+
+running generated program:
+
+21
+0.2
+1.2676506002282295e+29

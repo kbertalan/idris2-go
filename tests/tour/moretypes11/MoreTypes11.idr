@@ -1,9 +1,7 @@
 module MoreTypes11
 
-import Control.Monad.Either
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
-import System.File
 
 main : IO ()
 main = do
@@ -39,8 +37,8 @@ main = do
                   ]
                 ]
               ]
-  putStrLn "printing source:\n"
-  Right () <- runEitherT $ Go.print stdout src
+
+  Right () <- printFile "build/go" src
     | Left e => putStrLn $ show e
   pure ()
 

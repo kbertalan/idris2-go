@@ -21,3 +21,10 @@ func main() {
 	fmt.Println(a, b)
 	fmt.Println(names)
 }
+
+running generated program:
+
+[John Paul George Ringo]
+[John Paul] [Paul George]
+[John XXX] [XXX George]
+[John XXX George Ringo]

@@ -12,3 +12,7 @@ import (
 func main() {
 	fmt.Println(math.Pi)
 }
+
+running generated program:
+
+3.141592653589793
