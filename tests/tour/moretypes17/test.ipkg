@@ -1,0 +1,7 @@
+package test
+
+depends = idris2-go
+modules = MoreTypes17
+main = MoreTypes17
+executable = test
+opts = "--no-color --console-width 0"
