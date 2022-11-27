@@ -386,6 +386,36 @@ implementation Statement (ForStatement i c p sts) => Printer i => Printer c => P
     print file fs.body
 
 export
+implementation Statement (KeyValueRangeStatement k v a r sts) => Printer k => Printer v => Show (AssignOrDefine a) => Printer r => Printer (BlockStatement sts) => Printer (KeyValueRangeStatement k v a r sts) where
+  print file rs = do
+    pPutStr "for "
+    print file rs.key
+    pPutStr ", "
+    print file rs.value
+    pPutStr " \{show rs.token} range "
+    print file rs.expression
+    pPutStr " "
+    print file rs.body
+
+export
+implementation Statement (ValueRangeStatement v a r sts) => Printer v => Show (AssignOrDefine a) => Printer r => Printer (BlockStatement sts) => Printer (ValueRangeStatement v a r sts) where
+  print file rs = do
+    pPutStr "for "
+    print file rs.value
+    pPutStr " \{show rs.token} range "
+    print file rs.expression
+    pPutStr " "
+    print file rs.body
+
+export
+implementation Statement (RangeStatement r sts) => Printer r => Printer (BlockStatement sts) => Printer (RangeStatement r sts) where
+  print file rs = do
+    pPutStr "for range "
+    print file rs.expression
+    pPutStr " "
+    print file rs.body
+
+export
 implementation Statement (IfStatement i c sts e) => Printer i => Printer c => Printer (BlockStatement sts) => Printer e => Printer (IfStatement i c sts e) where
   print file is = do
     pPutStr "if "

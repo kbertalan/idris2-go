@@ -334,6 +334,36 @@ while :
 while c sts = MkForStatement Nothing (Just c) Nothing $ MkBlockStatement sts
 
 export
+rangeKV :
+  Expression r =>
+  All Statement sts =>
+  (key : String) ->
+  (value : String) ->
+  r ->
+  HList sts ->
+  KeyValueRangeStatement Identifier Identifier MkDefine r sts
+rangeKV k v r sts = MkKeyValueRangeStatement (id' k) (id' v) ItIsDefine r $ MkBlockStatement sts
+
+export
+rangeV :
+  Expression r =>
+  All Statement sts =>
+  (value : String) ->
+  r ->
+  HList sts ->
+  ValueRangeStatement Identifier MkDefine r sts
+rangeV v r sts = MkValueRangeStatement (id' v) ItIsDefine r $ MkBlockStatement sts
+
+export
+range :
+  Expression r =>
+  All Statement sts =>
+  r ->
+  HList sts ->
+  RangeStatement r sts
+range r sts = MkRangeStatement r $ MkBlockStatement sts
+
+export
 if' :
   Expression c =>
   All Statement sts =>

@@ -348,6 +348,14 @@ data AssignOrDefine : Operator -> Type where
   ItIsDefine : AssignOrDefine MkDefine
 
 public export
+implementation Show (AssignOrDefine MkAssign) where
+  show _ = show MkAssign
+
+public export
+implementation Show (AssignOrDefine MkDefine) where
+  show _ = show MkDefine
+
+public export
 record KeyValueRangeStatement k v a e sts where
   constructor MkKeyValueRangeStatement
   key : k

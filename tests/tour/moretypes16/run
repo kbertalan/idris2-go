@@ -1,0 +1,14 @@
+rm -rf build
+
+mkdir -p build/go
+
+$1 --build test.ipkg
+build/exec/test
+
+set -eo pipefail
+file=$(ls -1 build/go/*.go)
+echo -e "printing source:\n"
+cat $file
+
+echo -e "\nrunning generated program:\n"
+go run $file
