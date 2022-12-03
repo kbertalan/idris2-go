@@ -586,6 +586,14 @@ implementation Expression (ArrayType l e) => Printer l => Printer e => Printer (
     pPutStr "]"
     print file at.element
 
+export
+implementation GoType (MapType k v) => Printer k => Printer v => Printer (MapType k v) where
+  print file mt = do
+    pPutStr "map["
+    print file mt.key
+    pPutStr "]"
+    print file mt.value
+
 -- Declarations
 
 export

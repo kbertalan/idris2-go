@@ -202,6 +202,15 @@ array' :
 array' t = MkArrayType Nothing t
 
 export
+map' :
+  GoType k =>
+  GoType v =>
+  k ->
+  v ->
+  MapType k v
+map' k v = MkMapType k v
+
+export
 func :
   (name : Identifier) ->
   FieldList ps ->

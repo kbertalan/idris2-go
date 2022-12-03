@@ -97,6 +97,9 @@ public export
 implementation Expression k => Expression v => Expression (MapType k v) where
 
 public export
+implementation GoType k => GoType v => GoType (MapType k v) where
+
+public export
 data ChanDirection
   = Send
   | Receive
