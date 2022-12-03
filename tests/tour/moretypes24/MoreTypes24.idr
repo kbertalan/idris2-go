@@ -10,22 +10,22 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id' "compute")
+              [ func (id_ "compute")
                 [ field ["fn"] $ func'
-                  [ field [] $ id' "float64"
-                  , field [] $ id' "float64"
-                  ] [field [] $ id' "float64"]
-                ] [field [] $ id' "float64"]
-                [ return [ call (id' "fn") [ int 3, int 4 ] ]
+                  [ field [] $ id_ "float64"
+                  , field [] $ id_ "float64"
+                  ] [field [] $ id_ "float64"]
+                ] [field [] $ id_ "float64"]
+                [ return [ call (id_ "fn") [ int 3, int 4 ] ]
                 ]
-              , func (id' "main") [] void
-                [ [ id' "hypot" ] /:=/ [ funcL [ field ["x", "y"] $ id' "float64" ] [field [] $ id' "float64"]
-                    [ return [ call (id' "math" /./ "Sqrt") [ id' "x" /*/ id' "x" /+/ id' "y" /*/ id' "y" ] ]
+              , func (id_ "main") [] void
+                [ [ id_ "hypot" ] /:=/ [ funcL [ field ["x", "y"] $ id_ "float64" ] [field [] $ id_ "float64"]
+                    [ return [ call (id_ "math" /./ "Sqrt") [ id_ "x" /*/ id_ "x" /+/ id_ "y" /*/ id_ "y" ] ]
                     ]
                   ]
-                , expr $ call (id' "fmt" /./ "Println") [ call (id' "hypot") [ int 5, int 12 ] ]
-                , expr $ call (id' "fmt" /./ "Println") [ call (id' "compute") [ id' "hypot" ] ]
-                , expr $ call (id' "fmt" /./ "Println") [ call (id' "compute") [ id' "math" /./ "Pow" ] ]
+                , expr $ call (id_ "fmt" /./ "Println") [ call (id_ "hypot") [ int 5, int 12 ] ]
+                , expr $ call (id_ "fmt" /./ "Println") [ call (id_ "compute") [ id_ "hypot" ] ]
+                , expr $ call (id_ "fmt" /./ "Println") [ call (id_ "compute") [ id_ "math" /./ "Pow" ] ]
                 ]
               ]
 

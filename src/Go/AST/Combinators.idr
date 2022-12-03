@@ -72,16 +72,10 @@ package : String -> Package
 package = MkPackage
 
 export
-identifier :
+id_ :
   String ->
   Identifier
-identifier name = MkIdentifier name
-
-export
-id' :
-  String ->
-  Identifier
-id' name = MkIdentifier name
+id_ name = MkIdentifier name
 
 export
 file :
@@ -92,75 +86,76 @@ file :
   List ImportSpec ->
   HList ds ->
   File ds
-file name (MkPackage pkg) imports decls = MkFile Nothing name (identifier pkg) decls imports [] []
+file name (MkPackage pkg) imports decls = MkFile Nothing name (id_ pkg) decls imports [] []
 
-export
-string :
-  String ->
-  BasicLiteral
-string str = MkBasicLiteral MkString str
+namespace Literal
+  export
+  string :
+    String ->
+    BasicLiteral
+  string str = MkBasicLiteral MkString str
 
-export
-int :
-  Int ->
-  BasicLiteral
-int i = MkBasicLiteral MkInt $ show i
+  export
+  int :
+    Int ->
+    BasicLiteral
+  int i = MkBasicLiteral MkInt $ show i
 
-export
-float :
-  Double ->
-  BasicLiteral
-float f = MkBasicLiteral MkFloat $ show f
+  export
+  float :
+    Double ->
+    BasicLiteral
+  float f = MkBasicLiteral MkFloat $ show f
 
-export
-exp :
-  Double ->
-  Int ->
-  BasicLiteral
-exp f e = MkBasicLiteral MkFloat $ concat [floored, "e", show e]
-  where
-    floored : String
-    floored = if f == floor f then show $ the Int $ cast $ floor f
-                              else show f
+  export
+  exp :
+    Double ->
+    Int ->
+    BasicLiteral
+  exp f e = MkBasicLiteral MkFloat $ concat [floored, "e", show e]
+    where
+      floored : String
+      floored = if f == floor f then show $ the Int $ cast $ floor f
+                                else show f
 
-export
-imag :
-  Int ->
-  BasicLiteral
-imag i = MkBasicLiteral MkImag "\{show i}i"
+  export
+  imag :
+    Int ->
+    BasicLiteral
+  imag i = MkBasicLiteral MkImag "\{show i}i"
 
-export
-bool :
-  Bool ->
-  BasicLiteral
-bool b = MkBasicLiteral MkIdentifier $ case b of
-                                        True => "true"
-                                        False => "false"
+  export
+  bool :
+    Bool ->
+    BasicLiteral
+  bool b = MkBasicLiteral MkIdentifier $ case b of
+                                          True => "true"
+                                          False => "false"
 
-export
-composite :
-  Expression t =>
-  All Expression es =>
-  t ->
-  HList es ->
-  CompositLiteral t es
-composite t es = MkCompositLiteral (Just t) es
+  export
+  composite :
+    Expression t =>
+    All Expression es =>
+    t ->
+    HList es ->
+    CompositLiteral t es
+  composite t es = MkCompositLiteral (Just t) es
 
-export
-composite' :
-  All Expression es =>
-  HList es ->
-  CompositLiteral BadExpression es
-composite' es = MkCompositLiteral Nothing es
+  export
+  composite' :
+    All Expression es =>
+    HList es ->
+    CompositLiteral BadExpression es
+  composite' es = MkCompositLiteral Nothing es
 
-export
-funcL :
-  All Statement sts =>
-  FieldList ps ->
-  FieldList rs ->
-  HList sts ->
-  FunctionLiteral [] ps rs sts
-funcL ps rs sts = MkFunctionLiteral (MkFunctionType [] ps rs) (MkBlockStatement sts)
+  export
+  funcL :
+    All Statement sts =>
+    FieldList ps ->
+    FieldList rs ->
+    HList sts ->
+    FunctionLiteral [] ps rs sts
+  funcL ps rs sts = MkFunctionLiteral (MkFunctionType [] ps rs) (MkBlockStatement sts)
 
 export
 import' :
@@ -178,307 +173,310 @@ field :
   List String ->
   t ->
   Field t
-field fs t = MkField Nothing (identifier <$> fs) (Just t) Nothing Nothing
+field fs t = MkField Nothing (id_ <$> fs) (Just t) Nothing Nothing
 
 export
 field' :
   List String ->
   Field BadType
-field' fs = MkField Nothing (identifier <$> fs) (Maybe BadType `the` Nothing) Nothing Nothing
+field' fs = MkField Nothing (id_ <$> fs) (Maybe BadType `the` Nothing) Nothing Nothing
 
--- Types
+namespace Type
 
-export
-struct :
-  FieldList ts ->
-  StructType ts
-struct = MkStructType
+  export
+  struct :
+    FieldList ts ->
+    StructType ts
+  struct = MkStructType
 
-export
-array :
-  Expression l =>
-  GoType t =>
-  l ->
-  t ->
-  ArrayType l t
-array l t = MkArrayType (Just l) t
+  export
+  array :
+    Expression l =>
+    GoType t =>
+    l ->
+    t ->
+    ArrayType l t
+  array l t = MkArrayType (Just l) t
 
-export
-array' :
-  GoType t =>
-  t ->
-  ArrayType BadExpression t
-array' t = MkArrayType Nothing t
+  export
+  array' :
+    GoType t =>
+    t ->
+    ArrayType BadExpression t
+  array' t = MkArrayType Nothing t
 
-export
-map' :
-  GoType k =>
-  GoType v =>
-  k ->
-  v ->
-  MapType k v
-map' k v = MkMapType k v
+  export
+  map_ :
+    GoType k =>
+    GoType v =>
+    k ->
+    v ->
+    MapType k v
+  map_ k v = MkMapType k v
 
-export
-func' :
-  FieldList ps ->
-  FieldList rs ->
-  FunctionType [] ps rs
-func' ps rs = MkFunctionType [] ps rs
+  export
+  func' :
+    FieldList ps ->
+    FieldList rs ->
+    FunctionType [] ps rs
+  func' ps rs = MkFunctionType [] ps rs
 
-export
-func :
-  (name : Identifier) ->
-  FieldList ps ->
-  FieldList rs ->
-  { 0 sts : List Type } ->
-  { auto 0 ok : All Statement sts } ->
-  HList sts ->
-  FuncDeclaration [] [] ps rs sts
-func name ps rs sts = MkFuncDeclaration Nothing [] name (MkFunctionType [] ps rs) (MkBlockStatement sts)
+namespace Declaration
+  export
+  func :
+    (name : Identifier) ->
+    FieldList ps ->
+    FieldList rs ->
+    { 0 sts : List Type } ->
+    { auto 0 ok : All Statement sts } ->
+    HList sts ->
+    FuncDeclaration [] [] ps rs sts
+  func name ps rs sts = MkFuncDeclaration Nothing [] name (MkFunctionType [] ps rs) (MkBlockStatement sts)
 
-export
-types :
-  NonEmpty es =>
-  All Specification es =>
-  HList es ->
-  GenericDeclaration MkType es
-types es = MkGenericDeclaration Nothing Type' es
+  export
+  types :
+    NonEmpty es =>
+    All Specification es =>
+    HList es ->
+    GenericDeclaration MkType es
+  types es = MkGenericDeclaration Nothing Type' es
 
-export
-type :
-  GoType t =>
-  String ->
-  FieldList ts ->
-  t ->
-  TypeSpec ts t
-type name typeParams t = MkTypeSpec Nothing (id' name) typeParams t Nothing
+  export
+  type :
+    GoType t =>
+    String ->
+    FieldList ts ->
+    t ->
+    TypeSpec ts t
+  type name typeParams t = MkTypeSpec Nothing (id_ name) typeParams t Nothing
 
-export
-consts :
-  NonEmpty es =>
-  All Specification es =>
-  HList es ->
-  GenericDeclaration MkConst es
-consts es = MkGenericDeclaration Nothing Const es
+  export
+  consts :
+    NonEmpty es =>
+    All Specification es =>
+    HList es ->
+    GenericDeclaration MkConst es
+  consts es = MkGenericDeclaration Nothing Const es
 
-export
-const' :
-  Expression t =>
-  All Expression es =>
-  (is : List Identifier) ->
-  {auto 0 ok : NonEmpty is} ->
-  Maybe t ->
-  HList es ->
-  ValueSpec t es
-const' (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
+  export
+  const' :
+    Expression t =>
+    All Expression es =>
+    (is : List Identifier) ->
+    {auto 0 ok : NonEmpty is} ->
+    Maybe t ->
+    HList es ->
+    ValueSpec t es
+  const' (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
 
-export
-vars :
-  NonEmpty es =>
-  All Specification es =>
-  HList es ->
-  GenericDeclaration MkVar es
-vars es = MkGenericDeclaration Nothing Var es
+  export
+  vars :
+    NonEmpty es =>
+    All Specification es =>
+    HList es ->
+    GenericDeclaration MkVar es
+  vars es = MkGenericDeclaration Nothing Var es
 
-export
-var' :
-  All Expression es =>
-  (is : List Identifier) ->
-  {auto 0 ok : NonEmpty is} ->
-  HList es ->
-  ValueSpec BadType es
-var' (i::is) es = MkValueSpec Nothing (i:::is) Nothing es Nothing
+  export
+  var' :
+    All Expression es =>
+    (is : List Identifier) ->
+    {auto 0 ok : NonEmpty is} ->
+    HList es ->
+    ValueSpec BadType es
+  var' (i::is) es = MkValueSpec Nothing (i:::is) Nothing es Nothing
 
-export
-var :
-  GoType t =>
-  All Expression es =>
-  (is : List Identifier) ->
-  {auto 0 ok : NonEmpty is} ->
-  t ->
-  HList es ->
-  ValueSpec t es
-var (i::is) t es = MkValueSpec Nothing (i:::is) (Just t) es Nothing
+  export
+  var :
+    GoType t =>
+    All Expression es =>
+    (is : List Identifier) ->
+    {auto 0 ok : NonEmpty is} ->
+    t ->
+    HList es ->
+    ValueSpec t es
+  var (i::is) t es = MkValueSpec Nothing (i:::is) (Just t) es Nothing
 
-export
-block :
-  All Statement ts =>
-  HList ts ->
-  BlockStatement ts
-block = MkBlockStatement
+namespace Statement
 
-export
-expr : Expression e => e -> ExpressionStatement e
-expr e = MkExpressionStatement Nothing e Nothing
+  export
+  block :
+    All Statement ts =>
+    HList ts ->
+    BlockStatement ts
+  block = MkBlockStatement
 
-export
-decl : Declaration d => d -> DeclarationStatement d
-decl d = MkDeclarationStatement d
+  export
+  expr : Expression e => e -> ExpressionStatement e
+  expr e = MkExpressionStatement Nothing e Nothing
 
-export
-defer :
-  CallExpression f as e ->
-  DeferStatement f as e
-defer c = MkDeferStatement c
+  export
+  decl : Declaration d => d -> DeclarationStatement d
+  decl d = MkDeclarationStatement d
 
-export
-return :
-  All Expression es =>
-  HList es ->
-  ReturnStatement es
-return es = MkReturnStatement Nothing es
+  export
+  defer :
+    CallExpression f as e ->
+    DeferStatement f as e
+  defer c = MkDeferStatement c
 
-export
-for' :
-  Statement i =>
-  Expression c =>
-  Statement p =>
-  All Statement sts =>
-  i ->
-  c ->
-  p ->
-  HList sts ->
-  ForStatement i c p sts
-for' i c p sts = MkForStatement (Just i) (Just c) (Just p) (MkBlockStatement sts)
+  export
+  return :
+    All Expression es =>
+    HList es ->
+    ReturnStatement es
+  return es = MkReturnStatement Nothing es
 
-export
-forever :
-  All Statement sts =>
-  HList sts ->
-  ForStatement BadStatement BadExpression BadStatement sts
-forever sts = MkForStatement Nothing Nothing Nothing $ MkBlockStatement sts
+  export
+  for_ :
+    Statement i =>
+    Expression c =>
+    Statement p =>
+    All Statement sts =>
+    i ->
+    c ->
+    p ->
+    HList sts ->
+    ForStatement i c p sts
+  for_ i c p sts = MkForStatement (Just i) (Just c) (Just p) (MkBlockStatement sts)
 
-export
-while :
-  Expression c =>
-  All Statement sts =>
-  c ->
-  HList sts ->
-  ForStatement BadStatement c BadStatement sts
-while c sts = MkForStatement Nothing (Just c) Nothing $ MkBlockStatement sts
+  export
+  forever :
+    All Statement sts =>
+    HList sts ->
+    ForStatement BadStatement BadExpression BadStatement sts
+  forever sts = MkForStatement Nothing Nothing Nothing $ MkBlockStatement sts
 
-export
-rangeKV :
-  Expression r =>
-  All Statement sts =>
-  (key : String) ->
-  (value : String) ->
-  r ->
-  HList sts ->
-  KeyValueRangeStatement Identifier Identifier MkDefine r sts
-rangeKV k v r sts = MkKeyValueRangeStatement (id' k) (id' v) ItIsDefine r $ MkBlockStatement sts
+  export
+  while :
+    Expression c =>
+    All Statement sts =>
+    c ->
+    HList sts ->
+    ForStatement BadStatement c BadStatement sts
+  while c sts = MkForStatement Nothing (Just c) Nothing $ MkBlockStatement sts
 
-export
-rangeV :
-  Expression r =>
-  All Statement sts =>
-  (value : String) ->
-  r ->
-  HList sts ->
-  ValueRangeStatement Identifier MkDefine r sts
-rangeV v r sts = MkValueRangeStatement (id' v) ItIsDefine r $ MkBlockStatement sts
+  export
+  rangeKV :
+    Expression r =>
+    All Statement sts =>
+    (key : String) ->
+    (value : String) ->
+    r ->
+    HList sts ->
+    KeyValueRangeStatement Identifier Identifier MkDefine r sts
+  rangeKV k v r sts = MkKeyValueRangeStatement (id_ k) (id_ v) ItIsDefine r $ MkBlockStatement sts
 
-export
-range :
-  Expression r =>
-  All Statement sts =>
-  r ->
-  HList sts ->
-  RangeStatement r sts
-range r sts = MkRangeStatement r $ MkBlockStatement sts
+  export
+  rangeV :
+    Expression r =>
+    All Statement sts =>
+    (value : String) ->
+    r ->
+    HList sts ->
+    ValueRangeStatement Identifier MkDefine r sts
+  rangeV v r sts = MkValueRangeStatement (id_ v) ItIsDefine r $ MkBlockStatement sts
 
-export
-if' :
-  Expression c =>
-  All Statement sts =>
-  c ->
-  HList sts ->
-  IfStatement BadStatement c sts BadStatement
-if' c sts = MkIfStatement Nothing c (MkBlockStatement sts) Nothing
+  export
+  range :
+    Expression r =>
+    All Statement sts =>
+    r ->
+    HList sts ->
+    RangeStatement r sts
+  range r sts = MkRangeStatement r $ MkBlockStatement sts
 
-export
-ifs :
-  Statement i =>
-  Expression c =>
-  All Statement sts =>
-  i ->
-  c ->
-  HList sts ->
-  IfStatement i c sts BadStatement
-ifs i c sts = MkIfStatement (Just i) c (MkBlockStatement sts) Nothing
+  export
+  if_ :
+    Expression c =>
+    All Statement sts =>
+    c ->
+    HList sts ->
+    IfStatement BadStatement c sts BadStatement
+  if_ c sts = MkIfStatement Nothing c (MkBlockStatement sts) Nothing
 
-export
-ifE :
-  Expression c =>
-  All Statement sts =>
-  Statement e =>
-  c ->
-  HList sts ->
-  e ->
-  IfStatement BadStatement c sts e
-ifE c sts e = MkIfStatement Nothing c (MkBlockStatement sts) (Just e)
+  export
+  ifS :
+    Statement i =>
+    Expression c =>
+    All Statement sts =>
+    i ->
+    c ->
+    HList sts ->
+    IfStatement i c sts BadStatement
+  ifS i c sts = MkIfStatement (Just i) c (MkBlockStatement sts) Nothing
 
-export
-ifsE :
-  Statement i =>
-  Expression c =>
-  All Statement sts =>
-  Statement e =>
-  i ->
-  c ->
-  HList sts ->
-  e ->
-  IfStatement i c sts e
-ifsE i c sts e = MkIfStatement (Just i) c (MkBlockStatement sts) (Just e)
+  export
+  ifE :
+    Expression c =>
+    All Statement sts =>
+    Statement e =>
+    c ->
+    HList sts ->
+    e ->
+    IfStatement BadStatement c sts e
+  ifE c sts e = MkIfStatement Nothing c (MkBlockStatement sts) (Just e)
 
-export
-switchs :
-  Statement i =>
-  Expression e =>
-  All Statement sts =>
-  All IsCaseClause sts =>
-  i ->
-  e ->
-  HList sts ->
-  SwitchStatement i e sts
-switchs i e sts = MkSwitchStatement (Just i) (Just e) (MkBlockStatement sts)
+  export
+  ifSE :
+    Statement i =>
+    Expression c =>
+    All Statement sts =>
+    Statement e =>
+    i ->
+    c ->
+    HList sts ->
+    e ->
+    IfStatement i c sts e
+  ifSE i c sts e = MkIfStatement (Just i) c (MkBlockStatement sts) (Just e)
 
-export
-switch :
-  Expression e =>
-  All Statement sts =>
-  All IsCaseClause sts =>
-  e ->
-  HList sts ->
-  SwitchStatement BadStatement e sts
-switch e sts = MkSwitchStatement Nothing (Just e) (MkBlockStatement sts)
+  export
+  switchS :
+    Statement i =>
+    Expression e =>
+    All Statement sts =>
+    All IsCaseClause sts =>
+    i ->
+    e ->
+    HList sts ->
+    SwitchStatement i e sts
+  switchS i e sts = MkSwitchStatement (Just i) (Just e) (MkBlockStatement sts)
 
-export
-switch' :
-  All Statement sts =>
-  All IsCaseClause sts =>
-  HList sts ->
-  SwitchStatement BadStatement BadExpression sts
-switch' sts = MkSwitchStatement Nothing Nothing (MkBlockStatement sts)
+  export
+  switch :
+    Expression e =>
+    All Statement sts =>
+    All IsCaseClause sts =>
+    e ->
+    HList sts ->
+    SwitchStatement BadStatement e sts
+  switch e sts = MkSwitchStatement Nothing (Just e) (MkBlockStatement sts)
 
-export
-case' :
-  All Expression es =>
-  All Statement sts =>
-  NonEmpty sts =>
-  HList es ->
-  HList sts ->
-  CaseClause es sts
-case' es sts = MkCaseClause es sts
+  export
+  switch' :
+    All Statement sts =>
+    All IsCaseClause sts =>
+    HList sts ->
+    SwitchStatement BadStatement BadExpression sts
+  switch' sts = MkSwitchStatement Nothing Nothing (MkBlockStatement sts)
 
-export
-default' :
-  All Statement sts =>
-  NonEmpty sts =>
-  HList sts ->
-  CaseClause [] sts
-default' sts = MkCaseClause [] sts
+  export
+  case_ :
+    All Expression es =>
+    All Statement sts =>
+    NonEmpty sts =>
+    HList es ->
+    HList sts ->
+    CaseClause es sts
+  case_ es sts = MkCaseClause es sts
+
+  export
+  default_ :
+    All Statement sts =>
+    NonEmpty sts =>
+    HList sts ->
+    CaseClause [] sts
+  default_ sts = MkCaseClause [] sts
 
 export
 call :
@@ -575,7 +573,7 @@ export
   e ->
   String ->
   SelectorExpression e
-(/./) e f = MkSelectorExpression e $ id' f
+(/./) e f = MkSelectorExpression e $ id_ f
 
 export
 (/:/) :

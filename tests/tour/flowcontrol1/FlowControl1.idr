@@ -8,11 +8,11 @@ main = do
   let src = file "for.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [id' "sum"] /:=/ [int 0]
-                , for' ([id' "i"] /:=/ [int 0]) (id' "i" /</ int 10) (inc $ id' "i")
-                  [ [id' "sum" ] /+=/ [id' "i"] ]
-                , expr $ call (id' "fmt" /./ "Println") [id' "sum"]
+              [ func (id_ "main") [] void
+                [ [id_ "sum"] /:=/ [int 0]
+                , for_ ([id_ "i"] /:=/ [int 0]) (id_ "i" /</ int 10) (inc $ id_ "i")
+                  [ [id_ "sum" ] /+=/ [id_ "i"] ]
+                , expr $ call (id_ "fmt" /./ "Println") [id_ "sum"]
                 ]
               ]
 

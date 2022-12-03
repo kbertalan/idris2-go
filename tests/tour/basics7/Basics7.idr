@@ -9,13 +9,13 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [
-                func (id' "split") [field ["sum"] $ id' "int"] [field ["x", "y"] $ id' "int"]
-                [ [id' "x"] /=/ [id' "sum" /*/ int 4 /// int 9]
-                , [id' "y"] /=/ [id' "sum" /-/ id' "x"]
+                func (id_ "split") [field ["sum"] $ id_ "int"] [field ["x", "y"] $ id_ "int"]
+                [ [id_ "x"] /=/ [id_ "sum" /*/ int 4 /// int 9]
+                , [id_ "y"] /=/ [id_ "sum" /-/ id_ "x"]
                 , return []
                 ]
-              , func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println") [call (id' "split") [int 17]]
+              , func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println") [call (id_ "split") [int 17]]
                 ]
               ]
 

@@ -8,15 +8,15 @@ main = do
   let src = file "nil-slices.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ decl $ vars [ var [ id' "s" ] (array' (id' "int")) [] ]
-                , expr $ call (id' "fmt" /./ "Println")
-                  [ id' "s"
-                  , call (id' "len") [id' "s"]
-                  , call (id' "cap") [id' "s"]
+              [ func (id_ "main") [] void
+                [ decl $ vars [ var [ id_ "s" ] (array' (id_ "int")) [] ]
+                , expr $ call (id_ "fmt" /./ "Println")
+                  [ id_ "s"
+                  , call (id_ "len") [id_ "s"]
+                  , call (id_ "cap") [id_ "s"]
                   ]
-                , if' (id' "s" /==/ id' "nil")
-                  [ expr $ call (id' "fmt" /./ "Println") [ string "nil!" ]
+                , if_ (id_ "s" /==/ id_ "nil")
+                  [ expr $ call (id_ "fmt" /./ "Println") [ string "nil!" ]
                   ]
                 ]
               ]

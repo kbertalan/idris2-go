@@ -8,9 +8,9 @@ main = do
   let src = file "defer.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ defer $ call (id' "fmt" /./ "Println") [string "world"]
-                , expr $ call (id' "fmt" /./ "Println") [string "hello"]
+              [ func (id_ "main") [] void
+                [ defer $ call (id_ "fmt" /./ "Println") [string "world"]
+                , expr $ call (id_ "fmt" /./ "Println") [string "hello"]
                 ]
               ]
 

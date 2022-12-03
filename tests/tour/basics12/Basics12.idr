@@ -8,12 +8,12 @@ main = do
   let src = file "basic-types.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ decl $ vars [ var [id' "i"] (id' "int") [] ]
-                , decl $ vars [ var [id' "f"] (id' "float64") [] ]
-                , decl $ vars [ var [id' "b"] (id' "bool") [] ]
-                , decl $ vars [ var [id' "s"] (id' "string") [] ]
-                , expr $ call (id' "fmt" /./ "Printf") [string "%v %v %v %q\\n", id' "i", id' "f", id' "b", id' "s"]
+              [ func (id_ "main") [] void
+                [ decl $ vars [ var [id_ "i"] (id_ "int") [] ]
+                , decl $ vars [ var [id_ "f"] (id_ "float64") [] ]
+                , decl $ vars [ var [id_ "b"] (id_ "bool") [] ]
+                , decl $ vars [ var [id_ "s"] (id_ "string") [] ]
+                , expr $ call (id_ "fmt" /./ "Printf") [string "%v %v %v %q\\n", id_ "i", id_ "f", id_ "b", id_ "s"]
                 ]
               ]
 

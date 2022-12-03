@@ -10,8 +10,8 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println") [id' "math" /./ "Pi"] ]
+              [ func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println") [id_ "math" /./ "Pi"] ]
               ]
 
   Right () <- printFile "build/go" src

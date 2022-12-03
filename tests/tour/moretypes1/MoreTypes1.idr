@@ -8,21 +8,21 @@ main = do
   let src = file "pointers.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [ id' "i", id' "j" ] /:=/ [int 42, int 2701]
-                , [ id' "p" ] /:=/ [ /&/ id' "i" ]
+              [ func (id_ "main") [] void
+                [ [ id_ "i", id_ "j" ] /:=/ [int 42, int 2701]
+                , [ id_ "p" ] /:=/ [ /&/ id_ "i" ]
                   |> comment " point to i"
-                , expr (call (id' "fmt" /./ "Println") [ star $ id' "p" ])
+                , expr (call (id_ "fmt" /./ "Println") [ star $ id_ "p" ])
                   |> comment " read i through the pointer"
-                , [ star $ id' "p" ] /=/ [ int 21 ]
+                , [ star $ id_ "p" ] /=/ [ int 21 ]
                   |> comment " set i through the pointer"
-                , expr (call (id' "fmt" /./ "Println") [id' "i"])
+                , expr (call (id_ "fmt" /./ "Println") [id_ "i"])
                   |> comment " see the new value of i"
-                , [ id' "p" ] /=/ [ /&/ id' "j" ]
+                , [ id_ "p" ] /=/ [ /&/ id_ "j" ]
                   |> comment " point to j"
-                , [ star $ id' "p" ] /=/ [ star (id' "p") /// int 37 ]
+                , [ star $ id_ "p" ] /=/ [ star (id_ "p") /// int 37 ]
                   |> comment " divide j through the pointer"
-                , expr (call (id' "fmt" /./ "Println") [ id' "j" ])
+                , expr (call (id_ "fmt" /./ "Println") [ id_ "j" ])
                   |> comment " see the new value of j"
                 ]
               ]

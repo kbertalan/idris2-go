@@ -10,15 +10,15 @@ main = do
               [ import' "fmt"
               , import' "runtime"
               ]
-              [ func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Print") [ string "Go runs on " ]
-                , switchs ([id' "os"] /:=/ [id' "runtime" /./ "GOOS"]) (id' "os")
-                  [ case' [string "darwin"]
-                    [ expr $ call (id' "fmt" /./ "Println") [string "OS X."] ]
-                  , case' [string "linux"]
-                    [ expr $ call (id' "fmt" /./ "Println") [string "Linux."] ]
-                  , default'
-                    [ expr (call (id' "fmt" /./ "Printf") [string "%s os.\\n", id' "os"])
+              [ func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Print") [ string "Go runs on " ]
+                , switchS ([id_ "os"] /:=/ [id_ "runtime" /./ "GOOS"]) (id_ "os")
+                  [ case_ [string "darwin"]
+                    [ expr $ call (id_ "fmt" /./ "Println") [string "OS X."] ]
+                  , case_ [string "linux"]
+                    [ expr $ call (id_ "fmt" /./ "Println") [string "Linux."] ]
+                  , default_
+                    [ expr (call (id_ "fmt" /./ "Printf") [string "%s os.\\n", id_ "os"])
                       |> docs
                         [ " freebsd, openbsd,"
                         , " plan9, windows..."

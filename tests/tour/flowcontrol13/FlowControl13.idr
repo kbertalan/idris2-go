@@ -8,12 +8,12 @@ main = do
   let src = file "defer-multi.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println") [string "counting"]
-                , for' ([id' "i"] /:=/ [int 0]) (id' "i" /</ int 10) (inc $ id' "i")
-                  [ defer $ call (id' "fmt" /./ "Println") [id' "i"]
+              [ func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println") [string "counting"]
+                , for_ ([id_ "i"] /:=/ [int 0]) (id_ "i" /</ int 10) (inc $ id_ "i")
+                  [ defer $ call (id_ "fmt" /./ "Println") [id_ "i"]
                   ]
-                , expr $ call (id' "fmt" /./ "Println") [string "done"]
+                , expr $ call (id_ "fmt" /./ "Println") [string "done"]
                 ]
               ]
 

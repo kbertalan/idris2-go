@@ -8,8 +8,8 @@ main = do
   let src = file "slice-bounds.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [ id' "s" ] /:=/ [ composite (array' (id' "int")) 
+              [ func (id_ "main") [] void
+                [ [ id_ "s" ] /:=/ [ composite (array' (id_ "int")) 
                     [ int 2
                     , int 3
                     , int 5
@@ -18,12 +18,12 @@ main = do
                     , int 13
                     ]
                   ]
-                , [ id' "s" ] /=/ [ sliceLH (id' "s") (int 1) (int 4)]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "s" ]
-                , [ id' "s" ] /=/ [ sliceH (id' "s") (int 2)]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "s" ]
-                , [ id' "s" ] /=/ [ sliceL (id' "s") (int 1)]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "s" ]
+                , [ id_ "s" ] /=/ [ sliceLH (id_ "s") (int 1) (int 4)]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "s" ]
+                , [ id_ "s" ] /=/ [ sliceH (id_ "s") (int 2)]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "s" ]
+                , [ id_ "s" ] /=/ [ sliceL (id_ "s") (int 1)]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "s" ]
                 ]
               ]
 

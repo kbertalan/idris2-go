@@ -9,13 +9,13 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ types
-                [ Go.type "Vertex" [] $ struct
-                  [ field ["X"] $ id' "int"
-                  , field ["Y"] $ id' "int"
+                [ type "Vertex" [] $ struct
+                  [ field ["X"] $ id_ "int"
+                  , field ["Y"] $ id_ "int"
                   ]
                 ]
-              , func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println") [ composite (id' "Vertex") [int 1, int 2] ]
+              , func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println") [ composite (id_ "Vertex") [int 1, int 2] ]
                 ]
               ]
 

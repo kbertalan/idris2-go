@@ -10,17 +10,17 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id' "main") [] void
-                [ decl $ vars [ var [id' "x", id' "y"] (id' "int") [int 3, int 4] ]
-                , decl $ vars [ var [id' "f"] (id' "float64") [
-                    call (id' "math" /./ "Sqrt") [
-                      call (id' "float64") [ id' "x" /*/ id' "x" /+/ id' "y" /*/ id' "y" ]
+              [ func (id_ "main") [] void
+                [ decl $ vars [ var [id_ "x", id_ "y"] (id_ "int") [int 3, int 4] ]
+                , decl $ vars [ var [id_ "f"] (id_ "float64") [
+                    call (id_ "math" /./ "Sqrt") [
+                      call (id_ "float64") [ id_ "x" /*/ id_ "x" /+/ id_ "y" /*/ id_ "y" ]
                     ]
                   ] ]
-                , decl $ vars [ var [id' "z"] (id' "uint") [
-                    call (id' "uint") [id' "f"]
+                , decl $ vars [ var [id_ "z"] (id_ "uint") [
+                    call (id_ "uint") [id_ "f"]
                   ] ]
-                , expr $ call (id' "fmt" /./ "Println") [id' "x", id' "y", id' "z"]
+                , expr $ call (id_ "fmt" /./ "Println") [id_ "x", id_ "y", id_ "z"]
                 ]
               ]
 

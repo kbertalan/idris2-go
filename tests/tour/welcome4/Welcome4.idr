@@ -10,9 +10,9 @@ main = do
               [ import' "fmt"
               , import' "time"
               ]
-              [ func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println") [string "Welcome to the playground!"]
-                , expr $ call (id' "fmt" /./ "Println") [string "The time is", call (id' "time.Now") []]
+              [ func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println") [string "Welcome to the playground!"]
+                , expr $ call (id_ "fmt" /./ "Println") [string "The time is", call (id_ "time.Now") []]
                 ]
               ]
 

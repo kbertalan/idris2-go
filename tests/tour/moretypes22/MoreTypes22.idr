@@ -8,16 +8,16 @@ main = do
   let src = file "map-literals-continued.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [ id' "m" ] /:=/ [ call (id' "make") [map' (id' "string") (id' "int")] ]
-                , [ id' "m" `index` string "Answer" ] /=/ [ int 42 ]
-                , expr $ call (id' "fmt" /./ "Println") [ string "The value:", id' "m" `index` string "Answer"]
-                , [ id' "m" `index` string "Answer" ] /=/ [ int 48 ]
-                , expr $ call (id' "fmt" /./ "Println") [ string "The value:", id' "m" `index` string "Answer"]
-                , expr $ call (id' "delete") [ id' "m", string "Answer" ]
-                , expr $ call (id' "fmt" /./ "Println") [ string "The value:", id' "m" `index` string "Answer"]
-                , [ id' "v", id' "ok" ] /:=/ [ id' "m" `index` string "Answer" ]
-                , expr $ call (id' "fmt" /./ "Println") [ string "The value:", id' "v", string "Present?", id' "ok" ]
+              [ func (id_ "main") [] void
+                [ [ id_ "m" ] /:=/ [ call (id_ "make") [map_ (id_ "string") (id_ "int")] ]
+                , [ id_ "m" `index` string "Answer" ] /=/ [ int 42 ]
+                , expr $ call (id_ "fmt" /./ "Println") [ string "The value:", id_ "m" `index` string "Answer"]
+                , [ id_ "m" `index` string "Answer" ] /=/ [ int 48 ]
+                , expr $ call (id_ "fmt" /./ "Println") [ string "The value:", id_ "m" `index` string "Answer"]
+                , expr $ call (id_ "delete") [ id_ "m", string "Answer" ]
+                , expr $ call (id_ "fmt" /./ "Println") [ string "The value:", id_ "m" `index` string "Answer"]
+                , [ id_ "v", id_ "ok" ] /:=/ [ id_ "m" `index` string "Answer" ]
+                , expr $ call (id_ "fmt" /./ "Println") [ string "The value:", id_ "v", string "Present?", id_ "ok" ]
                 ]
               ]
 

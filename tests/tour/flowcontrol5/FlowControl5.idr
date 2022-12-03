@@ -10,18 +10,18 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id' "sqrt") [field ["x"] $ id' "float64"] [field [] $ id' "string"]
-                [ if' (id' "x" /</ int 0)
-                  [ return [ call (id' "sqrt") [ minus' $ id' "x" ] /+/ string "i" ] ]
-                , return [ call (id' "fmt" /./ "Sprint")
-                    [ call (id' "math" /./ "Sqrt") [id' "x"]
+              [ func (id_ "sqrt") [field ["x"] $ id_ "float64"] [field [] $ id_ "string"]
+                [ if_ (id_ "x" /</ int 0)
+                  [ return [ call (id_ "sqrt") [ minus' $ id_ "x" ] /+/ string "i" ] ]
+                , return [ call (id_ "fmt" /./ "Sprint")
+                    [ call (id_ "math" /./ "Sqrt") [id_ "x"]
                     ]
                   ]
                 ]
-              , func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println")
-                  [ call (id' "sqrt") [int 2]
-                  , call (id' "sqrt") [int $ -4]
+              , func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println")
+                  [ call (id_ "sqrt") [int 2]
+                  , call (id_ "sqrt") [int $ -4]
                   ]
                 ]
               ]

@@ -8,11 +8,11 @@ main = do
   let src = file "for-is-gos-while.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [id' "sum"] /:=/ [int 1]
-                , while (id' "sum" /</ int 1000)
-                  [ [id' "sum" ] /+=/ [id' "sum"] ]
-                , expr $ call (id' "fmt" /./ "Println") [id' "sum"]
+              [ func (id_ "main") [] void
+                [ [id_ "sum"] /:=/ [int 1]
+                , while (id_ "sum" /</ int 1000)
+                  [ [id_ "sum" ] /+=/ [id_ "sum"] ]
+                , expr $ call (id_ "fmt" /./ "Println") [id_ "sum"]
                 ]
               ]
 

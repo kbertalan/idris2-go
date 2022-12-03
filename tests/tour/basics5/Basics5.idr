@@ -9,11 +9,11 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [
-                func (id' "add") [field ["x", "y"] (id' "int")] [field [] $ id' "int"]
-                [ return [ id' "x" /+/ id' "y" ] ]
-              , func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println")
-                  [ call (id' "add") [int 42, int 13]
+                func (id_ "add") [field ["x", "y"] (id_ "int")] [field [] $ id_ "int"]
+                [ return [ id_ "x" /+/ id_ "y" ] ]
+              , func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println")
+                  [ call (id_ "add") [int 42, int 13]
                   ]
                 ]
               ]

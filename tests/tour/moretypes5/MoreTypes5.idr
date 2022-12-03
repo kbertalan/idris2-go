@@ -9,22 +9,22 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ types
-                [ Go.type "Vertex" [] $ struct
-                  [ field ["X", "Y"] $ id' "int"
+                [ type "Vertex" [] $ struct
+                  [ field ["X", "Y"] $ id_ "int"
                   ]
                 ]
               , vars
-                [ var' [id' "v1"] [ composite (id' "Vertex") [int 1, int 2] ]
+                [ var' [id_ "v1"] [ composite (id_ "Vertex") [int 1, int 2] ]
                   |> comment " has type Vertex"
-                , var' [id' "v2"] [ composite (id' "Vertex") [id' "X" /:/ int 1] ]
+                , var' [id_ "v2"] [ composite (id_ "Vertex") [id_ "X" /:/ int 1] ]
                   |> comment " Y:0 is implicit"
-                , var' [id' "v3"] [ composite (id' "Vertex") [] ]
+                , var' [id_ "v3"] [ composite (id_ "Vertex") [] ]
                   |> comment " X:0 and Y:0"
-                , var' [id' "p"] [ /&/ composite (id' "Vertex") [int 1, int 2] ]
+                , var' [id_ "p"] [ /&/ composite (id_ "Vertex") [int 1, int 2] ]
                   |> comment " has type *Vertex"
                 ]
-              , func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println") [ id' "v1", id' "p", id' "v2", id' "v3" ]
+              , func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println") [ id_ "v1", id_ "p", id_ "v2", id_ "v3" ]
                 ]
               ]
 

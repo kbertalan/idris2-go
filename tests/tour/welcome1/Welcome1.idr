@@ -8,8 +8,8 @@ main = do
   let src = file "hello.go"
               (package "main")
               [import' "fmt"]
-              [ func (id' "main") [] void [
-                expr $ call (id' "fmt" /./ "Println") [string "Hello,   "]
+              [ func (id_ "main") [] void [
+                expr $ call (id_ "fmt" /./ "Println") [string "Hello,   "]
               ]]
 
 

@@ -8,10 +8,10 @@ main = do
   let src = file "slices.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [ id' "primes" ] /:=/ [ composite (array (int 6) (id' "int")) [int 2, int 3, int 5, int 7, int 11, int 13] ]
-                , decl $ vars [ var [id' "s"] (array' $ id' "int") [ sliceLH (id' "primes") (int 1) (int 4) ] ]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "s" ]
+              [ func (id_ "main") [] void
+                [ [ id_ "primes" ] /:=/ [ composite (array (int 6) (id_ "int")) [int 2, int 3, int 5, int 7, int 11, int 13] ]
+                , decl $ vars [ var [id_ "s"] (array' $ id_ "int") [ sliceLH (id_ "primes") (int 1) (int 4) ] ]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "s" ]
                 ]
               ]
 

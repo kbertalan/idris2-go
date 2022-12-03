@@ -10,17 +10,17 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id' "pow") [field ["x","n","lim"] $ id' "float64"] [field [] $ id' "float64"]
-                [ ifsE ([id' "v"] /:=/ [call (id' "math" /./ "Pow") [id' "x", id' "n"]]) (id' "v" /</ id' "lim")
-                  [ return [ id' "v" ] ]
-                  $ block [ expr $ call (id' "fmt" /./ "Printf") [string "%g >= %g \\n", id' "v", id' "lim"] ]
-                , return [ id' "lim" ]
+              [ func (id_ "pow") [field ["x","n","lim"] $ id_ "float64"] [field [] $ id_ "float64"]
+                [ ifSE ([id_ "v"] /:=/ [call (id_ "math" /./ "Pow") [id_ "x", id_ "n"]]) (id_ "v" /</ id_ "lim")
+                  [ return [ id_ "v" ] ]
+                  $ block [ expr $ call (id_ "fmt" /./ "Printf") [string "%g >= %g \\n", id_ "v", id_ "lim"] ]
+                , return [ id_ "lim" ]
                   |> doc " can't use v here, though"
                 ]
-              , func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println")
-                  [ call (id' "pow") [int 3, int 2, int 10]
-                  , call (id' "pow") [int 3, int 3, int 20]
+              , func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println")
+                  [ call (id_ "pow") [int 3, int 2, int 10]
+                  , call (id_ "pow") [int 3, int 3, int 20]
                   ]
                 ]
               ]

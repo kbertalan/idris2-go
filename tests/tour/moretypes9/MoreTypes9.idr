@@ -8,8 +8,8 @@ main = do
   let src = file "slice-literals.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [ id' "q" ] /:=/ [ composite (array' (id' "int")) 
+              [ func (id_ "main") [] void
+                [ [ id_ "q" ] /:=/ [ composite (array' (id_ "int")) 
                     [ int 2
                     , int 3
                     , int 5
@@ -18,8 +18,8 @@ main = do
                     , int 13
                     ]
                   ]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "q" ]
-                , [ id' "r" ] /:=/ [ composite (array' (id' "bool")) 
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "q" ]
+                , [ id_ "r" ] /:=/ [ composite (array' (id_ "bool")) 
                     [ bool True
                     , bool False
                     , bool True
@@ -28,8 +28,8 @@ main = do
                     , bool True
                     ]
                   ]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "r" ]
-                , [ id' "s" ] /:=/ [ composite (array' $ struct [ field ["i"] $ id' "int", field ["b"] $ id' "bool" ])
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "r" ]
+                , [ id_ "s" ] /:=/ [ composite (array' $ struct [ field ["i"] $ id_ "int", field ["b"] $ id_ "bool" ])
                     [ composite' [int 2, bool True]
                     , composite' [int 3, bool False]
                     , composite' [int 5, bool True]
@@ -38,7 +38,7 @@ main = do
                     , composite' [int 13, bool True]
                     ]
                   ]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "s" ]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "s" ]
                 ]
               ]
 

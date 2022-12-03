@@ -8,21 +8,21 @@ main = do
   let src = file "slices-pointers.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [ id' "names" ] /:=/ [ composite (array (int 4) (id' "string")) 
+              [ func (id_ "main") [] void
+                [ [ id_ "names" ] /:=/ [ composite (array (int 4) (id_ "string")) 
                     [ string "John"
                     , string "Paul"
                     , string "George"
                     , string "Ringo"
                     ]
                   ]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "names" ]
-                , [id' "a"] /:=/ [ sliceLH (id' "names") (int 0) (int 2) ]
-                , [id' "b"] /:=/ [ sliceLH (id' "names") (int 1) (int 3) ]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "a", id' "b" ]
-                , [ id' "b" `index` int 0 ] /=/ [string "XXX"]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "a", id' "b" ]
-                , expr $ call (id' "fmt" /./ "Println") [ id' "names" ]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "names" ]
+                , [id_ "a"] /:=/ [ sliceLH (id_ "names") (int 0) (int 2) ]
+                , [id_ "b"] /:=/ [ sliceLH (id_ "names") (int 1) (int 3) ]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "a", id_ "b" ]
+                , [ id_ "b" `index` int 0 ] /=/ [string "XXX"]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "a", id_ "b" ]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "names" ]
                 ]
               ]
 

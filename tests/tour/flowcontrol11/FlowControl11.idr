@@ -10,15 +10,15 @@ main = do
               [ import' "fmt"
               , import' "time"
               ]
-              [ func (id' "main") [] void
-                [ [ id' "t" ] /:=/ [ call (id' "time" /./ "Now") [] ]
+              [ func (id_ "main") [] void
+                [ [ id_ "t" ] /:=/ [ call (id_ "time" /./ "Now") [] ]
                 , switch'
-                  [ case' [call (id' "t" /./ "Hour") [] /</ int 12]
-                    [ expr $ call (id' "fmt" /./ "Println") [string "Good morning!"] ]
-                  , case' [call (id' "t" /./ "Hour") [] /</ int 17]
-                    [ expr $ call (id' "fmt" /./ "Println") [string "Good afternoon."] ]
-                  , default'
-                    [ expr (call (id' "fmt" /./ "Println") [string "Good evening."]) ]
+                  [ case_ [call (id_ "t" /./ "Hour") [] /</ int 12]
+                    [ expr $ call (id_ "fmt" /./ "Println") [string "Good morning!"] ]
+                  , case_ [call (id_ "t" /./ "Hour") [] /</ int 17]
+                    [ expr $ call (id_ "fmt" /./ "Println") [string "Good afternoon."] ]
+                  , default_
+                    [ expr (call (id_ "fmt" /./ "Println") [string "Good evening."]) ]
                   ]
                 ]
               ]

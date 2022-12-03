@@ -8,9 +8,9 @@ main = do
   let src = file "type-conversions.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [id' "v"] /:=/ [int 42] |> comment " change me!"
-                , expr $ call (id' "fmt" /./ "Printf") [string "v is of type %T\\n", id' "v"]
+              [ func (id_ "main") [] void
+                [ [id_ "v"] /:=/ [int 42] |> comment " change me!"
+                , expr $ call (id_ "fmt" /./ "Printf") [string "v is of type %T\\n", id_ "v"]
                 ]
               ]
 

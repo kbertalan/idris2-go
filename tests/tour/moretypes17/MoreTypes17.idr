@@ -8,14 +8,14 @@ main = do
   let src = file "range-continued.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [ id' "pow" ] /:=/ [ call (id' "make") [ array' $ id' "int", int 10 ] ]
-                , rangeV "i" (id' "pow")
-                  [ [ id' "pow" `index` id' "i" ] /=/ [ int 1 /<</ call (id' "uint") [ id' "i" ] ]
+              [ func (id_ "main") [] void
+                [ [ id_ "pow" ] /:=/ [ call (id_ "make") [ array' $ id_ "int", int 10 ] ]
+                , rangeV "i" (id_ "pow")
+                  [ [ id_ "pow" `index` id_ "i" ] /=/ [ int 1 /<</ call (id_ "uint") [ id_ "i" ] ]
                     |> comment " == 2**i"
                   ]
-                , rangeKV "_" "value" (id' "pow")
-                  [ expr $ call (id' "fmt" /./ "Printf") [ string "%d\\n", id' "value" ]
+                , rangeKV "_" "value" (id_ "pow")
+                  [ expr $ call (id_ "fmt" /./ "Printf") [ string "%d\\n", id_ "value" ]
                   ]
                 ]
               ]

@@ -11,14 +11,14 @@ main = do
               , import' "math/cmplx"
               ]
               [ vars
-                [ var [id' "ToBe"] (id' "bool") [bool False]
-                , var [id' "MaxInt"] (id' "uint64") [int 1 /<</ int 64 /-/ int 1]
-                , var [id' "z"] (id' "complex128") [call (id' "cmplx" /./ "Sqrt") [int (-5) /+/ imag 12]]
+                [ var [id_ "ToBe"] (id_ "bool") [bool False]
+                , var [id_ "MaxInt"] (id_ "uint64") [int 1 /<</ int 64 /-/ int 1]
+                , var [id_ "z"] (id_ "complex128") [call (id_ "cmplx" /./ "Sqrt") [int (-5) /+/ imag 12]]
                 ]
-              , func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Printf") [string "Type: %T Value: %v\\n", id' "ToBe", id' "ToBe"]
-                , expr $ call (id' "fmt" /./ "Printf") [string "Type: %T Value: %v\\n", id' "MaxInt", id' "MaxInt"]
-                , expr $ call (id' "fmt" /./ "Printf") [string "Type: %T Value: %v\\n", id' "z", id' "z"]
+              , func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Printf") [string "Type: %T Value: %v\\n", id_ "ToBe", id_ "ToBe"]
+                , expr $ call (id_ "fmt" /./ "Printf") [string "Type: %T Value: %v\\n", id_ "MaxInt", id_ "MaxInt"]
+                , expr $ call (id_ "fmt" /./ "Printf") [string "Type: %T Value: %v\\n", id_ "z", id_ "z"]
                 ]
               ]
 

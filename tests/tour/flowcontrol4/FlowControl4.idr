@@ -8,7 +8,7 @@ main = do
   let src = file "forever.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
+              [ func (id_ "main") [] void
                 [ forever []
                 ]
               ]

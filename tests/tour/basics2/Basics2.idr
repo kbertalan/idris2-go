@@ -10,8 +10,8 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Printf") [string "Now you have %g problems.\\n", call (id' "math" /./ "Sqrt") [int 7]]
+              [ func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Printf") [string "Now you have %g problems.\\n", call (id_ "math" /./ "Sqrt") [int 7]]
                 ]
               ]
 

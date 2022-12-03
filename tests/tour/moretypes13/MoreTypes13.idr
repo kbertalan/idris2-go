@@ -8,23 +8,23 @@ main = do
   let src = file "make-slices.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id' "main") [] void
-                [ [id' "a"] /:=/ [call (id' "make") [array' $ id' "int", int 5]]
-                , expr $ call (id' "printSlice") [string "a", id' "a"]
-                , [id' "b"] /:=/ [call (id' "make") [array' $ id' "int", int 0, int 5]]
-                , expr $ call (id' "printSlice") [string "b", id' "b"]
-                , [id' "c"] /:=/ [id' "b" `sliceH` int 2]
-                , expr $ call (id' "printSlice") [string "c", id' "c"]
-                , [id' "d"] /:=/ [sliceLH (id' "c") (int 2) (int 5)]
-                , expr $ call (id' "printSlice") [string "d", id' "d"]
+              [ func (id_ "main") [] void
+                [ [id_ "a"] /:=/ [call (id_ "make") [array' $ id_ "int", int 5]]
+                , expr $ call (id_ "printSlice") [string "a", id_ "a"]
+                , [id_ "b"] /:=/ [call (id_ "make") [array' $ id_ "int", int 0, int 5]]
+                , expr $ call (id_ "printSlice") [string "b", id_ "b"]
+                , [id_ "c"] /:=/ [id_ "b" `sliceH` int 2]
+                , expr $ call (id_ "printSlice") [string "c", id_ "c"]
+                , [id_ "d"] /:=/ [sliceLH (id_ "c") (int 2) (int 5)]
+                , expr $ call (id_ "printSlice") [string "d", id_ "d"]
                 ]
-              , func (id' "printSlice") [field ["s"] $ id' "string", field ["x"] $ array' $ id' "int"] void
-                [ expr $ call (id' "fmt" /./ "Printf")
+              , func (id_ "printSlice") [field ["s"] $ id_ "string", field ["x"] $ array' $ id_ "int"] void
+                [ expr $ call (id_ "fmt" /./ "Printf")
                   [ string "%s len=%d cap=%d %v\\n"
-                  , id' "s"
-                  , call (id' "len") [id' "x"]
-                  , call (id' "cap") [id' "x"]
-                  , id' "x"
+                  , id_ "s"
+                  , call (id_ "len") [id_ "x"]
+                  , call (id_ "cap") [id_ "x"]
+                  , id_ "x"
                   ]
                 ]
               ]

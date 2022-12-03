@@ -10,8 +10,8 @@ main = do
               [ import' "fmt"
               , import' "math/rand"
               ]
-              [ func (id' "main") [] void
-                [ expr $ call (id' "fmt" /./ "Println") [string "My favorite number is", call (id' "rand" /./ "Intn") [int 10]]
+              [ func (id_ "main") [] void
+                [ expr $ call (id_ "fmt" /./ "Println") [string "My favorite number is", call (id_ "rand" /./ "Intn") [int 10]]
                 ]
               ]
 
