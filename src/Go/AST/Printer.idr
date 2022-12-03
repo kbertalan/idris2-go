@@ -128,6 +128,13 @@ implementation Expression (CompositLiteral t es) => Printer t => All Printer es 
         multiLine xs
 
 export
+implementation Expression (FunctionLiteral ts ps rs sts) => Printer (FunctionType ts ps rs) => Printer (BlockStatement sts) => Printer (FunctionLiteral ts ps rs sts) where
+  print file fl = do
+    print file fl.type
+    pPutStr " "
+    print file fl.body
+
+export
 implementation Expression (CallExpression f as e) => Printer f => All Printer as => Printer (CallExpression f as e) where
   print file ce = do
       print file ce.function
@@ -594,6 +601,28 @@ implementation GoType (MapType k v) => Printer k => Printer v => Printer (MapTyp
     pPutStr "]"
     print file mt.value
 
+printReturnTypes : HasIO io => All Printer rs => File -> FieldList rs -> PrinterMonad io ()
+printReturnTypes file fl = case fl of
+  [] => print file fl
+  [x] => do
+    let parens = 2 <= length x.names
+    pPutStr " "
+    when parens $ pPutStr "("
+    print file fl
+    when parens $ pPutStr ")"
+  xs => do
+    pPutStr " ("
+    print file fl
+    pPutStr ")"
+
+export
+implementation GoType (FunctionType ts ps rs) => All Printer ts => All Printer ps => All Printer rs => Printer (FunctionType ts ps rs) where
+  print file ft = do
+    pPutStr "func("
+    print file ft.params
+    pPutStr ")"
+    printReturnTypes file ft.results
+
 -- Declarations
 
 export
@@ -604,24 +633,9 @@ implementation Declaration (FuncDeclaration rcs ts ps rs sts) => All Printer ps 
     pPutStr "("
     print file fd.type.params
     pPutStr ")"
-    printReturnTypes fd.type.results
+    printReturnTypes file fd.type.results
     pPutStr " "
     print file fd.body
-
-    where
-      printReturnTypes : FieldList rs -> PrinterMonad io ()
-      printReturnTypes fl = case fl of
-        [] => print file fl
-        [x] => do
-          let parens = 2 <= length x.names
-          pPutStr " "
-          when parens $ pPutStr "("
-          print file fl
-          when parens $ pPutStr ")"
-        xs => do
-          pPutStr " ("
-          print file fl
-          pPutStr ")"
 
 export
 implementation Declaration (GenericDeclaration k es) => All Printer es => Show (GenericDeclarationToken k) => Printer (GenericDeclaration k es) where

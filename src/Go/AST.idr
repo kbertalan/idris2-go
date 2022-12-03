@@ -427,7 +427,7 @@ record FunctionLiteral ts ps rs sts where
   body : BlockStatement sts
 
 public export
-implementation All Statement sts => Expression (FunctionType ts ps rs) => Expression (FunctionLiteral ts ps rs sts) where
+implementation All Statement sts => GoType (FunctionType ts ps rs) => Expression (FunctionLiteral ts ps rs sts) where
 
 public export
 record CompositLiteral t es where

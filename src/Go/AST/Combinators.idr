@@ -154,6 +154,15 @@ composite' :
 composite' es = MkCompositLiteral Nothing es
 
 export
+funcL :
+  All Statement sts =>
+  FieldList ps ->
+  FieldList rs ->
+  HList sts ->
+  FunctionLiteral [] ps rs sts
+funcL ps rs sts = MkFunctionLiteral (MkFunctionType [] ps rs) (MkBlockStatement sts)
+
+export
 import' :
   (path : String) ->
   ImportSpec
@@ -209,6 +218,13 @@ map' :
   v ->
   MapType k v
 map' k v = MkMapType k v
+
+export
+func' :
+  FieldList ps ->
+  FieldList rs ->
+  FunctionType [] ps rs
+func' ps rs = MkFunctionType [] ps rs
 
 export
 func :
