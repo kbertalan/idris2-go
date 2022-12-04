@@ -7,7 +7,11 @@ modules = Data.List.All,
   Go.Token,
   Go.AST,
   Go.AST.Combinators,
-  Go.AST.Printer
+  Go.AST.Printer,
+  Idris2.Compiler.Go
 
 sourcedir = "src"
+
+executable = idris2-go
+main = Main
 

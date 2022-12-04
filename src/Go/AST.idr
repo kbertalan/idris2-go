@@ -10,6 +10,7 @@ import Go.Token
 interface Expression a where
 interface Statement a where
 interface Specification a where
+export
 interface Declaration a where
 interface GoType a where
 
