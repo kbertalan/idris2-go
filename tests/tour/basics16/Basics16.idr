@@ -9,16 +9,16 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ consts
-                [ const' [id_ "Big"] (Maybe Identifier `the` Nothing) [int 1 /<</ int 100]
+                [ const' [id_ "Big"] [int 1 /<</ int 100]
                   |> docs [ " Create a huge number by shifting a 1 bit left 100 places."
                           , " In other words, the binary number that is 1 followed by 100 zeroes."
                           ]
-                , const' [id_ "Small"] (Maybe Identifier `the` Nothing) [id_ "Big" />>/ int 99]
+                , const' [id_ "Small"] [id_ "Big" />>/ int 99]
                   |> doc " Shift it right again 99 places, so we end up with 1<<1, or 2."
                 ]
-              , func (id_ "needInt") [field ["x"] (id_ "int")] [field [] $ id_ "int"]
+              , func (id_ "needInt") [field ["x"] (tid' "int")] [field [] $ tid' "int"]
                 [ return [ id_ "x" /*/ int 10 /+/ int 1 ] ]
-              , func (id_ "needFloat") [field ["x"] (id_ "float64")] [field [] $ id_ "float64"]
+              , func (id_ "needFloat") [field ["x"] (tid' "float64")] [field [] $ tid' "float64"]
                 [ return [ id_ "x" /*/ float 0.1 ] ]
               , func (id_ "main") [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [call (id_ "needInt") [id_ "Small"]]

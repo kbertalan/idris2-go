@@ -10,14 +10,14 @@ main = do
               [ import' "fmt" ]
               [ types
                 [ type "Vertex" [] $ struct
-                  [ field ["Lat", "Long"] $ id_ "float64"
+                  [ field ["Lat", "Long"] $ tid' "float64"
                   ]
                 ]
               , vars
                 [ var' [id_ "m"]
-                  [ composite (map_ (id_ "string") (id_ "Vertex"))
-                    [ string "Bell Labs" /:/ composite (id_ "Vertex") [ float 40.68433, float (-74.39967) ]
-                    , string "Google" /:/ composite (id_ "Vertex") [ float 37.42202, float (-122.08408) ]
+                  [ composit (map_ (tid' "string") (tid' "Vertex"))
+                    [ string "Bell Labs" /:/ composit (tid' "Vertex") [ float 40.68433, float (-74.39967) ]
+                    , string "Google" /:/ composit (tid' "Vertex") [ float 37.42202, float (-122.08408) ]
                     ]
                   ]
                 ]

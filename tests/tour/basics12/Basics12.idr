@@ -9,10 +9,10 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ decl $ vars [ var [id_ "i"] (id_ "int") [] ]
-                , decl $ vars [ var [id_ "f"] (id_ "float64") [] ]
-                , decl $ vars [ var [id_ "b"] (id_ "bool") [] ]
-                , decl $ vars [ var [id_ "s"] (id_ "string") [] ]
+                [ decl $ vars [ var [id_ "i"] (tid' "int") [] ]
+                , decl $ vars [ var [id_ "f"] (tid' "float64") [] ]
+                , decl $ vars [ var [id_ "b"] (tid' "bool") [] ]
+                , decl $ vars [ var [id_ "s"] (tid' "string") [] ]
                 , expr $ call (id_ "fmt" /./ "Printf") [string "%v %v %v %q\\n", id_ "i", id_ "f", id_ "b", id_ "s"]
                 ]
               ]

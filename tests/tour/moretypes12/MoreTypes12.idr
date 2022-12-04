@@ -9,7 +9,7 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ decl $ vars [ var [ id_ "s" ] (array' (id_ "int")) [] ]
+                [ decl $ vars [ var [ id_ "s" ] (array' (tid' "int")) [] ]
                 , expr $ call (id_ "fmt" /./ "Println")
                   [ id_ "s"
                   , call (id_ "len") [id_ "s"]

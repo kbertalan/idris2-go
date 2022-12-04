@@ -12,14 +12,14 @@ main = do
               ]
               [ func (id_ "compute")
                 [ field ["fn"] $ func'
-                  [ field [] $ id_ "float64"
-                  , field [] $ id_ "float64"
-                  ] [field [] $ id_ "float64"]
-                ] [field [] $ id_ "float64"]
+                  [ field [] $ tid' "float64"
+                  , field [] $ tid' "float64"
+                  ] [field [] $ tid' "float64"]
+                ] [field [] $ tid' "float64"]
                 [ return [ call (id_ "fn") [ int 3, int 4 ] ]
                 ]
               , func (id_ "main") [] void
-                [ [ id_ "hypot" ] /:=/ [ funcL [ field ["x", "y"] $ id_ "float64" ] [field [] $ id_ "float64"]
+                [ [ id_ "hypot" ] /:=/ [ funcL [ field ["x", "y"] $ tid' "float64" ] [field [] $ tid' "float64"]
                     [ return [ call (id_ "math" /./ "Sqrt") [ id_ "x" /*/ id_ "x" /+/ id_ "y" /*/ id_ "y" ] ]
                     ]
                   ]

@@ -9,7 +9,7 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [ id_ "s" ] /:=/ [ composite (array' (id_ "int")) 
+                [ [ id_ "s" ] /:=/ [ composit (array' (tid' "int")) 
                     [ int 2
                     , int 3
                     , int 5

@@ -41,13 +41,19 @@ data FieldList : (ts : List Type) -> Type where
   (::) : {auto tt : GoType t} -> Field t -> FieldList ts -> FieldList (t::ts)
 
 public export
+record TypeIdentifier where
+  constructor MkTypeIdentifier
+  package : Maybe Identifier
+  name : Identifier
+
+export
+implementation GoType TypeIdentifier where
+
+public export
 record ArrayType l e where
   constructor MkArrayType
   length : Maybe l
   element : e
-
-public export
-implementation Expression l => Expression e => Expression (ArrayType l e) where
 
 public export
 implementation Expression l => GoType e => GoType (ArrayType l e) where
@@ -56,9 +62,6 @@ public export
 record StructType ts where
   constructor MkStructType
   fields : FieldList ts
-
-public export
-implementation Expression (StructType ts) where
 
 public export
 implementation GoType (StructType ts) where
@@ -71,18 +74,12 @@ record FunctionType ts ps rs where
   results : FieldList rs
 
 public export
-implementation Expression (FunctionType ts ps rs) where
-
-public export
 implementation GoType (FunctionType ts ps rs) where
 
 public export
 record InterfaceType ts where
   constructor MkInterfaceType
   methods : FieldList ts
-
-public export
-implementation Expression (InterfaceType ts) where
 
 public export
 implementation GoType (InterfaceType ts) where
@@ -92,9 +89,6 @@ record MapType k v where
   constructor MkMapType
   key : k
   value : v
-
-public export
-implementation Expression k => Expression v => Expression (MapType k v) where
 
 public export
 implementation GoType k => GoType v => GoType (MapType k v) where
@@ -112,7 +106,7 @@ record ChanType e where
   value : e
 
 public export
-implementation Expression e => Expression (ChanType e) where
+implementation GoType e => GoType (ChanType e) where
 
 public export
 record BadStatement where
@@ -409,9 +403,6 @@ public export
 implementation Expression Identifier where
 
 public export
-implementation GoType Identifier where
-
-public export
 record BasicLiteral where
   constructor MkBasicLiteral
   kind : Token.Literal
@@ -436,7 +427,7 @@ record CompositLiteral t es where
   expressions : HList es
 
 public export
-implementation Expression t => All Expression es => Expression (CompositLiteral t es) where
+implementation GoType t => All Expression es => Expression (CompositLiteral t es) where
 
 public export
 record ParenExpression e where
@@ -454,6 +445,24 @@ record SelectorExpression e where
 
 public export
 implementation Expression e => Expression (SelectorExpression e) where
+
+public export
+record CastExpression t e where
+  constructor MkCastExpression
+  type : t
+  expression : e
+
+public export
+implementation GoType t => Expression e => Expression (CastExpression t e) where
+
+public export
+record MakeExpression t es where
+  constructor MkMakeExpression
+  type : t
+  expressions : HList es
+
+public export
+implementation GoType t => All Expression es => Expression (MakeExpression t es) where
 
 public export
 record IndexExpression e i where
@@ -555,16 +564,16 @@ public export
 implementation GoType t => All Expression es => Specification (ValueSpec t es) where
 
 public export
-record TypeSpec fs e where
+record TypeSpec ts t where
   constructor MkTypeSpec
   doc : Maybe CommentGroup
   name : Identifier
-  typeParams : FieldList fs
-  type : e
+  typeParams : FieldList ts
+  type : t
   comment : Maybe CommentGroup
 
 public export
-implementation Expression e => Specification (TypeSpec fs e) where
+implementation GoType t => Specification (TypeSpec ts t) where
 
 -- declarations
 

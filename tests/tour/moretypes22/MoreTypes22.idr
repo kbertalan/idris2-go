@@ -9,7 +9,7 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [ id_ "m" ] /:=/ [ call (id_ "make") [map_ (id_ "string") (id_ "int")] ]
+                [ [ id_ "m" ] /:=/ [ make (map_ (tid' "string") (tid' "int")) [] ]
                 , [ id_ "m" `index` string "Answer" ] /=/ [ int 42 ]
                 , expr $ call (id_ "fmt" /./ "Println") [ string "The value:", id_ "m" `index` string "Answer"]
                 , [ id_ "m" `index` string "Answer" ] /=/ [ int 48 ]

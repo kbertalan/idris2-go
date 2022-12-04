@@ -13,10 +13,10 @@ main = do
               [ func (id_ "main") [] void
                 [
                   [ id_ "board" ] /:=/
-                  [ composite (array' $ array' (id_ "string"))
-                    [ composite (array' $ id_ "string") $ [ string "_", string "_", string "_" ]
-                    , composite (array' $ id_ "string") $ [ string "_", string "_", string "_" ]
-                    , composite (array' $ id_ "string") $ [ string "_", string "_", string "_" ]
+                  [ composit (array' $ array' (tid' "string"))
+                    [ composit (array' $ tid' "string") $ [ string "_", string "_", string "_" ]
+                    , composit (array' $ tid' "string") $ [ string "_", string "_", string "_" ]
+                    , composit (array' $ tid' "string") $ [ string "_", string "_", string "_" ]
                     ]
                   ]
                   |> doc " Create a tic-tac-toe board."

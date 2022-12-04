@@ -9,7 +9,7 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [ id_ "q" ] /:=/ [ composite (array' (id_ "int")) 
+                [ [ id_ "q" ] /:=/ [ composit (array' (tid' "int")) 
                     [ int 2
                     , int 3
                     , int 5
@@ -19,7 +19,7 @@ main = do
                     ]
                   ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "q" ]
-                , [ id_ "r" ] /:=/ [ composite (array' (id_ "bool")) 
+                , [ id_ "r" ] /:=/ [ composit (array' (tid' "bool")) 
                     [ bool True
                     , bool False
                     , bool True
@@ -29,13 +29,13 @@ main = do
                     ]
                   ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "r" ]
-                , [ id_ "s" ] /:=/ [ composite (array' $ struct [ field ["i"] $ id_ "int", field ["b"] $ id_ "bool" ])
-                    [ composite' [int 2, bool True]
-                    , composite' [int 3, bool False]
-                    , composite' [int 5, bool True]
-                    , composite' [int 7, bool True]
-                    , composite' [int 11, bool False]
-                    , composite' [int 13, bool True]
+                , [ id_ "s" ] /:=/ [ composit (array' $ struct [ field ["i"] $ tid' "int", field ["b"] $ tid' "bool" ])
+                    [ composit' [int 2, bool True]
+                    , composit' [int 3, bool False]
+                    , composit' [int 5, bool True]
+                    , composit' [int 7, bool True]
+                    , composit' [int 11, bool False]
+                    , composit' [int 13, bool True]
                     ]
                   ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "s" ]

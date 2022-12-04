@@ -155,6 +155,32 @@ implementation Expression (CallExpression f as e) => Printer f => All Printer as
         many xs
 
 export
+implementation Expression (CastExpression t e) => Printer t => Printer e => Printer (CastExpression t e) where
+  print file ce = do
+    print file ce.type
+    pPutStr "("
+    print file ce.expression
+    pPutStr ")"
+
+export
+implementation Expression (MakeExpression t es) => Printer t => All Printer es => Printer (MakeExpression t es) where
+  print file me = do
+      pPutStr "make("
+      print file me.type
+      many me.expressions
+      pPutStr ")"
+    where
+      many : { 0 ts : List Type } -> {auto ps : All Printer ts} -> HList ts -> PrinterMonad io ()
+      many [] = pure ()
+      many {ps = [p]} [x] = do
+        pPutStr ", "
+        print file x
+      many {ps = (p::ps)} (x::xs) = do
+        pPutStr ", "
+        print file x
+        many xs
+
+export
 implementation Expression (SelectorExpression e) => Printer e => Printer (SelectorExpression e) where
   print file se = do
     print file se.expression
@@ -567,7 +593,17 @@ implementation Printer BadType where
   print file bt = pPutStr "/* Evaluating Bad Type */"
 
 export
-implementation Expression (StructType es) => All Printer es => Printer (FieldList es) => Printer (StructType es) where
+implementation Printer TypeIdentifier where
+  print file ti = do
+    case ti.package of
+      Nothing => pure ()
+      Just p => do
+        print file p
+        pPutStr "."
+    print file ti.name
+
+export
+implementation GoType (StructType es) => All Printer es => Printer (FieldList es) => Printer (StructType es) where
   print file st = do
       pPutStr "struct {\n"
       many st.fields
@@ -586,7 +622,7 @@ implementation Expression (StructType es) => All Printer es => Printer (FieldLis
         many xs
 
 export
-implementation Expression (ArrayType l e) => Printer l => Printer e => Printer (ArrayType l e) where
+implementation GoType (ArrayType l e) => Printer l => Printer e => Printer (ArrayType l e) where
   print file at = do
     pPutStr "["
     maybe (pure ()) (print file) at.length

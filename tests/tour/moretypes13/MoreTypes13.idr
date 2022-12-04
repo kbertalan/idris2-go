@@ -9,16 +9,16 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [id_ "a"] /:=/ [call (id_ "make") [array' $ id_ "int", int 5]]
+                [ [id_ "a"] /:=/ [make (array' $ tid' "int") [int 5]]
                 , expr $ call (id_ "printSlice") [string "a", id_ "a"]
-                , [id_ "b"] /:=/ [call (id_ "make") [array' $ id_ "int", int 0, int 5]]
+                , [id_ "b"] /:=/ [make (array' $ tid' "int") [int 0, int 5]]
                 , expr $ call (id_ "printSlice") [string "b", id_ "b"]
                 , [id_ "c"] /:=/ [id_ "b" `sliceH` int 2]
                 , expr $ call (id_ "printSlice") [string "c", id_ "c"]
                 , [id_ "d"] /:=/ [sliceLH (id_ "c") (int 2) (int 5)]
                 , expr $ call (id_ "printSlice") [string "d", id_ "d"]
                 ]
-              , func (id_ "printSlice") [field ["s"] $ id_ "string", field ["x"] $ array' $ id_ "int"] void
+              , func (id_ "printSlice") [field ["s"] $ tid' "string", field ["x"] $ array' $ tid' "int"] void
                 [ expr $ call (id_ "fmt" /./ "Printf")
                   [ string "%s len=%d cap=%d %v\\n"
                   , id_ "s"

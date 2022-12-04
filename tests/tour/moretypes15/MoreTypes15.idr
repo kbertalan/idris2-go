@@ -9,7 +9,7 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ decl $ vars [ var [ id_ "s" ] (array' $ id_ "int") [] ]
+                [ decl $ vars [ var [ id_ "s" ] (array' $ tid' "int") [] ]
                 , expr $ call (id_ "printSlice") [id_ "s"]
                 , [id_ "s"] /=/ [ call (id_ "append") [ id_ "s", int 0 ] ]
                   |> doc " append works on nil slices."
@@ -21,7 +21,7 @@ main = do
                   |> doc " We can add more element at a time."
                 , expr $ call (id_ "printSlice") [id_ "s"]
                 ]
-              , func (id_ "printSlice") [field ["s"] $ array' $ id_ "int"] void
+              , func (id_ "printSlice") [field ["s"] $ array' $ tid' "int"] void
                 [ expr $ call (id_ "fmt" /./ "Printf")
                   [ string "len=%d cap=%d %v\\n"
                   , call (id_ "len") [id_ "s"]

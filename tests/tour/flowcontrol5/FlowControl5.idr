@@ -10,7 +10,7 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id_ "sqrt") [field ["x"] $ id_ "float64"] [field [] $ id_ "string"]
+              [ func (id_ "sqrt") [field ["x"] $ tid' "float64"] [field [] $ tid' "string"]
                 [ if_ (id_ "x" /</ int 0)
                   [ return [ call (id_ "sqrt") [ minus' $ id_ "x" ] /+/ string "i" ] ]
                 , return [ call (id_ "fmt" /./ "Sprint")

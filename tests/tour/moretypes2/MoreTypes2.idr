@@ -10,12 +10,12 @@ main = do
               [ import' "fmt" ]
               [ types
                 [ type "Vertex" [] $ struct
-                  [ field ["X"] $ id_ "int"
-                  , field ["Y"] $ id_ "int"
+                  [ field ["X"] $ tid' "int"
+                   , field ["Y"] $ tid' "int"
                   ]
                 ]
               , func (id_ "main") [] void
-                [ expr $ call (id_ "fmt" /./ "Println") [ composite (id_ "Vertex") [int 1, int 2] ]
+                [ expr $ call (id_ "fmt" /./ "Println") [ composit (tid' "Vertex") [int 1, int 2] ]
                 ]
               ]
 

@@ -8,9 +8,9 @@ main = do
   let src = file "function-closures.go"
               (package "main")
               [ import' "fmt" ]
-              [ func (id_ "adder") [] [field [] $ func' [field [] $ id_ "int"] [field [] $ id_ "int"] ]
+              [ func (id_ "adder") [] [field [] $ func' [field [] $ tid' "int"] [field [] $ tid' "int"] ]
                 [ [ id_ "sum" ] /:=/ [ int 0 ]
-                , return [ funcL [field ["x"] $ id_ "int"] [ field [] $ id_ "int" ]
+                , return [ funcL [field ["x"] $ tid' "int"] [ field [] $ tid' "int" ]
                     [ [ id_ "sum" ] /+=/ [ id_ "x" ]
                     , return [ id_ "sum" ]
                     ]

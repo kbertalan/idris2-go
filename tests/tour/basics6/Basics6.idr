@@ -9,7 +9,7 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [
-                func (id_ "swap") [field ["x", "y"] $ id_ "string"] [field [] $ id_ "string", field [] $ id_ "string"]
+                func (id_ "swap") [field ["x", "y"] $ tid' "string"] [field [] $ tid' "string", field [] $ tid' "string"]
                 [ return [ id_ "y" , id_ "x" ] ]
               , func (id_ "main") [] void
                 [ [id_ "a", id_ "b"] /:=/ [call (id_ "swap") [string "hello", string "world"]]

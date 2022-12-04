@@ -10,15 +10,15 @@ main = do
               [ import' "fmt" ]
               [ types
                 [ type "Vertex" [] $ struct
-                  [ field ["Lat", "Long"] $ id_ "float64"
+                  [ field ["Lat", "Long"] $ tid' "float64"
                   ]
                 ]
               , vars
-                [ var [id_ "m"] (map_ (id_ "string") (id_ "Vertex")) []
+                [ var [id_ "m"] (map_ (tid' "string") (tid' "Vertex")) []
                 ]
               , func (id_ "main") [] void
-                [ [ id_ "m" ] /=/ [ call (id_ "make") [ map_ (id_ "string") (id_ "Vertex")] ]
-                , [ id_ "m" `index` string "Bell Labs" ] /=/ [ composite (id_ "Vertex") [ float 40.68433, float (-74.39967) ] ]
+                [ [ id_ "m" ] /=/ [make (map_ (tid' "string") (tid' "Vertex")) [] ]
+                , [ id_ "m" `index` string "Bell Labs" ] /=/ [ composit (tid' "Vertex") [ float 40.68433, float (-74.39967) ] ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "m" `index` string "Bell Labs" ]
                 ]
               ]

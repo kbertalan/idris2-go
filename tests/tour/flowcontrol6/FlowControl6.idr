@@ -10,7 +10,7 @@ main = do
               [ import' "fmt"
               , import' "math"
               ]
-              [ func (id_ "pow") [field ["x","n","lim"] $ id_ "float64"] [field [] $ id_ "float64"]
+              [ func (id_ "pow") [field ["x","n","lim"] $ tid' "float64"] [field [] $ tid' "float64"]
                 [ ifS ([id_ "v"] /:=/ [call (id_ "math" /./ "Pow") [id_ "x", id_ "n"]]) (id_ "v" /</ id_ "lim")
                   [ return [ id_ "v" ] ]
                 , return [ id_ "lim" ]

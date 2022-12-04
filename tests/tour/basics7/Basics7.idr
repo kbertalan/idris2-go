@@ -9,7 +9,7 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [
-                func (id_ "split") [field ["sum"] $ id_ "int"] [field ["x", "y"] $ id_ "int"]
+                func (id_ "split") [field ["sum"] $ tid' "int"] [field ["x", "y"] $ tid' "int"]
                 [ [id_ "x"] /=/ [id_ "sum" /*/ int 4 /// int 9]
                 , [id_ "y"] /=/ [id_ "sum" /-/ id_ "x"]
                 , return []

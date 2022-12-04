@@ -133,20 +133,20 @@ namespace Literal
                                           False => "false"
 
   export
-  composite :
-    Expression t =>
+  composit :
+    GoType t =>
     All Expression es =>
     t ->
     HList es ->
     CompositLiteral t es
-  composite t es = MkCompositLiteral (Just t) es
+  composit t es = MkCompositLiteral (Just t) es
 
   export
-  composite' :
+  composit' :
     All Expression es =>
     HList es ->
-    CompositLiteral BadExpression es
-  composite' es = MkCompositLiteral Nothing es
+    CompositLiteral BadType es
+  composit' es = MkCompositLiteral Nothing es
 
   export
   funcL :
@@ -182,6 +182,19 @@ field' :
 field' fs = MkField Nothing (id_ <$> fs) (Maybe BadType `the` Nothing) Nothing Nothing
 
 namespace Type
+
+  export
+  tid :
+    String ->
+    String ->
+    TypeIdentifier
+  tid p n = MkTypeIdentifier (Just $ id_ p) (id_ n)
+
+  export
+  tid' :
+    String ->
+    TypeIdentifier
+  tid' n = MkTypeIdentifier Nothing (id_ n)
 
   export
   struct :
@@ -259,15 +272,24 @@ namespace Declaration
   consts es = MkGenericDeclaration Nothing Const es
 
   export
-  const' :
-    Expression t =>
+  const_ :
+    GoType t =>
     All Expression es =>
     (is : List Identifier) ->
     {auto 0 ok : NonEmpty is} ->
-    Maybe t ->
+    t ->
     HList es ->
     ValueSpec t es
-  const' (i::is) t es = MkValueSpec Nothing (i:::is) t es Nothing
+  const_ (i::is) t es = MkValueSpec Nothing (i:::is) (Just t) es Nothing
+
+  export
+  const' :
+    All Expression es =>
+    (is : List Identifier) ->
+    {auto 0 ok : NonEmpty is} ->
+    HList es ->
+    ValueSpec BadType es
+  const' (i::is) es = MkValueSpec Nothing (i:::is) Nothing es Nothing
 
   export
   vars :
@@ -487,6 +509,24 @@ call :
   HList args ->
   CallExpression fn args BadExpression
 call fn args = MkCallExpression fn args Nothing
+
+export
+cast_ :
+  GoType t =>
+  Expression e =>
+  t ->
+  e ->
+  CastExpression t e
+cast_ = MkCastExpression
+
+export
+make :
+  GoType t =>
+  All Expression es =>
+  t ->
+  HList es ->
+  MakeExpression t es
+make t es = MkMakeExpression t es
 
 export
 index :

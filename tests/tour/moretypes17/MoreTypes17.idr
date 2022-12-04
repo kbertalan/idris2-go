@@ -9,9 +9,9 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [ id_ "pow" ] /:=/ [ call (id_ "make") [ array' $ id_ "int", int 10 ] ]
+                [ [ id_ "pow" ] /:=/ [ make (array' $ tid' "int") [ int 10 ] ]
                 , rangeV "i" (id_ "pow")
-                  [ [ id_ "pow" `index` id_ "i" ] /=/ [ int 1 /<</ call (id_ "uint") [ id_ "i" ] ]
+                  [ [ id_ "pow" `index` id_ "i" ] /=/ [ int 1 /<</ cast_ (tid' "uint") ( id_ "i" ) ]
                     |> comment " == 2**i"
                   ]
                 , rangeKV "_" "value" (id_ "pow")

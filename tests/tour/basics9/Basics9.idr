@@ -9,7 +9,7 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ vars
-                [ var (map id_ ["i", "j"]) (id_ "int") [int 1, int 2]
+                [ var (map id_ ["i", "j"]) (tid' "int") [int 1, int 2]
                 ]
               , func (id_ "main") [] void
                 [ decl $ vars
