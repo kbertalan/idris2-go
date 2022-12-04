@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "switch-evaluation-order.go"
               (package "main")
-              [ import' "fmt"
-              , import' "time"
+              [ import_ "fmt"
+              , import_ "time"
               ]
-              [ func (id_ "main") [] void
+              [ func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [ stringL "When's Sunday?" ]
                 , [ id_ "today" ] /:=/ [ call (call (id_ "time" /./ "Now") [] /./ "Weekday") [] ]
                 , switch (id_ "time" /./ "Saturday")

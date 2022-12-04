@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "basic-types.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ decl $ vars [ var [id_ "i"] int [] ]
                 , decl $ vars [ var [id_ "f"] float64 [] ]
                 , decl $ vars [ var [id_ "b"] bool [] ]

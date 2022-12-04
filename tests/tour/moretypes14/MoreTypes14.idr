@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "slices-of-slice.go"
               (package "main")
-              [ import' "fmt"
-              , import' "strings"
+              [ import_ "fmt"
+              , import_ "strings"
               ]
-              [ func (id_ "main") [] void
+              [ func "main" [] void
                 [
                   [ id_ "board" ] /:=/
                   [ compositL (array' $ array' string)

@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "map-literals.go"
               (package "main")
-              [ import' "fmt" ]
-              [ types [ type "Vertex" [] $ struct [ field ["Lat", "Long"] float64 ] ]
+              [ import_ "fmt" ]
+              [ types [ type "Vertex" [] $ struct [ fields ["Lat", "Long"] float64 ] ]
               , vars
                 [ var' [id_ "m"]
                   [ compositL (map_ string (tid' "Vertex"))
@@ -17,7 +17,7 @@ main = do
                     ]
                   ]
                 ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [ id_ "m" ]
                 ]
               ]

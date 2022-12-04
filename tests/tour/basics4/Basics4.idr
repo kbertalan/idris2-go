@@ -7,11 +7,11 @@ main : IO ()
 main = do
   let src = file "functions.go"
               (package "main")
-              [ import' "fmt" ]
+              [ import_ "fmt" ]
               [
-                func (id_ "add") [field ["x"] int, field ["y"] int] [field [] int]
+                func "add" [field "x" int, field "y" int] [fieldT int]
                 [ return [ id_ "x" /+/ id_ "y" ] ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println")
                   [ call (id_ "add") [intL 42, intL 13]
                   ]

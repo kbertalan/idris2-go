@@ -7,11 +7,11 @@ main : IO ()
 main = do
   let src = file "multiple-results.go"
               (package "main")
-              [ import' "fmt" ]
+              [ import_ "fmt" ]
               [
-                func (id_ "swap") [field ["x", "y"] string] [field [] string, field [] string]
+                func "swap" [fields ["x", "y"] string] [fieldT string, fieldT string]
                 [ return [ id_ "y" , id_ "x" ] ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ [id_ "a", id_ "b"] /:=/ [call (id_ "swap") [stringL "hello", stringL "world"]]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "a", id_ "b" ]
                 ]

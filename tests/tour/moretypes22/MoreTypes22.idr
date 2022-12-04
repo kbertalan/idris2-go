@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "map-literals-continued.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [ id_ "m" ] /:=/ [ make (map_ string int) [] ]
                 , [ id_ "m" `index` stringL "Answer" ] /=/ [ intL 42 ]
                 , expr $ call (id_ "fmt" /./ "Println") [ stringL "The value:", id_ "m" `index` stringL "Answer"]

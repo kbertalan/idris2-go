@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "slice-literals.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [ id_ "q" ] /:=/ [ compositL (array' int) 
                     [ intL 2
                     , intL 3
@@ -29,7 +29,7 @@ main = do
                     ]
                   ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "r" ]
-                , [ id_ "s" ] /:=/ [ compositL (array' $ struct [ field ["i"] int, field ["b"] bool ])
+                , [ id_ "s" ] /:=/ [ compositL (array' $ struct [ field "i" int, field "b" bool ])
                     [ compositL' [intL 2, boolL True]
                     , compositL' [intL 3, boolL False]
                     , compositL' [intL 5, boolL True]

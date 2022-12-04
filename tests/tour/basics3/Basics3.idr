@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "exported-names.go"
               (package "main")
-              [ import' "fmt"
-              , import' "math"
+              [ import_ "fmt"
+              , import_ "math"
               ]
-              [ func (id_ "main") [] void
+              [ func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [id_ "math" /./ "Pi"] ]
               ]
 

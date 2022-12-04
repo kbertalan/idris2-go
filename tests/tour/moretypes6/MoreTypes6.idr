@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "struct-literals.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ decl $ vars [ var [id_ "a"] (array (intL 2) $ string) [] ]
                 , [ id_ "a" `index` intL 0 ] /=/ [ stringL "Hello" ]
                 , [ id_ "a" `index` intL 1 ] /=/ [ stringL "World" ]

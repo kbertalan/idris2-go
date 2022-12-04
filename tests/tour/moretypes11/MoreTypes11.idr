@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "slice-len-cap.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [ id_ "s" ] /:=/ [ compositL (array' int) 
                     [ intL 2
                     , intL 3
@@ -28,7 +28,7 @@ main = do
                   |> doc " Drop its first two values."
                 , expr $ call (id_ "printSlice") [ id_ "s" ]
                 ]
-              , func (id_ "printSlice") [field ["s"] $ array' int] void
+              , func "printSlice" [field "s" $ array' int] void
                 [ expr $ call (id_ "fmt" /./ "Printf")
                   [ stringL "len=%d cap=%d %v\\n"
                   , call (id_ "len") [id_ "s"]

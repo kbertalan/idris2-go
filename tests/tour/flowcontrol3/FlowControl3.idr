@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "for-is-gos-while.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [id_ "sum"] /:=/ [intL 1]
                 , while (id_ "sum" /</ intL 1000)
                   [ [id_ "sum" ] /+=/ [id_ "sum"] ]

@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "type-conversions.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [id_ "v"] /:=/ [intL 42] |> comment " change me!"
                 , expr $ call (id_ "fmt" /./ "Printf") [stringL "v is of type %T\\n", id_ "v"]
                 ]

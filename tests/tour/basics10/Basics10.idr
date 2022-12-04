@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "short-variable-declarations.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ decl $ vars
                   [ var (map id_ ["i", "j"]) int [intL 1, intL 2]
                   ]

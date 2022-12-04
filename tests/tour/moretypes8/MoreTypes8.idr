@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "slices-pointers.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [ id_ "names" ] /:=/ [ compositL (array (intL 4) string) 
                     [ stringL "John"
                     , stringL "Paul"

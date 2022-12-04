@@ -7,14 +7,14 @@ main : IO ()
 main = do
   let src = file "named-results.go"
               (package "main")
-              [ import' "fmt" ]
+              [ import_ "fmt" ]
               [
-                func (id_ "split") [field ["sum"] $ int] [field ["x", "y"] int]
+                func "split" [field "sum" $ int] [fields ["x", "y"] int]
                 [ [id_ "x"] /=/ [id_ "sum" /*/ intL 4 /// intL 9]
                 , [id_ "y"] /=/ [id_ "sum" /-/ id_ "x"]
                 , return []
                 ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [call (id_ "split") [intL 17]]
                 ]
               ]

@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "type-conversions.go"
               (package "main")
-              [ import' "fmt"
-              , import' "math"
+              [ import_ "fmt"
+              , import_ "math"
               ]
-              [ func (id_ "main") [] void
+              [ func "main" [] void
                 [ decl $ vars [ var [id_ "x", id_ "y"] int [intL 3, intL 4] ]
                 , decl $ vars [ var [id_ "f"] float64 [
                     call (id_ "math" /./ "Sqrt") [

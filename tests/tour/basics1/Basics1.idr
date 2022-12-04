@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "packages.go"
               (package "main")
-              [ import' "fmt"
-              , import' "math/rand"
+              [ import_ "fmt"
+              , import_ "math/rand"
               ]
-              [ func (id_ "main") [] void
+              [ func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [stringL "My favorite number is", call (id_ "rand" /./ "Intn") [intL 10]]
                 ]
               ]

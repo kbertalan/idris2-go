@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "struct-literals.go"
               (package "main")
-              [ import' "fmt" ]
+              [ import_ "fmt" ]
               [ types
                 [ type "Vertex" [] $ struct
-                  [ field ["X", "Y"] int
+                  [ fields ["X", "Y"] int
                   ]
                 ]
               , vars
@@ -23,7 +23,7 @@ main = do
                 , var' [id_ "p"] [ /&/ compositL (tid' "Vertex") [intL 1, intL 2] ]
                   |> comment " has type *Vertex"
                 ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [ id_ "v1", id_ "p", id_ "v2", id_ "v3" ]
                 ]
               ]

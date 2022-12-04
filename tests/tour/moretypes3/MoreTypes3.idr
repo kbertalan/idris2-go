@@ -5,16 +5,16 @@ import Go.AST.Combinators as Go
 
 main : IO ()
 main = do
-  let src = file "struct-fields.go"
+  let src = file "struct-fieldss.go"
               (package "main")
-              [ import' "fmt" ]
+              [ import_ "fmt" ]
               [ types
                 [ type "Vertex" [] $ struct
-                  [ field ["X"] int
-                  , field ["Y"] int
+                  [ field "X" int
+                  , field "Y" int
                   ]
                 ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ [ id_ "v" ] /:=/ [ compositL (tid' "Vertex") [intL 1, intL 2] ]
                 , [ id_ "v" /./ "X" ] /=/ [ intL 4 ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "v" /./ "X" ]

@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "switch.go"
               (package "main")
-              [ import' "fmt"
-              , import' "runtime"
+              [ import_ "fmt"
+              , import_ "runtime"
               ]
-              [ func (id_ "main") [] void
+              [ func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Print") [ stringL "Go runs on " ]
                 , switchS ([id_ "os"] /:=/ [id_ "runtime" /./ "GOOS"]) (id_ "os")
                   [ case_ [stringL "darwin"]

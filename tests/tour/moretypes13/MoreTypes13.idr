@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "make-slices.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [id_ "a"] /:=/ [make (array' int) [intL 5]]
                 , expr $ call (id_ "printSlice") [stringL "a", id_ "a"]
                 , [id_ "b"] /:=/ [make (array' int) [intL 0, intL 5]]
@@ -18,7 +18,7 @@ main = do
                 , [id_ "d"] /:=/ [sliceLH (id_ "c") (intL 2) (intL 5)]
                 , expr $ call (id_ "printSlice") [stringL "d", id_ "d"]
                 ]
-              , func (id_ "printSlice") [field ["s"] $ string, field ["x"] $ array' int] void
+              , func "printSlice" [field "s" $ string, field "x" $ array' int] void
                 [ expr $ call (id_ "fmt" /./ "Printf")
                   [ stringL "%s len=%d cap=%d %v\\n"
                   , id_ "s"

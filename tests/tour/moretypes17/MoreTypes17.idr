@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "range-continued.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [ id_ "pow" ] /:=/ [ make (array' int) [ intL 10 ] ]
                 , rangeV "i" (id_ "pow")
                   [ [ id_ "pow" `index` id_ "i" ] /=/ [ intL 1 /<</ cast_ (tid' "uint") ( id_ "i" ) ]

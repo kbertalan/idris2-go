@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "append.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ decl $ vars [ var [ id_ "s" ] (array' int) [] ]
                 , expr $ call (id_ "printSlice") [id_ "s"]
                 , [id_ "s"] /=/ [ call (id_ "append") [ id_ "s", intL 0 ] ]
@@ -21,7 +21,7 @@ main = do
                   |> doc " We can add more element at a time."
                 , expr $ call (id_ "printSlice") [id_ "s"]
                 ]
-              , func (id_ "printSlice") [field ["s"] $ array' int] void
+              , func "printSlice" [field "s" $ array' int] void
                 [ expr $ call (id_ "fmt" /./ "Printf")
                   [ stringL "len=%d cap=%d %v\\n"
                   , call (id_ "len") [id_ "s"]

@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "nil-slices.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ decl $ vars [ var [ id_ "s" ] (array' int) [] ]
                 , expr $ call (id_ "fmt" /./ "Println")
                   [ id_ "s"

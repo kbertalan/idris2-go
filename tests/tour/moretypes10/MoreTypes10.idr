@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "slice-bounds.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [ id_ "s" ] /:=/ [ compositL (array' int) 
                     [ intL 2
                     , intL 3

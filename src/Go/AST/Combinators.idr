@@ -158,28 +158,49 @@ namespace Literal
   funcL ps rs sts = MkFunctionLiteral (MkFunctionType [] ps rs) (MkBlockStatement sts)
 
 export
-import' :
+import_ :
   (path : String) ->
   ImportSpec
-import' path = MkImportSpec Nothing Nothing (stringL path) Nothing
+import_ path = MkImportSpec Nothing Nothing (stringL path) Nothing
 
 export
 void : FieldList []
 void = []
 
 export
-field :
+fields :
   GoType t =>
   List String ->
   t ->
   Field t
-field fs t = MkField Nothing (id_ <$> fs) (Just t) Nothing Nothing
+fields fs t = MkField Nothing (id_ <$> fs) (Just t) Nothing Nothing
+
+export
+fields' :
+  List String ->
+  Field BadType
+fields' fs = MkField Nothing (id_ <$> fs) (Maybe BadType `the` Nothing) Nothing Nothing
+
+export
+field :
+  GoType t =>
+  String ->
+  t ->
+  Field t
+field f t = MkField Nothing [id_ f] (Just t) Nothing Nothing
 
 export
 field' :
-  List String ->
+  String ->
   Field BadType
-field' fs = MkField Nothing (id_ <$> fs) (Maybe BadType `the` Nothing) Nothing Nothing
+field' f = MkField Nothing [id_ f] Nothing Nothing Nothing
+
+export
+fieldT :
+  GoType t =>
+  t ->
+  Field t
+fieldT t = MkField Nothing [] (Just t) Nothing Nothing
 
 namespace Type
 
@@ -313,14 +334,14 @@ namespace Type
 namespace Declaration
   export
   func :
-    (name : Identifier) ->
+    (name : String) ->
     FieldList ps ->
     FieldList rs ->
     { 0 sts : List Type } ->
     { auto 0 ok : All Statement sts } ->
     HList sts ->
     FuncDeclaration [] [] ps rs sts
-  func name ps rs sts = MkFuncDeclaration Nothing [] name (MkFunctionType [] ps rs) (MkBlockStatement sts)
+  func name ps rs sts = MkFuncDeclaration Nothing [] (id_ name) (MkFunctionType [] ps rs) (MkBlockStatement sts)
 
   export
   types :

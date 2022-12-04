@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "sandbox.go"
               (package "main")
-              [ import' "fmt"
-              , import' "time"
+              [ import_ "fmt"
+              , import_ "time"
               ]
-              [ func (id_ "main") [] void
+              [ func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [stringL "Welcome to the playground!"]
                 , expr $ call (id_ "fmt" /./ "Println") [stringL "The time is", call (id_ "time.Now") []]
                 ]

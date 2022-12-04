@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "if.go"
               (package "main")
-              [ import' "fmt"
-              , import' "math"
+              [ import_ "fmt"
+              , import_ "math"
               ]
-              [ func (id_ "sqrt") [field ["x"] float64] [field [] string]
+              [ func "sqrt" [field "x" float64] [fieldT string]
                 [ if_ (id_ "x" /</ intL 0)
                   [ return [ call (id_ "sqrt") [ minus' $ id_ "x" ] /+/ stringL "i" ] ]
                 , return [ call (id_ "fmt" /./ "Sprint")
@@ -18,7 +18,7 @@ main = do
                     ]
                   ]
                 ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println")
                   [ call (id_ "sqrt") [intL 2]
                   , call (id_ "sqrt") [intL $ -4]

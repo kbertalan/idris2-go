@@ -7,8 +7,8 @@ main : IO ()
 main = do
   let src = file "pointers.go"
               (package "main")
-              [ import' "fmt" ]
-              [ func (id_ "main") [] void
+              [ import_ "fmt" ]
+              [ func "main" [] void
                 [ [ id_ "i", id_ "j" ] /:=/ [intL 42, intL 2701]
                 , [ id_ "p" ] /:=/ [ /&/ id_ "i" ]
                   |> comment " point to i"

@@ -7,10 +7,10 @@ main : IO ()
 main = do
   let src = file "imports.go"
               (package "main")
-              [ import' "fmt"
-              , import' "math"
+              [ import_ "fmt"
+              , import_ "math"
               ]
-              [ func (id_ "main") [] void
+              [ func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Printf") [stringL "Now you have %g problems.\\n", call (id_ "math" /./ "Sqrt") [intL 7]]
                 ]
               ]

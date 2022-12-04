@@ -7,14 +7,14 @@ main : IO ()
 main = do
   let src = file "structs.go"
               (package "main")
-              [ import' "fmt" ]
+              [ import_ "fmt" ]
               [ types
                 [ type "Vertex" [] $ struct
-                  [ field ["X"] $ int
-                   , field ["Y"] $ int
+                  [ field "X" $ int
+                   , field "Y" $ int
                   ]
                 ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ expr $ call (id_ "fmt" /./ "Println") [ compositL (tid' "Vertex") [intL 1, intL 2] ]
                 ]
               ]

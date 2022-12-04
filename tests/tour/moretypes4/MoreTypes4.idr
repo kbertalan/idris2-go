@@ -7,14 +7,14 @@ main : IO ()
 main = do
   let src = file "struct-pointers.go"
               (package "main")
-              [ import' "fmt" ]
+              [ import_ "fmt" ]
               [ types
                 [ type "Vertex" [] $ struct
-                  [ field ["X"] int
-                  , field ["Y"] int
+                  [ field "X" int
+                  , field "Y" int
                   ]
                 ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ [ id_ "v" ] /:=/ [ compositL (tid' "Vertex") [intL 1, intL 2] ]
                 , [ id_ "p" ] /:=/ [ /&/ id_ "v" ]
                 , [ id_ "p" /./ "X" ] /=/ [ 1 `expL` 9 ]

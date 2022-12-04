@@ -7,19 +7,19 @@ main : IO ()
 main = do
   let src = file "function-values.go"
               (package "main")
-              [ import' "fmt"
-              , import' "math"
+              [ import_ "fmt"
+              , import_ "math"
               ]
-              [ func (id_ "compute")
-                [ field ["fn"] $ func'
-                  [ field [] float64
-                  , field [] float64
-                  ] [field [] float64]
-                ] [field [] float64]
+              [ func "compute"
+                [ field "fn" $ func'
+                  [ fieldT float64
+                  , fieldT float64
+                  ] [fieldT float64]
+                ] [fieldT float64]
                 [ return [ call (id_ "fn") [ intL 3, intL 4 ] ]
                 ]
-              , func (id_ "main") [] void
-                [ [ id_ "hypot" ] /:=/ [ funcL [ field ["x", "y"] float64 ] [field [] float64]
+              , func "main" [] void
+                [ [ id_ "hypot" ] /:=/ [ funcL [ fields ["x", "y"] float64 ] [fieldT float64]
                     [ return [ call (id_ "math" /./ "Sqrt") [ id_ "x" /*/ id_ "x" /+/ id_ "y" /*/ id_ "y" ] ]
                     ]
                   ]

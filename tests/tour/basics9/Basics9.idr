@@ -7,11 +7,11 @@ main : IO ()
 main = do
   let src = file "variables-with-initializers.go"
               (package "main")
-              [ import' "fmt" ]
+              [ import_ "fmt" ]
               [ vars
                 [ var (map id_ ["i", "j"]) int [intL 1, intL 2]
                 ]
-              , func (id_ "main") [] void
+              , func "main" [] void
                 [ decl $ vars
                   [ var' (map id_ ["c", "python", "java"]) [boolL True, boolL False, stringL "no!"]
                     ]
