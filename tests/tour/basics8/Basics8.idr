@@ -9,10 +9,10 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ vars
-                [ var (map id_ ["c", "python", "java"]) (tid' "bool") []
+                [ var (map id_ ["c", "python", "java"]) bool []
                 ]
               , func (id_ "main") [] void
-                [ decl $ vars [ var [id_ "i"] (tid' "int") [] ]
+                [ decl $ vars [ var [id_ "i"] int [] ]
                 , expr $ call (id_ "fmt" /./ "Println") [id_ "i", id_ "c", id_ "python", id_ "java"]
                 ]
               ]

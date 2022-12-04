@@ -10,17 +10,17 @@ main = do
               [ import' "fmt" ]
               [ types
                 [ type "Vertex" [] $ struct
-                  [ field ["X", "Y"] $ tid' "int"
+                  [ field ["X", "Y"] int
                   ]
                 ]
               , vars
-                [ var' [id_ "v1"] [ composit (tid' "Vertex") [int 1, int 2] ]
+                [ var' [id_ "v1"] [ compositL (tid' "Vertex") [intL 1, intL 2] ]
                   |> comment " has type Vertex"
-                , var' [id_ "v2"] [ composit (tid' "Vertex") [id_ "X" /:/ int 1] ]
+                , var' [id_ "v2"] [ compositL (tid' "Vertex") [id_ "X" /:/ intL 1] ]
                   |> comment " Y:0 is implicit"
-                , var' [id_ "v3"] [ composit (tid' "Vertex") [] ]
+                , var' [id_ "v3"] [ compositL (tid' "Vertex") [] ]
                   |> comment " X:0 and Y:0"
-                , var' [id_ "p"] [ /&/ composit (tid' "Vertex") [int 1, int 2] ]
+                , var' [id_ "p"] [ /&/ compositL (tid' "Vertex") [intL 1, intL 2] ]
                   |> comment " has type *Vertex"
                 ]
               , func (id_ "main") [] void

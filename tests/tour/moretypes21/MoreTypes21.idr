@@ -8,16 +8,12 @@ main = do
   let src = file "map-literals-continued.go"
               (package "main")
               [ import' "fmt" ]
-              [ types
-                [ type "Vertex" [] $ struct
-                  [ field ["Lat", "Long"] $ tid' "float64"
-                  ]
-                ]
+              [ types [ type "Vertex" [] $ struct [ field ["Lat", "Long"] float64 ] ]
               , vars
                 [ var' [id_ "m"]
-                  [ composit (map_ (tid' "string") (tid' "Vertex"))
-                    [ string "Bell Labs" /:/ composit' [ float 40.68433, float (-74.39967) ]
-                    , string "Google" /:/ composit' [ float 37.42202, float (-122.08408) ]
+                  [ compositL (map_ string (tid' "Vertex"))
+                    [ stringL "Bell Labs" /:/ compositL' [ floatL 40.68433, floatL (-74.39967) ]
+                    , stringL "Google" /:/ compositL' [ floatL 37.42202, floatL (-122.08408) ]
                     ]
                   ]
                 ]

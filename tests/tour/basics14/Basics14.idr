@@ -9,8 +9,8 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [id_ "v"] /:=/ [int 42] |> comment " change me!"
-                , expr $ call (id_ "fmt" /./ "Printf") [string "v is of type %T\\n", id_ "v"]
+                [ [id_ "v"] /:=/ [intL 42] |> comment " change me!"
+                , expr $ call (id_ "fmt" /./ "Printf") [stringL "v is of type %T\\n", id_ "v"]
                 ]
               ]
 

@@ -11,10 +11,10 @@ main = do
               , import' "math"
               ]
               [ func (id_ "main") [] void
-                [ decl $ vars [ var [id_ "x", id_ "y"] (tid' "int") [int 3, int 4] ]
-                , decl $ vars [ var [id_ "f"] (tid' "float64") [
+                [ decl $ vars [ var [id_ "x", id_ "y"] int [intL 3, intL 4] ]
+                , decl $ vars [ var [id_ "f"] float64 [
                     call (id_ "math" /./ "Sqrt") [
-                      cast_ (tid' "float64") ( id_ "x" /*/ id_ "x" /+/ id_ "y" /*/ id_ "y" )
+                      cast_ float64 ( id_ "x" /*/ id_ "x" /+/ id_ "y" /*/ id_ "y" )
                     ]
                   ] ]
                 , decl $ vars [ var [id_ "z"] (tid' "uint") [

@@ -9,12 +9,12 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ decl $ vars [ var [id_ "a"] (array (int 2) $ tid' "string") [] ]
-                , [ id_ "a" `index` int 0 ] /=/ [ string "Hello" ]
-                , [ id_ "a" `index` int 1 ] /=/ [ string "World" ]
-                , expr $ call (id_ "fmt" /./ "Println") [ id_ "a" `index` int 0, id_ "a" `index` int 1]
+                [ decl $ vars [ var [id_ "a"] (array (intL 2) $ string) [] ]
+                , [ id_ "a" `index` intL 0 ] /=/ [ stringL "Hello" ]
+                , [ id_ "a" `index` intL 1 ] /=/ [ stringL "World" ]
+                , expr $ call (id_ "fmt" /./ "Println") [ id_ "a" `index` intL 0, id_ "a" `index` intL 1]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "a" ]
-                , [ id_ "primes" ] /:=/ [ composit (array (int 6) (tid' "int")) [int 2, int 3, int 5, int 7, int 11, int 13] ]
+                , [ id_ "primes" ] /:=/ [ compositL (array (intL 6) int) [intL 2, intL 3, intL 5, intL 7, intL 11, intL 13] ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "primes" ]
                 ]
               ]

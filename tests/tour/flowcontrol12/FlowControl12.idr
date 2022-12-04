@@ -9,8 +9,8 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ defer $ call (id_ "fmt" /./ "Println") [string "world"]
-                , expr $ call (id_ "fmt" /./ "Println") [string "hello"]
+                [ defer $ call (id_ "fmt" /./ "Println") [stringL "world"]
+                , expr $ call (id_ "fmt" /./ "Println") [stringL "hello"]
                 ]
               ]
 

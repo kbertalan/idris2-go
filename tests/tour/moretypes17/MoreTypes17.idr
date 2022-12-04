@@ -9,13 +9,13 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [ id_ "pow" ] /:=/ [ make (array' $ tid' "int") [ int 10 ] ]
+                [ [ id_ "pow" ] /:=/ [ make (array' int) [ intL 10 ] ]
                 , rangeV "i" (id_ "pow")
-                  [ [ id_ "pow" `index` id_ "i" ] /=/ [ int 1 /<</ cast_ (tid' "uint") ( id_ "i" ) ]
+                  [ [ id_ "pow" `index` id_ "i" ] /=/ [ intL 1 /<</ cast_ (tid' "uint") ( id_ "i" ) ]
                     |> comment " == 2**i"
                   ]
                 , rangeKV "_" "value" (id_ "pow")
-                  [ expr $ call (id_ "fmt" /./ "Printf") [ string "%d\\n", id_ "value" ]
+                  [ expr $ call (id_ "fmt" /./ "Printf") [ stringL "%d\\n", id_ "value" ]
                   ]
                 ]
               ]

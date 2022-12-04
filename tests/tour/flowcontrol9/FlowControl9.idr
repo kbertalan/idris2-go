@@ -11,14 +11,14 @@ main = do
               , import' "runtime"
               ]
               [ func (id_ "main") [] void
-                [ expr $ call (id_ "fmt" /./ "Print") [ string "Go runs on " ]
+                [ expr $ call (id_ "fmt" /./ "Print") [ stringL "Go runs on " ]
                 , switchS ([id_ "os"] /:=/ [id_ "runtime" /./ "GOOS"]) (id_ "os")
-                  [ case_ [string "darwin"]
-                    [ expr $ call (id_ "fmt" /./ "Println") [string "OS X."] ]
-                  , case_ [string "linux"]
-                    [ expr $ call (id_ "fmt" /./ "Println") [string "Linux."] ]
+                  [ case_ [stringL "darwin"]
+                    [ expr $ call (id_ "fmt" /./ "Println") [stringL "OS X."] ]
+                  , case_ [stringL "linux"]
+                    [ expr $ call (id_ "fmt" /./ "Println") [stringL "Linux."] ]
                   , default_
-                    [ expr (call (id_ "fmt" /./ "Printf") [string "%s os.\\n", id_ "os"])
+                    [ expr (call (id_ "fmt" /./ "Printf") [stringL "%s os.\\n", id_ "os"])
                       |> docs
                         [ " freebsd, openbsd,"
                         , " plan9, windows..."

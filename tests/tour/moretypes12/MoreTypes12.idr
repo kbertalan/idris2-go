@@ -9,14 +9,14 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ decl $ vars [ var [ id_ "s" ] (array' (tid' "int")) [] ]
+                [ decl $ vars [ var [ id_ "s" ] (array' int) [] ]
                 , expr $ call (id_ "fmt" /./ "Println")
                   [ id_ "s"
                   , call (id_ "len") [id_ "s"]
                   , call (id_ "cap") [id_ "s"]
                   ]
                 , if_ (id_ "s" /==/ id_ "nil")
-                  [ expr $ call (id_ "fmt" /./ "Println") [ string "nil!" ]
+                  [ expr $ call (id_ "fmt" /./ "Println") [ stringL "nil!" ]
                   ]
                 ]
               ]

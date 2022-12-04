@@ -11,7 +11,7 @@ main = do
               , import' "math"
               ]
               [ func (id_ "main") [] void
-                [ expr $ call (id_ "fmt" /./ "Printf") [string "Now you have %g problems.\\n", call (id_ "math" /./ "Sqrt") [int 7]]
+                [ expr $ call (id_ "fmt" /./ "Printf") [stringL "Now you have %g problems.\\n", call (id_ "math" /./ "Sqrt") [intL 7]]
                 ]
               ]
 

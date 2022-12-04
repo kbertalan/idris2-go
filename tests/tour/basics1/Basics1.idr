@@ -11,7 +11,7 @@ main = do
               , import' "math/rand"
               ]
               [ func (id_ "main") [] void
-                [ expr $ call (id_ "fmt" /./ "Println") [string "My favorite number is", call (id_ "rand" /./ "Intn") [int 10]]
+                [ expr $ call (id_ "fmt" /./ "Println") [stringL "My favorite number is", call (id_ "rand" /./ "Intn") [intL 10]]
                 ]
               ]
 

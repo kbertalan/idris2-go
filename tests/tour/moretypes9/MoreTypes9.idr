@@ -9,33 +9,33 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [ id_ "q" ] /:=/ [ composit (array' (tid' "int")) 
-                    [ int 2
-                    , int 3
-                    , int 5
-                    , int 7
-                    , int 11
-                    , int 13
+                [ [ id_ "q" ] /:=/ [ compositL (array' int) 
+                    [ intL 2
+                    , intL 3
+                    , intL 5
+                    , intL 7
+                    , intL 11
+                    , intL 13
                     ]
                   ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "q" ]
-                , [ id_ "r" ] /:=/ [ composit (array' (tid' "bool")) 
-                    [ bool True
-                    , bool False
-                    , bool True
-                    , bool True
-                    , bool False
-                    , bool True
+                , [ id_ "r" ] /:=/ [ compositL (array' bool) 
+                    [ boolL True
+                    , boolL False
+                    , boolL True
+                    , boolL True
+                    , boolL False
+                    , boolL True
                     ]
                   ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "r" ]
-                , [ id_ "s" ] /:=/ [ composit (array' $ struct [ field ["i"] $ tid' "int", field ["b"] $ tid' "bool" ])
-                    [ composit' [int 2, bool True]
-                    , composit' [int 3, bool False]
-                    , composit' [int 5, bool True]
-                    , composit' [int 7, bool True]
-                    , composit' [int 11, bool False]
-                    , composit' [int 13, bool True]
+                , [ id_ "s" ] /:=/ [ compositL (array' $ struct [ field ["i"] int, field ["b"] bool ])
+                    [ compositL' [intL 2, boolL True]
+                    , compositL' [intL 3, boolL False]
+                    , compositL' [intL 5, boolL True]
+                    , compositL' [intL 7, boolL True]
+                    , compositL' [intL 11, boolL False]
+                    , compositL' [intL 13, boolL True]
                     ]
                   ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "s" ]

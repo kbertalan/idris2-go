@@ -9,10 +9,10 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [
-                func (id_ "swap") [field ["x", "y"] $ tid' "string"] [field [] $ tid' "string", field [] $ tid' "string"]
+                func (id_ "swap") [field ["x", "y"] string] [field [] string, field [] string]
                 [ return [ id_ "y" , id_ "x" ] ]
               , func (id_ "main") [] void
-                [ [id_ "a", id_ "b"] /:=/ [call (id_ "swap") [string "hello", string "world"]]
+                [ [id_ "a", id_ "b"] /:=/ [call (id_ "swap") [stringL "hello", stringL "world"]]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "a", id_ "b" ]
                 ]
               ]

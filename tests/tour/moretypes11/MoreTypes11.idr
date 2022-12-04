@@ -9,28 +9,28 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [ id_ "s" ] /:=/ [ composit (array' (tid' "int")) 
-                    [ int 2
-                    , int 3
-                    , int 5
-                    , int 7
-                    , int 11
-                    , int 13
+                [ [ id_ "s" ] /:=/ [ compositL (array' int) 
+                    [ intL 2
+                    , intL 3
+                    , intL 5
+                    , intL 7
+                    , intL 11
+                    , intL 13
                     ]
                   ]
-                , [ id_ "s" ] /=/ [ sliceH (id_ "s") (int 0)]
+                , [ id_ "s" ] /=/ [ sliceH (id_ "s") (intL 0)]
                   |> doc " Slice the slice to give it zero length."
                 , expr $ call (id_ "printSlice") [ id_ "s" ]
-                , [ id_ "s" ] /=/ [ sliceH (id_ "s") (int 4)]
+                , [ id_ "s" ] /=/ [ sliceH (id_ "s") (intL 4)]
                   |> doc " Extend its length."
                 , expr $ call (id_ "printSlice") [ id_ "s" ]
-                , [ id_ "s" ] /=/ [ sliceL (id_ "s") (int 2)]
+                , [ id_ "s" ] /=/ [ sliceL (id_ "s") (intL 2)]
                   |> doc " Drop its first two values."
                 , expr $ call (id_ "printSlice") [ id_ "s" ]
                 ]
-              , func (id_ "printSlice") [field ["s"] $ array' $ tid' "int"] void
+              , func (id_ "printSlice") [field ["s"] $ array' int] void
                 [ expr $ call (id_ "fmt" /./ "Printf")
-                  [ string "len=%d cap=%d %v\\n"
+                  [ stringL "len=%d cap=%d %v\\n"
                   , call (id_ "len") [id_ "s"]
                   , call (id_ "cap") [id_ "s"]
                   , id_ "s"

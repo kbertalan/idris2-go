@@ -11,8 +11,8 @@ main = do
               , import' "time"
               ]
               [ func (id_ "main") [] void
-                [ expr $ call (id_ "fmt" /./ "Println") [string "Welcome to the playground!"]
-                , expr $ call (id_ "fmt" /./ "Println") [string "The time is", call (id_ "time.Now") []]
+                [ expr $ call (id_ "fmt" /./ "Println") [stringL "Welcome to the playground!"]
+                , expr $ call (id_ "fmt" /./ "Println") [stringL "The time is", call (id_ "time.Now") []]
                 ]
               ]
 

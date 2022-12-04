@@ -13,23 +13,23 @@ main = do
               [ func (id_ "main") [] void
                 [
                   [ id_ "board" ] /:=/
-                  [ composit (array' $ array' (tid' "string"))
-                    [ composit (array' $ tid' "string") $ [ string "_", string "_", string "_" ]
-                    , composit (array' $ tid' "string") $ [ string "_", string "_", string "_" ]
-                    , composit (array' $ tid' "string") $ [ string "_", string "_", string "_" ]
+                  [ compositL (array' $ array' string)
+                    [ compositL (array' $ string) $ [ stringL "_", stringL "_", stringL "_" ]
+                    , compositL (array' $ string) $ [ stringL "_", stringL "_", stringL "_" ]
+                    , compositL (array' $ string) $ [ stringL "_", stringL "_", stringL "_" ]
                     ]
                   ]
                   |> doc " Create a tic-tac-toe board."
-                , [ ((id_ "board") `index` int 0) `index` int 0 ] /=/ [ string "X" ]
+                , [ ((id_ "board") `index` intL 0) `index` intL 0 ] /=/ [ stringL "X" ]
                   |> doc " The players take turns."
-                , [ ((id_ "board") `index` int 2) `index` int 2 ] /=/ [ string "O" ]
-                , [ ((id_ "board") `index` int 1) `index` int 2 ] /=/ [ string "X" ]
-                , [ ((id_ "board") `index` int 1) `index` int 0 ] /=/ [ string "O" ]
-                , [ ((id_ "board") `index` int 0) `index` int 2 ] /=/ [ string "X" ]
-                , for_ ([id_ "i"] /:=/ [int 0]) (id_ "i" /</ call (id_ "len") [id_ "board"]) (inc $ id_ "i")
+                , [ ((id_ "board") `index` intL 2) `index` intL 2 ] /=/ [ stringL "O" ]
+                , [ ((id_ "board") `index` intL 1) `index` intL 2 ] /=/ [ stringL "X" ]
+                , [ ((id_ "board") `index` intL 1) `index` intL 0 ] /=/ [ stringL "O" ]
+                , [ ((id_ "board") `index` intL 0) `index` intL 2 ] /=/ [ stringL "X" ]
+                , for_ ([id_ "i"] /:=/ [intL 0]) (id_ "i" /</ call (id_ "len") [id_ "board"]) (inc $ id_ "i")
                   [ expr $ call (id_ "fmt" /./ "Printf")
-                    [ string "%s\\n"
-                    , call (id_ "strings" /./ "Join") [ id_ "board" `index` id_ "i", string " " ]
+                    [ stringL "%s\\n"
+                    , call (id_ "strings" /./ "Join") [ id_ "board" `index` id_ "i", stringL " " ]
                     ]
                   ]
                 ]

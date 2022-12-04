@@ -90,63 +90,63 @@ file name (MkPackage pkg) imports decls = MkFile Nothing name (id_ pkg) decls im
 
 namespace Literal
   export
-  string :
+  stringL :
     String ->
     BasicLiteral
-  string str = MkBasicLiteral MkString str
+  stringL str = MkBasicLiteral MkString str
 
   export
-  int :
+  intL :
     Int ->
     BasicLiteral
-  int i = MkBasicLiteral MkInt $ show i
+  intL i = MkBasicLiteral MkInt $ show i
 
   export
-  float :
+  floatL :
     Double ->
     BasicLiteral
-  float f = MkBasicLiteral MkFloat $ show f
+  floatL f = MkBasicLiteral MkFloat $ show f
 
   export
-  exp :
+  expL :
     Double ->
     Int ->
     BasicLiteral
-  exp f e = MkBasicLiteral MkFloat $ concat [floored, "e", show e]
+  expL f e = MkBasicLiteral MkFloat $ concat [floored, "e", show e]
     where
       floored : String
       floored = if f == floor f then show $ the Int $ cast $ floor f
                                 else show f
 
   export
-  imag :
+  imagL :
     Int ->
     BasicLiteral
-  imag i = MkBasicLiteral MkImag "\{show i}i"
+  imagL i = MkBasicLiteral MkImag "\{show i}i"
 
   export
-  bool :
+  boolL :
     Bool ->
     BasicLiteral
-  bool b = MkBasicLiteral MkIdentifier $ case b of
+  boolL b = MkBasicLiteral MkIdentifier $ case b of
                                           True => "true"
                                           False => "false"
 
   export
-  composit :
+  compositL :
     GoType t =>
     All Expression es =>
     t ->
     HList es ->
     CompositLiteral t es
-  composit t es = MkCompositLiteral (Just t) es
+  compositL t es = MkCompositLiteral (Just t) es
 
   export
-  composit' :
+  compositL' :
     All Expression es =>
     HList es ->
     CompositLiteral BadType es
-  composit' es = MkCompositLiteral Nothing es
+  compositL' es = MkCompositLiteral Nothing es
 
   export
   funcL :
@@ -161,7 +161,7 @@ export
 import' :
   (path : String) ->
   ImportSpec
-import' path = MkImportSpec Nothing Nothing (string path) Nothing
+import' path = MkImportSpec Nothing Nothing (stringL path) Nothing
 
 export
 void : FieldList []
@@ -233,6 +233,82 @@ namespace Type
     FieldList rs ->
     FunctionType [] ps rs
   func' ps rs = MkFunctionType [] ps rs
+
+  export
+  bool : TypeIdentifier
+  bool = tid' "bool"
+
+  export
+  string : TypeIdentifier
+  string = tid' "string"
+
+  export
+  int : TypeIdentifier
+  int = tid' "int"
+
+  export
+  int8 : TypeIdentifier
+  int8 = tid' "int8"
+
+  export
+  int16 : TypeIdentifier
+  int16 = tid' "int16"
+
+  export
+  int32 : TypeIdentifier
+  int32 = tid' "int32"
+
+  export
+  int64 : TypeIdentifier
+  int64 = tid' "int64"
+
+  export
+  uint : TypeIdentifier
+  uint = tid' "uint"
+
+  export
+  uint8 : TypeIdentifier
+  uint8 = tid' "uint8"
+
+  export
+  uint16 : TypeIdentifier
+  uint16 = tid' "uint16"
+
+  export
+  uint32 : TypeIdentifier
+  uint32 = tid' "uint32"
+
+  export
+  uint64 : TypeIdentifier
+  uint64 = tid' "uint64"
+
+  export
+  uintptr : TypeIdentifier
+  uintptr = tid' "uintptr"
+
+  export
+  byte : TypeIdentifier
+  byte = tid' "byte"
+
+  export
+  rune : TypeIdentifier
+  rune = tid' "rune"
+
+  export
+  float32 : TypeIdentifier
+  float32 = tid' "float32"
+
+  export
+  float64 : TypeIdentifier
+  float64 = tid' "float64"
+
+  export
+  complex64 : TypeIdentifier
+  complex64 = tid' "complex64"
+
+  export
+  complex128 : TypeIdentifier
+  complex128 = tid' "complex128"
 
 namespace Declaration
   export

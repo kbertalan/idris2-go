@@ -9,7 +9,7 @@ main = do
               (package "main")
               [import' "fmt"]
               [ func (id_ "main") [] void [
-                expr $ call (id_ "fmt" /./ "Println") [string "Hello,   "]
+                expr $ call (id_ "fmt" /./ "Println") [stringL "Hello,   "]
               ]]
 
 

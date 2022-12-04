@@ -9,8 +9,8 @@ main = do
               (package "main")
               [ import' "fmt" ]
               [ func (id_ "main") [] void
-                [ [ id_ "primes" ] /:=/ [ composit (array (int 6) (tid' "int")) [int 2, int 3, int 5, int 7, int 11, int 13] ]
-                , decl $ vars [ var [id_ "s"] (array' $ tid' "int") [ sliceLH (id_ "primes") (int 1) (int 4) ] ]
+                [ [ id_ "primes" ] /:=/ [ compositL (array (intL 6) int) [intL 2, intL 3, intL 5, intL 7, intL 11, intL 13] ]
+                , decl $ vars [ var [id_ "s"] (array' int) [ sliceLH (id_ "primes") (intL 1) (intL 4) ] ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "s" ]
                 ]
               ]
