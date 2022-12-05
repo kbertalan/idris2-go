@@ -2,10 +2,51 @@ module Idris2.Compiler.Go
 
 import Core.CompileExpr
 import Core.Context
+import Core.Directory
+
+import Data.List
+import Data.List1
+import Data.SortedMap
+import Data.String
 
 import Go.AST
 import Go.AST.Combinators as Go
 import Go.AST.Printer
+
+import Idris2.Compiler.Go.Name as Go
+
+import Libraries.Utils.Path
+
+goLocationFromNS :
+  Namespace ->
+  Location
+goLocationFromNS ns =
+  let parts = map toLower $ reverse $ unsafeUnfoldNamespace ns
+      package = case parts of
+                  _::_ => last parts
+                  _ => ""
+
+  in MkLocation (joinPath parts) (package ++ ".go") package
+
+goUserName :
+  UserName ->
+  String
+goUserName (Basic n) = capitalize n
+goUserName (Field n) = capitalize n ++ "__field"
+goUserName Underscore = "Underscore__"
+
+goName :
+  Core.Name.Name ->
+  Go.Name
+goName (NS ns n) = let sub = goName n in MkName (goLocationFromNS ns) sub.value
+goName (UN un) = MkName (MkLocation "go/user" "user.go" "user") $ goUserName un
+goName (MN mn i) = MkName (MkLocation "go/gen" "gen.go" "gen") (capitalize $ mn ++ show i)
+goName (PV n i) = let sub = goName n in MkName sub.location (sub.value ++ show i)
+goName (DN str n) = let sub = goName n in MkName sub.location (capitalize str)
+goName (Nested x n) = goName n
+goName (CaseBlock str i) = MkName empty str
+goName (WithBlock str i) = MkName empty str
+goName (Resolved i) = MkName empty ("resolved" ++ show i)
 
 data GoDecls : Type where
 
@@ -13,36 +54,15 @@ data DeclList : Type where
   Nil : DeclList
   (::) : {t : Type} -> {auto d : Declaration t} -> {auto p : Printer t} -> (a : t) -> DeclList -> DeclList
 
-goUserName :
-  UserName ->
-  String
-goUserName (Basic n) = n
-goUserName (Field n) = "field_" ++ n
-goUserName Underscore = "_go_underscore"
-
-goName :
-  Name ->
-  String
-goName (NS ns n) = showNSWithSep "_" ns ++ "_" ++ goName n
-goName (UN un) = goUserName un
-goName (MN mn i) = mn
-goName (PV n i) = goName n
-goName (DN str n) = str
-goName (Nested x n) = goName n
-goName (CaseBlock str i) = str
-goName (WithBlock str i) = str
-goName (Resolved i) = goName (UN Underscore)
-
 goDefs :
   {auto s : Ref GoDecls DeclList} ->
-  (Name, FC, NamedDef) ->
+  (Go.Name,NamedDef) ->
   Core ()
-goDefs (n, _, nd) = defs nd
+goDefs (n, nd) = defs nd
   where
     defs : NamedDef -> Core ()
     defs (MkNmFun args exp) = do
-      let fnName = goName n
-          fnDecl = func fnName [] void []
+      let fnDecl = func n.value [] void []
       decls <- get GoDecls
       put GoDecls (fnDecl :: decls)
       pure ()
@@ -58,23 +78,49 @@ toGoDecls ((::) {t=t} {d=d} {p=p} x xs) =
   let (ts' ** (ds',ps', rest)) = toGoDecls xs
   in (t::ts' ** (d::ds',p::ps',x::rest))
 
-export
-compileGo :
-  {auto c : Ref Ctxt Defs} ->
-  (outfile : String) ->
-  List (Name, FC, NamedDef) ->
+goFile :
+  (outDir : String) ->
+  (outFile : String) ->
+  (List1 (Go.Name, NamedDef)) ->
   Core (Maybe String)
-compileGo outfile defs = do
+goFile outDir outFile defs = do
   _ <- newRef GoDecls []
+  let (name, _) = head defs
+  ensureDirectoryExists (outDir </> name.location.dir)
 
-  traverse_ goDefs defs
+  traverse_ goDefs $ forget defs
 
   goDecls <- get GoDecls
   let (_ ** (_, _, decls)) = toGoDecls goDecls
-      src = Go.file outfile (package "main") [] decls
+      src = Go.file (name.location.dir </> name.location.fileName) (package name.location.package) [] decls
 
-  result <- coreLift $ printFile "." src
+  result <- coreLift $ printFile outDir src
   case result of
     Right () => pure Nothing
     Left e => pure $ Just $ show e
+
+getGrouppedDefs :
+  List (Core.Name.Name, FC, NamedDef) ->
+  List (List1 (Go.Name, NamedDef))
+getGrouppedDefs defs =
+  groupBy ((==) `on` locationOf)
+    $ sortBy (compare `on` locationOf)
+    $ map (\(n, _, d) => (goName n,d)) defs
+  where
+    locationOf : (Go.Name, _) -> Location
+    locationOf = location . fst
+
+export
+compileGo :
+  {auto c : Ref Ctxt Defs} ->
+  (outputDir : String) ->
+  (outfile : String) ->
+  List (Core.Name.Name, FC, NamedDef) ->
+  Core (Maybe String)
+compileGo outDir outFile defs = do
+
+  let grouppedDefs = getGrouppedDefs defs
+  traverse_ (goFile outDir outFile) grouppedDefs
+
+  pure Nothing
 

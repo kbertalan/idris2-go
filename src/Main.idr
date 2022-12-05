@@ -10,8 +10,6 @@ import Idris.Syntax
 
 import Idris2.Compiler.Go
 
-import Libraries.Utils.Path
-
 export
 compileExpr :
   Ref Ctxt Defs ->
@@ -22,10 +20,10 @@ compileExpr :
   (outfile : String) ->
   Core (Maybe String)
 compileExpr c s _ outputDir tm outfile = do
-  let out = outputDir </> outfile ++ ".go"
+  let out = outfile ++ ".go"
   cdata <- getCompileData False Cases tm
   let defs = namedDefs cdata
-  compileGo out defs
+  compileGo outputDir out defs
 
 export
 executeExpr :
