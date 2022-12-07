@@ -31,21 +31,21 @@ goLocationFromNS ns =
 goUserName :
   UserName ->
   String
-goUserName (Basic n) = capitalize n
-goUserName (Field n) = capitalize n ++ "__field"
+goUserName (Basic n) = safeGoIdentifier n
+goUserName (Field n) = safeGoIdentifier $ n ++ "__field"
 goUserName Underscore = "Underscore__"
 
 goName :
   Core.Name.Name ->
   Go.Name
 goName (NS ns n) = let sub = goName n in MkName (goLocationFromNS ns) sub.value
-goName (UN un) = MkName (MkLocation "go/user" "user.go" "user") $ goUserName un
-goName (MN mn i) = MkName (MkLocation "go/gen" "gen.go" "gen") (capitalize $ mn ++ show i)
+goName (UN un) = MkName (MkLocation "gen/go" "user.go" "go") $ goUserName un
+goName (MN mn i) = MkName (MkLocation "gen/go" "generated.go" "go") (safeGoIdentifier $ mn ++ show i)
 goName (PV n i) = let sub = goName n in MkName sub.location (sub.value ++ show i)
-goName (DN str n) = let sub = goName n in MkName sub.location (capitalize str)
+goName (DN str n) = goName n
 goName (Nested x n) = goName n
-goName (CaseBlock str i) = MkName empty str
-goName (WithBlock str i) = MkName empty str
+goName (CaseBlock str i) = MkName empty $ safeGoIdentifier $ str ++ show i
+goName (WithBlock str i) = MkName empty $ safeGoIdentifier $ str ++ show i
 goName (Resolved i) = MkName empty ("resolved" ++ show i)
 
 data GoDecls : Type where
@@ -62,13 +62,19 @@ goDefs (n, nd) = defs nd
   where
     defs : NamedDef -> Core ()
     defs (MkNmFun args exp) = do
-      let fnDecl = func n.value [] void []
+      let fnDecl = func (capitalize n.value) [fields (map (value . goName) args) $ tid' "any" ] void
+                    [ [ id_ "i" ] /:=/ [ intL 0 ] |> doc (show exp)
+                    ]
       decls <- get GoDecls
       put GoDecls (fnDecl :: decls)
       pure ()
     defs (MkNmCon tag arity nt) = pure ()
-    defs (MkNmForeign ccs args type) = pure ()
-    defs (MkNmError exp) = pure ()
+    defs (MkNmForeign ccs args type) = do
+      let fnDecl = func (capitalize n.value) [] void []
+      decls <- get GoDecls
+      put GoDecls (fnDecl :: decls)
+      pure ()
+    defs (MkNmError exp) = assert_total $ idris_crash ("Error with expression: " ++ show exp)
 
 toGoDecls :
   DeclList ->
