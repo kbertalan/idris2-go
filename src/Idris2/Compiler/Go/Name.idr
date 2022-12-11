@@ -1,5 +1,11 @@
 module Idris2.Compiler.Go.Name
 
+import Core.Name
+
+import Data.String
+
+import Libraries.Utils.Path
+
 public export
 record Location where
   constructor MkLocation
@@ -26,6 +32,7 @@ record Name where
   constructor MkName
   location : Location
   value : String
+  original : Core.Name.Name
 
 export
 capitalize : String -> String
@@ -75,4 +82,38 @@ safeGoIdentifier n =
     avoidKeyword n =
       if n `elem` keywords then "keyword_" ++ n
                            else n
+
+export
+goLocationFromNS :
+  Namespace ->
+  Location
+goLocationFromNS ns =
+  let parts = map toLower $ reverse $ unsafeUnfoldNamespace ns
+      package = case parts of
+                  _::_ => last parts
+                  _ => ""
+
+  in MkLocation (joinPath parts) (package ++ ".go") package
+
+export
+goUserName :
+  UserName ->
+  String
+goUserName (Basic n) = safeGoIdentifier n
+goUserName (Field n) = safeGoIdentifier $ n ++ "__field"
+goUserName Underscore = "Underscore__"
+
+export
+goName :
+  Core.Name.Name ->
+  Go.Name.Name
+goName orig@(NS ns n) = let sub = goName n in MkName (goLocationFromNS ns) sub.value orig
+goName orig@(UN un) = MkName (MkLocation "_gen/idris2" "user.go" "idris2") (goUserName un) orig
+goName orig@(MN mn i) = MkName (MkLocation "_gen/idris2" "generated.go" "idris2") (safeGoIdentifier $ mn ++ show i) orig
+goName orig@(PV n i) = let sub = goName n in MkName sub.location (sub.value ++ show i) orig
+goName orig@(DN str n) = { original := orig } (goName n)
+goName orig@(Nested x n) = { original := orig } (goName n)
+goName orig@(CaseBlock str i) = MkName empty (safeGoIdentifier $ str ++ show i) orig
+goName orig@(WithBlock str i) = MkName empty (safeGoIdentifier $ str ++ show i) orig
+goName orig@(Resolved i) = MkName empty ("resolved" ++ show i) orig
 

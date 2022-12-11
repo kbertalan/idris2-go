@@ -65,6 +65,10 @@ implementation Statement (ReturnStatement rs) => Documentable (ReturnStatement r
   setDocs ds = { doc := Just ds }
 
 export
+implementation Declaration (FuncDeclaration rcs ts ps rs sts) => Documentable (FuncDeclaration rcs ts ps rs sts) where
+  setDocs ds = { doc := Just ds }
+
+export
 data Package = MkPackage String
 
 export
@@ -596,6 +600,13 @@ namespace Statement
     HList sts ->
     CaseClause [] sts
   default_ sts = MkCaseClause [] sts
+
+export
+paren :
+  Expression e =>
+  e ->
+  ParenExpression e
+paren = MkParenExpression
 
 export
 call :

@@ -155,6 +155,13 @@ implementation Expression (CallExpression f as e) => Printer f => All Printer as
         many xs
 
 export
+implementation Expression (ParenExpression e) => Printer e => Printer (ParenExpression e) where
+  print file pe = do
+    pPutStr "("
+    print file pe.expression
+    pPutStr ")"
+
+export
 implementation Expression (CastExpression t e) => Printer t => Printer e => Printer (CastExpression t e) where
   print file ce = do
     print file ce.type
@@ -664,6 +671,12 @@ implementation GoType (FunctionType ts ps rs) => All Printer ts => All Printer p
 export
 implementation Declaration (FuncDeclaration rcs ts ps rs sts) => All Printer ps => All Printer rs => Printer (BlockStatement sts) => Printer (FuncDeclaration rcs ts ps rs sts) where
   print file fd = do
+    case fd.doc of
+      Nothing => pure ()
+      Just ds => do
+        printComments $ forget ds.comments
+        printNewLine
+        printIndent
     pPutStr "func "
     pPutStr fd.name.name
     pPutStr "("

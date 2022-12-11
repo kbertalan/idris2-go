@@ -7,11 +7,19 @@ import Go.Token
 
 %default total
 
+export
 interface Expression a where
+
+export
 interface Statement a where
+
+export
 interface Specification a where
+
 export
 interface Declaration a where
+
+export
 interface GoType a where
 
 public export

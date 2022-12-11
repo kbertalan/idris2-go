@@ -1,6 +1,6 @@
 ipkg=idris2-go.ipkg
 
-.PHONY: build install run clean dev dev-build test-clean test-build test dev-test
+.PHONY: build install run clean dev dev-build test-clean test-build test dev-test compile-test
  
 build:
 	pack build ${ipkg}
@@ -31,4 +31,10 @@ test: install test-build
 
 dev-test:
 	find . -name *.idr | threads=4 INTERACTIVE="" entr make test
+
+compile-test:
+	make clean
+	make build
+	make test-clean
+	./build/exec/idris2-go --build tests/runtests.ipkg
 
