@@ -168,6 +168,13 @@ import_ :
 import_ path = MkImportSpec Nothing Nothing (stringL path) Nothing
 
 export
+importN :
+  (name : String) ->
+  (path : String) ->
+  ImportSpec
+importN name path = MkImportSpec Nothing (Just $ id_ name) (stringL path) Nothing
+
+export
 void : FieldList []
 void = []
 

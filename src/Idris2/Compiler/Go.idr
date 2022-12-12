@@ -232,6 +232,23 @@ namespace GoImports
         package = packageForImport i is
     in MkGoExp $ id_ package /./ capitalize n.value
 
+  export
+  goImportSpecList :
+    (currentImport : Import) ->
+    Imports ->
+    List ImportSpec
+  goImportSpecList currentImport is = go $ SortedMap.toList is
+    where
+      goPackage : List Import -> List ImportSpec
+      goPackage [] = []
+      goPackage (x::xs) = if x == currentImport
+                            then goPackage xs
+                            else importN (packageForImport x is) x.path :: goPackage xs
+
+      go : List (String, SortedSet Import) -> List ImportSpec
+      go [] = []
+      go (x::xs) = goPackage (SortedSet.toList $ snd x) ++ go xs
+
 goFile :
   (outDir : String) ->
   (outFile : String) ->
@@ -250,7 +267,7 @@ goFile outDir outFile defs = do
 
   goDecls <- get Decls
   let MkGoDecls decls = fromGoDecls goDecls
-      src = Go.file (name.location.dir </> name.location.fileName) (package name.location.package) [] decls
+      src = Go.file (name.location.dir </> name.location.fileName) (package name.location.package) (goImportSpecList currentImport imports) decls
 
   result <- coreLift $ printFile outDir src
   case result of
