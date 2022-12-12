@@ -51,61 +51,89 @@ namespace GoStmtList
     let MkGoStmts {ts} {sts} {ps} xs' = fromGoStmtList xs
     in MkGoStmts (x::xs')
 
-RefResolver : Type
-RefResolver = Go.Name -> GoExp
+record PackageResolver where
+  constructor MkPackageResolver
+  project : Go.Name -> GoExp
+  support : String -> GoExp
 
-goExpArgs : RefResolver -> List NamedCExp -> GoExpArgs
-goExp : RefResolver -> NamedCExp -> GoExp
-goStatement : RefResolver -> NamedCExp -> GoStmtList
+goExpArgs : PackageResolver -> List NamedCExp -> GoExpArgs
+goExp : PackageResolver -> NamedCExp -> GoExp
+goStatement : PackageResolver -> NamedCExp -> GoStmtList
 
 goExpArgs _ [] = MkGoExpArgs []
-goExpArgs rr (x::xs) =
-  let MkGoExpArgs {ts} {es} {ps} xs' = goExpArgs rr xs
-      MkGoExp {t} {e} {p} x' = goExp rr x
+goExpArgs pr (x::xs) =
+  let MkGoExpArgs {ts} {es} {ps} xs' = goExpArgs pr xs
+      MkGoExp {t} {e} {p} x' = goExp pr x
   in MkGoExpArgs {ts=t::ts} {es=e::es} {ps=p::ps} $ x' :: xs'
 
 goExp _ (NmLocal _ n) = MkGoExp $ id_ $ value $ goName n
-goExp rr (NmRef _ n) = rr $ goName n
-goExp rr (NmLam _ n exp) =
-  let MkGoStmts x = fromGoStmtList $ goStatement rr exp
+goExp pr (NmRef _ n) = pr.project $ goName n
+goExp pr (NmLam _ n exp) =
+  let MkGoStmts x = fromGoStmtList $ goStatement pr exp
   in MkGoExp $ funcL [fields [value $ goName n] $ tid' "any"] [fieldT $ tid' "any"] x
-goExp rr (NmLet _ n val x) =
-  let MkGoExp val' = goExp rr val
-      MkGoStmts x' = fromGoStmtList $ goStatement rr x
+goExp pr (NmLet _ n val x) =
+  let MkGoExp val' = goExp pr val
+      MkGoStmts x' = fromGoStmtList $ goStatement pr x
   in MkGoExp $ call (paren $ funcL [] [] x') []
-goExp rr (NmApp _ fn args) =
-  let MkGoExp fn' = goExp rr fn
-      MkGoExpArgs args' = goExpArgs rr args
+goExp pr (NmApp _ fn args) =
+  let MkGoExp fn' = goExp pr fn
+      MkGoExpArgs args' = goExpArgs pr args
   in MkGoExp $ call fn' args'
--- goExp rr (NmCon fc n x tag xs) = ?aaa_5
--- goExp rr (NmOp fc f xs) = ?aaa_6
--- goExp rr (NmExtPrim fc p xs) = ?aaa_7
--- goExp rr (NmForce fc lz x) = ?aaa_8
--- goExp rr (NmDelay fc lz x) = ?aaa_9
--- goExp rr (NmConCase fc sc xs x) = ?aaa_10
--- goExp rr (NmConstCase fc sc xs x) = ?aaa_11
--- goExp rr (NmPrimVal fc cst) = ?aaa_12
--- goExp rr (NmErased fc) = ?aaa_13
--- goExp rr (NmCrash fc str) = ?aaa_14
+goExp pr (NmCon fc n x tag xs) =
+  let MkGoExp con = pr.support "Constructor"
+      MkGoExpArgs args = goExpArgs pr xs
+      tag' = fromMaybe (-1) tag
+  in MkGoExp $ call con $ intL tag' :: args
+-- goExp pr (NmOp fc f xs) = ?aaa_6
+-- goExp pr (NmExtPrim fc p xs) = ?aaa_7
+goExp pr (NmForce fc lz x) =
+  let MkGoExp x' = goExp pr x
+  in MkGoExp $ call (paren x') []
+goExp pr (NmDelay fc lz x) =
+  let MkGoExp x' = goExp pr x
+  in MkGoExp $ funcL [] [fieldT $ tid' "any"] [ return [ x' ] ]
+-- goExp pr (NmConCase fc sc xs x) = ?aaa_10
+-- goExp pr (NmConstCase fc sc xs x) = ?aaa_11
+goExp pr (NmPrimVal fc (I i)) = MkGoExp $ intL i
+goExp pr (NmPrimVal fc (I8 i)) = MkGoExp $ cast_ int8 $ intL $ cast i
+goExp pr (NmPrimVal fc (I16 i)) = MkGoExp $ cast_ int16 $ intL $ cast i
+goExp pr (NmPrimVal fc (I32 i)) = MkGoExp $ cast_ int32 $ intL $ cast i
+goExp pr (NmPrimVal fc (I64 i)) = MkGoExp $ cast_ int64 $ intL $ cast i
+goExp pr (NmPrimVal fc (BI i)) = MkGoExp $ intL $ cast i
+goExp pr (NmPrimVal fc (B8 m)) = MkGoExp $ cast_ uint8 $ intL $ cast m
+goExp pr (NmPrimVal fc (B16 m)) = MkGoExp $ cast_ uint16 $ intL $ cast m
+goExp pr (NmPrimVal fc (B32 m)) = MkGoExp $ cast_ uint32 $ intL $ cast m
+goExp pr (NmPrimVal fc (B64 m)) = MkGoExp $ cast_ uint64 $ intL $ cast m
+goExp pr (NmPrimVal fc (Str str)) = MkGoExp $ stringL str
+goExp pr (NmPrimVal fc (Ch c)) = MkGoExp $ stringL $ pack [c] -- TODO replace with char literal
+goExp pr (NmPrimVal fc (Db dbl)) = MkGoExp $ floatL dbl
+goExp pr (NmPrimVal fc (PrT pty)) = MkGoExp $ stringL "TYPE" -- TODO
+goExp pr (NmPrimVal fc WorldVal) = MkGoExp $ stringL "WORLD"
+goExp pr exp@(NmErased fc) =
+  let MkGoStmts x = fromGoStmtList $ goStatement pr exp
+  in MkGoExp $ funcL [] [fieldT $ tid' "any"] x
+goExp pr exp@(NmCrash fc str) =
+  let MkGoStmts x = fromGoStmtList $ goStatement pr exp
+  in MkGoExp $ funcL [] [fieldT $ tid' "any"] x
 goExp _ _ = MkGoExp $ intL (-1)
 
-goStatement rr exp@(NmLocal _ _) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmRef _ _) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmLam _ _ _) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmLet _ n val x) =
-  let MkGoExp val' = goExp rr val 
-  in decl (vars [ var [id_ $ value $ goName n] (tid' "any") [val'] ]) :: goStatement rr x
-goStatement rr exp@(NmApp fc x xs) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmCon fc n x tag xs) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmOp fc f xs) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmExtPrim fc p xs) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmForce fc lz x) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmDelay fc lz x) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmConCase fc sc xs x) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmConstCase fc sc xs x) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmPrimVal fc cst) = let MkGoExp x = goExp rr exp in [ return [x] ]
-goStatement rr exp@(NmErased _) = [ expr $ call (id_ "panic") [stringL "executing erased term"] ]
-goStatement rr exp@(NmCrash _ str) = [ expr $ call (id_ "panic") [stringL str] ]
+goStatement pr exp@(NmLocal _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmRef _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmLam _ _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmLet _ n val x) =
+  let MkGoExp val' = goExp pr val 
+  in decl (vars [ var [id_ $ value $ goName n] (tid' "any") [val'] ]) :: goStatement pr x
+goStatement pr exp@(NmApp fc x xs) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmCon fc n x tag xs) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmOp fc f xs) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmExtPrim fc p xs) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmForce fc lz x) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmDelay fc lz x) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmConCase fc sc xs x) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmConstCase fc sc xs x) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmPrimVal fc cst) = let MkGoExp x = goExp pr exp in [ return [x] ]
+goStatement pr exp@(NmErased _) = [ expr $ call (id_ "panic") [stringL "executing erased term"] ]
+goStatement pr exp@(NmCrash _ str) = [ expr $ call (id_ "panic") [stringL str] ]
 
 data Decls : Type where
 
@@ -131,14 +159,14 @@ namespace GoDecls
 
 goDefs :
   {auto s : Ref Decls GoDeclList} ->
-  RefResolver ->
+  PackageResolver ->
   (Go.Name,NamedDef) ->
   Core ()
-goDefs rr (n, nd) = defs nd
+goDefs pr (n, nd) = defs nd
   where
     defs : NamedDef -> Core ()
     defs (MkNmFun args exp) = do
-      let MkGoStmts sts = fromGoStmtList $ goStatement rr exp
+      let MkGoStmts sts = fromGoStmtList $ goStatement pr exp
           fnDecl = docs [show exp, show n.original] $
                     func (capitalize n.value) [fields (map (value . goName) args) $ tid' "any" ] [fieldT $ tid' "any"] sts
       decls <- get Decls
@@ -233,6 +261,16 @@ namespace GoImports
     in MkGoExp $ id_ package /./ capitalize n.value
 
   export
+  goSupport :
+    (moduleName : String) ->
+    Imports ->
+    String ->
+    GoExp
+  goSupport moduleName is n =
+    let package = packageForImport (importForSupport moduleName) is
+    in MkGoExp $ id_ package /./ capitalize n
+
+  export
   goImportSpecList :
     (currentImport : Import) ->
     Imports ->
@@ -257,13 +295,16 @@ goFile :
 goFile outDir outFile defs = do
   let (name, _) = head defs
   ensureDirectoryExists (outDir </> name.location.dir)
-  let moduleName = "github.com/kbertalan/idris2-go"
+  let moduleName = "github.com/kbertalan/idris2-go" -- TODO detect module name or get as a compiler parameter
       currentImport = importForProject moduleName name.location
       imports = goImportDefs moduleName $ forget defs
-      refResolver = goRef moduleName currentImport imports
+      packageResolver = MkPackageResolver
+                          { project = goRef moduleName currentImport imports
+                          , support = goSupport moduleName imports
+                          }
 
   _ <- newRef Decls []
-  traverse_ (goDefs refResolver) $ forget defs
+  traverse_ (goDefs packageResolver) $ forget defs
 
   goDecls <- get Decls
   let MkGoDecls decls = fromGoDecls goDecls
