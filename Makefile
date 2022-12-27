@@ -26,7 +26,7 @@ test-clean:
 test-build:
 	make -C tests build
 
-test: install test-build
+test: test-build
 	make -C tests test
 
 dev-test:
@@ -36,5 +36,5 @@ compile-test:
 	make clean
 	make build
 	make test-clean
-	./build/exec/idris2-go --build tests/runtests.ipkg
+	IDRIS2_DATA="${PWD}/support" ./build/exec/idris2-go --build tests/runtests.ipkg --directive module=github.com/kbertalan/idris2-go/tests
 

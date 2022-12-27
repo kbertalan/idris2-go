@@ -3,6 +3,7 @@ module Idris2.Compiler.Go
 import Core.CompileExpr
 import Core.Context
 import Core.Directory
+import Core.Options
 
 import Data.List
 import Data.List1
@@ -59,6 +60,7 @@ record PackageResolver where
 goExpArgs : PackageResolver -> List NamedCExp -> GoExpArgs
 goExp : PackageResolver -> NamedCExp -> GoExp
 goStatement : PackageResolver -> NamedCExp -> GoStmtList
+goOp : {0 arity : Nat } -> PackageResolver -> PrimFn arity -> Vect arity NamedCExp -> GoExp
 
 goExpArgs _ [] = MkGoExpArgs []
 goExpArgs pr (x::xs) =
@@ -84,7 +86,7 @@ goExp pr (NmCon fc n x tag xs) =
       MkGoExpArgs args = goExpArgs pr xs
       tag' = fromMaybe (-1) tag
   in MkGoExp $ call con $ intL tag' :: args
--- goExp pr (NmOp fc f xs) = ?aaa_6
+goExp pr exp@(NmOp fc f xs) = goOp pr f xs
 -- goExp pr (NmExtPrim fc p xs) = ?aaa_7
 goExp pr (NmForce fc lz x) =
   let MkGoExp x' = goExp pr x
@@ -99,16 +101,34 @@ goExp pr (NmPrimVal fc (I8 i)) = MkGoExp $ cast_ int8 $ intL $ cast i
 goExp pr (NmPrimVal fc (I16 i)) = MkGoExp $ cast_ int16 $ intL $ cast i
 goExp pr (NmPrimVal fc (I32 i)) = MkGoExp $ cast_ int32 $ intL $ cast i
 goExp pr (NmPrimVal fc (I64 i)) = MkGoExp $ cast_ int64 $ intL $ cast i
-goExp pr (NmPrimVal fc (BI i)) = MkGoExp $ intL $ cast i
+goExp pr (NmPrimVal fc (BI i)) =
+  let MkGoExp fn = pr.support "IntegerLiteral"
+  in MkGoExp $ call fn [MkBasicLiteral MkInt $ show i]
 goExp pr (NmPrimVal fc (B8 m)) = MkGoExp $ cast_ uint8 $ intL $ cast m
 goExp pr (NmPrimVal fc (B16 m)) = MkGoExp $ cast_ uint16 $ intL $ cast m
 goExp pr (NmPrimVal fc (B32 m)) = MkGoExp $ cast_ uint32 $ intL $ cast m
 goExp pr (NmPrimVal fc (B64 m)) = MkGoExp $ cast_ uint64 $ intL $ cast m
 goExp pr (NmPrimVal fc (Str str)) = MkGoExp $ stringL str
-goExp pr (NmPrimVal fc (Ch c)) = MkGoExp $ stringL $ pack [c] -- TODO replace with char literal
+goExp pr (NmPrimVal fc (Ch c)) = MkGoExp $ charL c
 goExp pr (NmPrimVal fc (Db dbl)) = MkGoExp $ floatL dbl
-goExp pr (NmPrimVal fc (PrT pty)) = MkGoExp $ stringL "TYPE" -- TODO
-goExp pr (NmPrimVal fc WorldVal) = MkGoExp $ stringL "WORLD"
+goExp pr (NmPrimVal fc (PrT pty)) = 
+  let tyName = case pty of
+                 IntType => "IntTypeValue"
+                 Int8Type => "Int8TypeValue"
+                 Int16Type => "Int16TypeValue"
+                 Int32Type => "Int32TypeValue"
+                 Int64Type => "Int64TypeValue"
+                 IntegerType => "IntegerTypeValue"
+                 Bits8Type => "Bits8TypeValue"
+                 Bits16Type => "Bits16TypeValue"
+                 Bits32Type => "Bits32TypeValue"
+                 Bits64Type => "Bits64TypeValue"
+                 StringType => "StringTypeValue"
+                 CharType => "CharTypeValue"
+                 DoubleType => "DoubleTypeValue"
+                 WorldType => "WorldTypeValue"
+  in pr.support tyName
+goExp pr (NmPrimVal fc WorldVal) = pr.support "World"
 goExp pr exp@(NmErased fc) =
   let MkGoStmts x = fromGoStmtList $ goStatement pr exp
   in MkGoExp $ funcL [] [fieldT $ tid' "any"] x
@@ -116,6 +136,188 @@ goExp pr exp@(NmCrash fc str) =
   let MkGoStmts x = fromGoStmtList $ goStatement pr exp
   in MkGoExp $ funcL [] [fieldT $ tid' "any"] x
 goExp _ _ = MkGoExp $ intL (-1)
+
+goOp pr (Add ty) [x,y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /+/ y'
+goOp pr (Sub ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /-/ y'
+goOp pr (Mul ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /*/ y'
+goOp pr (Div ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /// y'
+goOp pr (Mod ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /%/ y'
+goOp pr (Neg ty) [x] =
+  let MkGoExp x' = goExp pr x
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ minus' x'
+goOp pr (ShiftL ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /<</ y'
+goOp pr (ShiftR ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' />>/ y'
+goOp pr (BAnd ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /&/ y'
+goOp pr (BOr ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /|/ y'
+goOp pr (BXOr ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /^/ y'
+goOp pr (LT ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /</ y'
+goOp pr (LTE ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /<=/ y'
+goOp pr (EQ ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' /==/ y'
+goOp pr (GTE ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' />=/ y'
+goOp pr (GT ty) [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in case ty of
+        IntegerType => MkGoExp $ intL (-2)
+        _ => MkGoExp $ x' />/ y'
+goOp pr StrLength [x] =
+  let MkGoExp x' = goExp pr x
+  in MkGoExp $ call (id_ "len") [x']
+goOp pr StrHead [x] =
+  let MkGoExp x' = goExp pr x
+  in MkGoExp $ x' `index` intL 0
+goOp pr StrTail [x] =
+  let MkGoExp x' = goExp pr x
+  in MkGoExp $ sliceL x' $ intL 1
+goOp pr StrIndex [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in MkGoExp $ x' `index` y'
+goOp pr StrCons [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+      MkGoExp strCons = pr.support "StrCons"
+  in MkGoExp $ call strCons [x',y']
+goOp pr StrAppend [x, y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+  in MkGoExp $ x' /+/ y'
+goOp pr StrReverse [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp strReverse = pr.support "StrReverse"
+  in MkGoExp $ call strReverse [x']
+goOp pr StrSubstr [x, y, z] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+      MkGoExp z' = goExp pr z
+  in MkGoExp $ sliceLH x' y' z'
+goOp pr DoubleExp [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleExp"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleLog [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleLog"
+  in MkGoExp $ call fn [x']
+goOp pr DoublePow [x,y] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp y' = goExp pr y
+      MkGoExp fn = pr.support "DoublePow"
+  in MkGoExp $ call fn [x', y']
+goOp pr DoubleSin [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleSin"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleCos [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleCos"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleTan [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleTan"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleASin [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleASin"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleACos [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleACos"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleATan [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleATan"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleSqrt [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleSqrt"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleFloor [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleFloor"
+  in MkGoExp $ call fn [x']
+goOp pr DoubleCeiling [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support "DoubleCeiling"
+  in MkGoExp $ call fn [x']
+-- goOp pr (Cast pty pty1) [x] = ?aaa_36
+goOp pr BelieveMe [_,_,x] = goExp pr x
+goOp pr Crash [_,x] =
+  let MkGoExp x' = goExp pr x
+  in MkGoExp $ call (paren $ funcL [] [fieldT $ tid' "any"] [ expr $ call (id_ "panic") [x'] ]) []
+goOp _ _ _ = MkGoExp $ intL (-3)
 
 goStatement pr exp@(NmLocal _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
 goStatement pr exp@(NmRef _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
@@ -253,10 +455,10 @@ namespace GoImports
     GoExp
   goRef moduleName currentImport is n =
     let True = n.location /= empty
-          | False => MkGoExp $ id_ n.value
+          | False => MkGoExp $ id_ $ capitalize n.value
         i = importForProject moduleName n.location
         True = i /= currentImport
-          | False => MkGoExp $ id_ n.value
+          | False => MkGoExp $ id_ $ capitalize n.value
         package = packageForImport i is
     in MkGoExp $ id_ package /./ capitalize n.value
 
@@ -275,13 +477,17 @@ namespace GoImports
     (currentImport : Import) ->
     Imports ->
     List ImportSpec
-  goImportSpecList currentImport is = go $ SortedMap.toList is
+  goImportSpecList currentImport is = sortBy (compare `on` (value . path)) $ go $ SortedMap.toList is
     where
       goPackage : List Import -> List ImportSpec
       goPackage [] = []
-      goPackage (x::xs) = if x == currentImport
-                            then goPackage xs
-                            else importN (packageForImport x is) x.path :: goPackage xs
+      goPackage (x::xs) with (x == currentImport)
+        _ | True = goPackage xs
+        _ | False =
+          let package = packageForImport x is
+          in case package == x.package of
+                True => import_ x.path :: goPackage xs
+                False => importN package x.path :: goPackage xs
 
       go : List (String, SortedSet Import) -> List ImportSpec
       go [] = []
@@ -290,13 +496,13 @@ namespace GoImports
 goFile :
   (outDir : String) ->
   (outFile : String) ->
+  (moduleName : String) ->
   (List1 (Go.Name, NamedDef)) ->
   Core (Maybe String)
-goFile outDir outFile defs = do
+goFile outDir outFile moduleName defs = do
   let (name, _) = head defs
   ensureDirectoryExists (outDir </> name.location.dir)
-  let moduleName = "github.com/kbertalan/idris2-go" -- TODO detect module name or get as a compiler parameter
-      currentImport = importForProject moduleName name.location
+  let currentImport = importForProject moduleName name.location
       imports = goImportDefs moduleName $ forget defs
       packageResolver = MkPackageResolver
                           { project = goRef moduleName currentImport imports
@@ -326,6 +532,30 @@ getGrouppedDefs defs =
     locationOf : (Go.Name, _) -> Location
     locationOf = location . fst
 
+getGoModule : List String -> Core String
+getGoModule directives
+    = do let Just mod = getFirstArg directives
+              | Nothing => throw (UserError "no go module has been specified, please use --directive module=<go-module-name>")
+         pure mod
+  where
+    getArg : String -> Maybe String
+    getArg directive =
+      let (k,v) = break (== '=') directive
+      in
+        if (trim k) == "module"
+          then Just $ trim $ substr 1 (length v) v
+          else Nothing
+
+    getFirstArg : List String -> Maybe String
+    getFirstArg [] = Nothing
+    getFirstArg (x::xs) =
+      let Just arg = getArg x
+            | Nothing => getFirstArg xs
+      in Just arg
+
+Go : CG
+Go = Other "go"
+
 export
 compileGo :
   {auto c : Ref Ctxt Defs} ->
@@ -335,8 +565,17 @@ compileGo :
   Core (Maybe String)
 compileGo outDir outFile defs = do
 
+  ds <- getDirectives Go
+  moduleName <- getGoModule ds
+
+  let supportPath = outDir </> "_gen" </> "idris2" </> "support"
+      supportFile = "support.go"
+  ensureDirectoryExists supportPath
+  support <- readDataFile supportFile
+  writeFile (supportPath </> supportFile) support
+
   let grouppedDefs = getGrouppedDefs defs
-  traverse_ (goFile outDir outFile) grouppedDefs
+  traverse_ (goFile outDir outFile moduleName) grouppedDefs
 
   pure Nothing
 

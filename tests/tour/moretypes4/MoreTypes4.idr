@@ -16,7 +16,7 @@ main = do
                 ]
               , func "main" [] void
                 [ [ id_ "v" ] /:=/ [ compositL (tid' "Vertex") [intL 1, intL 2] ]
-                , [ id_ "p" ] /:=/ [ /&/ id_ "v" ]
+                , [ id_ "p" ] /:=/ [ ptrOf $ id_ "v" ]
                 , [ id_ "p" /./ "X" ] /=/ [ 1 `expL` 9 ]
                 , expr $ call (id_ "fmt" /./ "Println") [ id_ "v" ]
                 ]

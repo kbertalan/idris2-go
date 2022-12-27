@@ -81,6 +81,7 @@ implementation Printer BasicLiteral where
   print file bl =
     let value = case bl.kind of
                   MkString => "\"\{bl.value}\""
+                  MkChar => "'\{bl.value}'"
                   _ => bl.value
     in pPutStr value
 

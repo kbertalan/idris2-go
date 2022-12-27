@@ -20,7 +20,7 @@ main = do
                   |> comment " Y:0 is implicit"
                 , var' [id_ "v3"] [ compositL (tid' "Vertex") [] ]
                   |> comment " X:0 and Y:0"
-                , var' [id_ "p"] [ /&/ compositL (tid' "Vertex") [intL 1, intL 2] ]
+                , var' [id_ "p"] [ ptrOf $ compositL (tid' "Vertex") [intL 1, intL 2] ]
                   |> comment " has type *Vertex"
                 ]
               , func "main" [] void

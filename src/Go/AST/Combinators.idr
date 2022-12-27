@@ -93,6 +93,19 @@ file :
 file name (MkPackage pkg) imports decls = MkFile Nothing name (id_ pkg) decls imports [] []
 
 namespace Literal
+
+  export
+  runeL :
+    Char ->
+    BasicLiteral
+  runeL c = MkBasicLiteral MkChar $ pack [c]
+
+  export
+  charL :
+    Char ->
+    BasicLiteral
+  charL = runeL
+
   export
   stringL :
     String ->
@@ -815,7 +828,25 @@ export
   BinaryExpression e1 e2
 (/-/) e1 e2 = MkBinaryExpression e1 MkSub e2
 
-infixl 8 /+/, /-/
+export
+(/|/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/|/) e1 e2 = MkBinaryExpression e1 MkOr e2
+
+export
+(/^/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/^/) e1 e2 = MkBinaryExpression e1 MkXor e2
+
+infixl 8 /+/, /-/, /|/, /^/
 
 export
 (/*/) :
@@ -836,6 +867,15 @@ export
 (///) e1 e2 = MkBinaryExpression e1 MkQuo e2
 
 export
+(/%/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/%/) e1 e2 = MkBinaryExpression e1 MkRem e2
+
+export
 (/<</) :
   Expression e1 =>
   Expression e2 =>
@@ -853,7 +893,16 @@ export
   BinaryExpression e1 e2
 (/>>/) e1 e2 = MkBinaryExpression e1 MkShr e2
 
-infixl 9 /*/, ///, /<</, />>/
+export
+(/&/) :
+  Expression e1 =>
+  Expression e2 =>
+  e1 ->
+  e2 ->
+  BinaryExpression e1 e2
+(/&/) e1 e2 = MkBinaryExpression e1 MkAnd e2
+
+infixl 9 /*/, ///, /%/, /<</, />>/, /&/
 
 export
 (/:=/) :
@@ -902,11 +951,11 @@ export
 infixl 7 /:=/, /=/, /+=/, /-=/
 
 export
-(/&/) :
+ptrOf :
   Expression e =>
   e ->
   UnaryExpression e
-(/&/) e = MkUnaryExpression MkAnd e
+ptrOf e = MkUnaryExpression MkAnd e
 
 export
 star :
@@ -914,6 +963,4 @@ star :
   e ->
   StarExpression e
 star e = MkStarExpression e
-
-prefix 4 /&/
 
