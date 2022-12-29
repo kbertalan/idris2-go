@@ -140,97 +140,113 @@ goExp _ _ = MkGoExp $ intL (-1)
 goOp pr (Add ty) [x,y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerAdd"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /+/ y'
 goOp pr (Sub ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerSub"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /-/ y'
 goOp pr (Mul ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerMul"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /*/ y'
 goOp pr (Div ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerDiv"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /// y'
 goOp pr (Mod ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerMod"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /%/ y'
 goOp pr (Neg ty) [x] =
   let MkGoExp x' = goExp pr x
+      MkGoExp ifn = pr.support "IntegerNeg"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x']
         _ => MkGoExp $ minus' x'
 goOp pr (ShiftL ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerShiftL"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /<</ y'
 goOp pr (ShiftR ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerShiftR"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' />>/ y'
 goOp pr (BAnd ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerBAnd"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /&/ y'
 goOp pr (BOr ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerBOr"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /|/ y'
 goOp pr (BXOr ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerBXOr"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /^/ y'
 goOp pr (LT ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerLT"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /</ y'
 goOp pr (LTE ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerLTE"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /<=/ y'
 goOp pr (EQ ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerEQ"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' /==/ y'
 goOp pr (GTE ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerGTE"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' />=/ y'
 goOp pr (GT ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
+      MkGoExp ifn = pr.support "IntegerGT"
   in case ty of
-        IntegerType => MkGoExp $ intL (-2)
+        IntegerType => MkGoExp $ call ifn [x', y']
         _ => MkGoExp $ x' />/ y'
 goOp pr StrLength [x] =
   let MkGoExp x' = goExp pr x

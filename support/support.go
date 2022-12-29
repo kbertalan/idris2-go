@@ -17,9 +17,7 @@ func Constructor(tag int, args ...any) any {
 	}
 }
 
-type BigInteger *big.Int
-
-func IntegerLiteral(i int64) BigInteger {
+func IntegerLiteral(i int64) *big.Int {
 	return big.NewInt(i)
 }
 
@@ -46,6 +44,124 @@ const (
 type WorldType struct{}
 
 var World WorldType
+
+func IntegerAdd(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	z := big.Int{}
+	return z.Add(a, b)
+}
+
+func IntegerSub(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	z := big.Int{}
+	return z.Sub(a, b)
+}
+
+func IntegerMul(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	z := big.Int{}
+	return z.Mul(a, b)
+}
+
+func IntegerDiv(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	z := big.Int{}
+	return z.Div(a, b)
+}
+
+func IntegerMod(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	z := big.Int{}
+	return z.Mod(a, b)
+}
+
+func IntegerNeg(x any) *big.Int {
+	a := x.(*big.Int)
+	z := big.Int{}
+	return z.Neg(a)
+}
+
+func IntegerShiftL(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int).Uint64()
+	z := big.Int{}
+	return z.Lsh(a, uint(b))
+}
+
+func IntegerShiftR(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int).Uint64()
+	z := big.Int{}
+	return z.Rsh(a, uint(b))
+}
+
+func IntegerBAnd(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	z := big.Int{}
+	return z.And(a, b)
+}
+
+func IntegerBOr(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	z := big.Int{}
+	return z.Or(a, b)
+}
+
+func IntegerBXOr(x, y any) *big.Int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	z := big.Int{}
+	return z.Xor(a, b)
+}
+
+func boolAsInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+
+func IntegerLT(x, y any) int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	c := a.Cmp(b)
+	return boolAsInt(c < 0)
+}
+
+func IntegerLTE(x, y any) int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	c := a.Cmp(b)
+	return boolAsInt(c <= 0)
+}
+
+func IntegerEQ(x, y any) int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	c := a.Cmp(b)
+	return boolAsInt(c == 0)
+}
+
+func IntegerGTE(x, y any) int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	c := a.Cmp(b)
+	return boolAsInt(c >= 0)
+}
+
+func IntegerGT(x, y any) int {
+	a := x.(*big.Int)
+	b := y.(*big.Int)
+	c := a.Cmp(b)
+	return boolAsInt(c > 0)
+}
 
 func StrCons(ch rune, str string) string {
 	return string([]rune{ch}) + str
