@@ -86,8 +86,12 @@ goExp pr (NmCon fc n x tag xs) =
       MkGoExpArgs args = goExpArgs pr xs
       tag' = fromMaybe (-1) tag
   in MkGoExp $ call con $ intL tag' :: args
-goExp pr exp@(NmOp fc f xs) = goOp pr f xs
--- goExp pr (NmExtPrim fc p xs) = ?aaa_7
+goExp pr exp@(NmOp _ f xs) = goOp pr f xs
+goExp pr (NmExtPrim _ p xs) =
+  let name = goName p
+      MkGoExp fn = pr.support $ name.location.package ++ "_" ++ name.value
+      MkGoExpArgs args = goExpArgs pr xs
+  in MkGoExp $ call fn args
 goExp pr (NmForce fc lz x) =
   let MkGoExp x' = goExp pr x
   in MkGoExp $ call (paren x') []
@@ -136,6 +140,7 @@ goExp pr exp@(NmCrash fc str) =
   let MkGoStmts x = fromGoStmtList $ goStatement pr exp
   in MkGoExp $ funcL [] [fieldT $ tid' "any"] x
 goExp _ _ = MkGoExp $ intL (-1)
+
 
 goOp pr (Add ty) [x,y] =
   let MkGoExp x' = goExp pr x
@@ -328,7 +333,63 @@ goOp pr DoubleCeiling [x] =
   let MkGoExp x' = goExp pr x
       MkGoExp fn = pr.support "DoubleCeiling"
   in MkGoExp $ call fn [x']
--- goOp pr (Cast pty pty1) [x] = ?aaa_36
+goOp pr (Cast pty1 pty2) [x] =
+  let MkGoExp x' = goExp pr x
+      MkGoExp fn = pr.support $ "Cast" ++ (goPrimTypeCategory pty1) ++ "To" ++ (goPrimType pty2)
+  in case castTo pty1 of
+        Nothing => MkGoExp $ call fn [x']
+        Just ty => MkGoExp $ call fn [cast_ ty x']
+  where
+    goPrimType : PrimType -> String
+    goPrimType IntType = "Int"
+    goPrimType Int8Type = "Int8"
+    goPrimType Int16Type = "Int16"
+    goPrimType Int32Type = "Int32"
+    goPrimType Int64Type = "Int64"
+    goPrimType IntegerType = "Integer"
+    goPrimType Bits8Type = "UInt8"
+    goPrimType Bits16Type = "UInt16"
+    goPrimType Bits32Type = "UInt32"
+    goPrimType Bits64Type = "UInt64"
+    goPrimType StringType = "String"
+    goPrimType CharType = "Char"
+    goPrimType DoubleType = "Float64"
+    goPrimType WorldType = "World"
+
+    goPrimTypeCategory : PrimType -> String
+    goPrimTypeCategory IntType = "Number"
+    goPrimTypeCategory Int8Type = "Number"
+    goPrimTypeCategory Int16Type = "Number"
+    goPrimTypeCategory Int32Type = "Number"
+    goPrimTypeCategory Int64Type = "Number"
+    goPrimTypeCategory IntegerType = "Integer"
+    goPrimTypeCategory Bits8Type = "Number"
+    goPrimTypeCategory Bits16Type = "Number"
+    goPrimTypeCategory Bits32Type = "Number"
+    goPrimTypeCategory Bits64Type = "Number"
+    goPrimTypeCategory StringType = "String"
+    goPrimTypeCategory CharType = "Number"
+    goPrimTypeCategory DoubleType = "Number"
+    goPrimTypeCategory WorldType = "World"
+
+    castTo : PrimType -> Maybe TypeIdentifier
+    castTo IntType = Just int
+    castTo Int8Type = Just int8
+    castTo Int16Type = Just int16
+    castTo Int32Type = Just int32
+    castTo Int64Type = Just int64
+    castTo IntegerType = Nothing
+    castTo Bits8Type = Just uint8
+    castTo Bits16Type = Just uint16
+    castTo Bits32Type = Just uint32
+    castTo Bits64Type = Just uint64
+    castTo StringType = Just string
+    castTo CharType = Just rune
+    castTo DoubleType = Just float64
+    castTo WorldType = Nothing
+
+
+
 goOp pr BelieveMe [_,_,x] = goExp pr x
 goOp pr Crash [_,x] =
   let MkGoExp x' = goExp pr x
@@ -572,6 +633,17 @@ getGoModule directives
 Go : CG
 Go = Other "go"
 
+copySupportFile :
+  {auto c : Ref Ctxt Defs} ->
+  (outDir : String) ->
+  (fname : String) ->
+  Core ()
+copySupportFile outDir fname = do
+  let supportPath = outDir </> "_gen" </> "idris2" </> "support"
+  ensureDirectoryExists supportPath
+  support <- readDataFile fname
+  writeFile (supportPath </> fname) support
+
 export
 compileGo :
   {auto c : Ref Ctxt Defs} ->
@@ -584,11 +656,8 @@ compileGo outDir outFile defs = do
   ds <- getDirectives Go
   moduleName <- getGoModule ds
 
-  let supportPath = outDir </> "_gen" </> "idris2" </> "support"
-      supportFile = "support.go"
-  ensureDirectoryExists supportPath
-  support <- readDataFile supportFile
-  writeFile (supportPath </> supportFile) support
+  let supportFiles = ["support.go", "cast.go"]
+  for_ supportFiles $ copySupportFile outDir
 
   let grouppedDefs = getGrouppedDefs defs
   traverse_ (goFile outDir outFile moduleName) grouppedDefs
