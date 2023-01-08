@@ -463,7 +463,51 @@ goConstCase pr exp alts def = cond [(isIntegerConst alts, goIntegerConstCase)] g
           MkGoCaseStmts alts' = fromGoCaseStmtList $ goIntegerConstAlt pr v alts def
       in [ switchS ([id_ v] /:=/ [call asInteger [exp']]) (boolL True) alts' ]
 
-goConCase pr exp alts def = [ expr $ intL (-1) ]
+goConAlt : PackageResolver -> String -> List NamedConAlt -> Maybe NamedCExp -> Int -> GoCaseStmtList
+goConAlt pr _ [] (Just def) _ =
+  let MkGoExp defc = goExp pr def
+  in [ default_ [ return [ defc ] ] ]
+goConAlt _ _ [] Nothing _ =
+  [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ]]
+goConAlt pr v ((MkNConAlt name _ _ allArgs exp) :: alts) def n =
+  let MkGoStmts stmts@(_::_) = fromGoStmtList $ goConAltBody allArgs 0
+        | MkGoStmts empty => []
+  in (case_ [ intL n ] stmts) :: goConAlt pr v alts def (n+1)
+  where
+    argList : List Identifier -> GoExpArgs
+    argList (x::xs) =
+      let MkGoExpArgs xs' = argList xs
+      in MkGoExpArgs (x::xs')
+    argList [] = MkGoExpArgs []
+
+    goConAltBody : List Core.Name.Name -> Int -> GoStmtList
+    goConAltBody [] _ =
+      let MkGoStmts stmt = fromGoStmtList $ goStatement pr exp
+          allArgs' = map (value . goName) allArgs
+          MkGoExpArgs goArgs = argList $ map id_ allArgs'
+      in case allArgs' of
+          [] => [ return
+                  [ call
+                    (funcL [] [fieldT $ tid' "any"] stmt)
+                    []
+                  ]
+                ]
+          _ => [ return
+                 [ call
+                    (funcL [fields allArgs' $ tid' "any"] [fieldT $ tid' "any"] stmt)
+                    goArgs
+                 ]
+               ]
+    goConAltBody (name :: args) n =
+      (decl $ vars [ var [ id_ $ value $ goName name ] (tid' "any") [id_ v /./ "Args" `index` intL n]])
+        :: goConAltBody args (n+1)
+
+goConCase pr exp alts def =
+  let MkGoExp exp' = goExp pr exp
+      v = "__switch_con_var"
+      MkGoCaseStmts alts' = fromGoCaseStmtList $ goConAlt pr v alts def 0
+      MkGoExp asValue = pr.support "AsValue"
+  in [ switchS ([id_ v] /:=/ [call asValue [exp']]) (id_ v /./ "Tag") alts' ]
 
 goStatement pr exp@(NmLocal _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
 goStatement pr exp@(NmRef _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
@@ -584,12 +628,14 @@ namespace GoImports
     let ix = maybe empty (goImportExp mod) x
         isc = merge ix $ goImportExp mod sc
     in foldl (\acc => merge acc . goImportConstAlt mod) isc xs
+  goImportExp mod (NmPrimVal fc (BI _)) = addImport (importForSupport mod) empty
   goImportExp mod (NmPrimVal fc cst) = empty
   goImportExp mod (NmErased fc) = empty
   goImportExp mod (NmCrash fc str) = empty
 
-  goImportConAlt mod (MkNConAlt n x tag args y) = goImportExp mod y
+  goImportConAlt mod (MkNConAlt n x tag args y) = addImport (importForSupport mod) $ goImportExp mod y
 
+  goImportConstAlt mod (MkNConstAlt (BI _) x) = addImport (importForSupport mod) $ goImportExp mod x
   goImportConstAlt mod (MkNConstAlt cst x) = goImportExp mod x
 
   export

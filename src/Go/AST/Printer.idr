@@ -537,7 +537,7 @@ implementation Statement (CaseClause es sts) => All Printer es => All Printer st
         printNewLine
         printIndent {indent = inci}
         print {indent = inci} file x
-        printList xs
+        printBody xs
 
 export
 implementation Statement (ReturnStatement rs) => All Printer rs => Printer (ReturnStatement rs) where

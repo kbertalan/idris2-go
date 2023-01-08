@@ -17,6 +17,10 @@ func Constructor(tag int, args ...any) any {
 	}
 }
 
+func AsValue(v any) Value {
+	return v.(Value)
+}
+
 func IntegerLiteral(i int64) *big.Int {
 	return big.NewInt(i)
 }
