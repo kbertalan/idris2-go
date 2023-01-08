@@ -64,6 +64,7 @@ safeGoIdentifier n =
   where
     replaceChar : Char -> List Char
     replaceChar ' ' = ['_']
+    replaceChar ',' = ['_']
     replaceChar  x  = 'u' :: unpack (show $ ord x)
 
     replaceSpecialChars : (first : Bool) -> List Char -> List Char
