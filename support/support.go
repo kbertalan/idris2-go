@@ -21,6 +21,10 @@ func IntegerLiteral(i int64) *big.Int {
 	return big.NewInt(i)
 }
 
+func AsInteger(v any) *big.Int {
+	return v.(*big.Int)
+}
+
 type TypeValue int
 
 const (

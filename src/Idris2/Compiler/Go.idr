@@ -130,10 +130,9 @@ goExp pr (NmRef _ n) = pr.project $ goName n
 goExp pr (NmLam _ n exp) =
   let MkGoStmts x = fromGoStmtList $ goStatement pr exp
   in MkGoExp $ funcL [fields [value $ goName n] $ tid' "any"] [fieldT $ tid' "any"] x
-goExp pr (NmLet _ n val x) =
-  let MkGoExp val' = goExp pr val
-      MkGoStmts x' = fromGoStmtList $ goStatement pr x
-  in MkGoExp $ call (paren $ funcL [] [] x') []
+goExp pr exp@(NmLet _ n val x) =
+  let MkGoStmts stmts = fromGoStmtList $ goStatement pr exp
+  in MkGoExp $ call (paren $ funcL [] [fieldT $ tid' "any"] stmts) []
 goExp pr (NmApp _ fn args) =
   let MkGoExp fn' = goExp pr fn
       MkGoExpArgs args' = goExpArgs pr args
@@ -426,16 +425,43 @@ goConstAlt : PackageResolver -> List NamedConstAlt -> Maybe NamedCExp -> GoCaseS
 goConstAlt pr [] (Just def) =
   let MkGoExp defc = goExp pr def
   in [ default_ [ return [ defc ] ] ]
-goConstAlt pr [] Nothing = [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ]]
+goConstAlt pr [] Nothing =
+  [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ]]
 goConstAlt pr ((MkNConstAlt c exp) :: alts) def =
   let MkGoExp exp' = goExp pr exp
       MkGoExp c' = goPrimConst pr c
   in ( case_ [c'] $ [ return [exp']] ) :: goConstAlt pr alts def
 
-goConstCase pr exp alts def =
+goIntegerConstAlt : PackageResolver -> String -> List NamedConstAlt -> Maybe NamedCExp -> GoCaseStmtList
+goIntegerConstAlt pr v [] (Just def) =
+  let MkGoExp defc = goExp pr def
+  in [ default_ [ return [ defc ] ] ]
+goIntegerConstAlt pr v [] Nothing =
+  [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ]]
+goIntegerConstAlt pr v ((MkNConstAlt c exp) :: alts) def =
   let MkGoExp exp' = goExp pr exp
-      MkGoCaseStmts alts' = fromGoCaseStmtList $ goConstAlt pr alts def
-  in [ switch exp' alts' ]
+      MkGoExp c' = goPrimConst pr c
+  in (case_ [ (call (id_ v /./ "Cmp") [c']) /==/ intL 0 ] [ return [ exp' ] ]) :: goIntegerConstAlt pr v alts def
+
+goConstCase pr exp alts def = cond [(isIntegerConst alts, goIntegerConstCase)] goDefaultConstCase
+  where
+    goDefaultConstCase : GoStmtList
+    goDefaultConstCase =
+      let MkGoExp exp' = goExp pr exp
+          MkGoCaseStmts alts' = fromGoCaseStmtList $ goConstAlt pr alts def
+      in [ switch exp' alts' ]
+
+    isIntegerConst : List NamedConstAlt -> Bool
+    isIntegerConst (MkNConstAlt (BI i) _ :: alts) = True
+    isIntegerConst _ = False
+
+    goIntegerConstCase : GoStmtList
+    goIntegerConstCase =
+      let MkGoExp exp' = goExp pr exp
+          v = "__switch_var"
+          MkGoExp asInteger = pr.support "AsInteger"
+          MkGoCaseStmts alts' = fromGoCaseStmtList $ goIntegerConstAlt pr v alts def
+      in [ switchS ([id_ v] /:=/ [call asInteger [exp']]) (boolL True) alts' ]
 
 goConCase pr exp alts def = [ expr $ intL (-1) ]
 
