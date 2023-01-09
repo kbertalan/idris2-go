@@ -90,11 +90,15 @@ goLocationFromNS :
   Location
 goLocationFromNS ns =
   let parts = map toLower $ reverse $ unsafeUnfoldNamespace ns
-      package = case parts of
-                  _::_ => last parts
+      renameMain = \name => case name of
+                              "main" => "mainish"
+                              a => a
+      parts' = map renameMain parts
+      package = case parts' of
+                  _::_ => last parts'
                   _ => ""
 
-  in MkLocation (joinPath parts) (package ++ ".go") package
+  in MkLocation (joinPath parts') (package ++ ".go") package
 
 export
 goUserName :

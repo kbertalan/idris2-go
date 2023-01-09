@@ -23,7 +23,7 @@ compileExpr c s _ outputDir tm outfile = do
   let out = outfile ++ ".go"
   cdata <- getCompileData False Cases tm
   let defs = namedDefs cdata
-  compileGo outputDir out defs
+  compileGo outputDir out defs $ forget cdata.mainExpr
 
 export
 executeExpr :

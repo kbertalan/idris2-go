@@ -171,6 +171,14 @@ implementation Expression (CastExpression t e) => Printer t => Printer e => Prin
     pPutStr ")"
 
 export
+implementation Expression (TypeAssertExpression e t) => Printer e => Printer t => Printer (TypeAssertExpression e t) where
+  print file tae = do
+    print file tae.expression
+    pPutStr ".("
+    print file tae.type
+    pPutStr ")"
+
+export
 implementation Expression (MakeExpression t es) => Printer t => All Printer es => Printer (MakeExpression t es) where
   print file me = do
       pPutStr "make("

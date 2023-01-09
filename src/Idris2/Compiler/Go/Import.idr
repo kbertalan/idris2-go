@@ -70,6 +70,12 @@ importForProject :
 importForProject mod loc = MkImport Project (mod ++ "/" ++ loc.dir) loc.package
 
 export
+importForMain :
+  Module ->
+  Import
+importForMain mod = MkImport Project mod "main"
+
+export
 importForSupport :
   Module ->
   Import

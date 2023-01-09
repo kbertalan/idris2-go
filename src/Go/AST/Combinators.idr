@@ -648,6 +648,15 @@ cast_ :
 cast_ = MkCastExpression
 
 export
+typeAssert :
+  Expression e =>
+  GoType t =>
+  e ->
+  t ->
+  TypeAssertExpression e t
+typeAssert e t = MkTypeAssertExpression e t
+
+export
 make :
   GoType t =>
   All Expression es =>

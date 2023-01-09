@@ -133,10 +133,17 @@ goExp pr (NmLam _ n exp) =
 goExp pr exp@(NmLet _ n val x) =
   let MkGoStmts stmts = fromGoStmtList $ goStatement pr exp
   in MkGoExp $ call (paren $ funcL [] [fieldT $ tid' "any"] stmts) []
-goExp pr (NmApp _ fn args) =
+goExp pr (NmApp _ fn@(NmRef _ _) args) =
   let MkGoExp fn' = goExp pr fn
       MkGoExpArgs args' = goExpArgs pr args
   in MkGoExp $ call fn' args'
+goExp pr (NmApp _ fn []) =
+  let MkGoExp fn' = goExp pr fn
+  in MkGoExp $ call (typeAssert fn' (func' [] [fieldT $ tid' "any"])) []
+goExp pr (NmApp _ fn args) =
+  let MkGoExp fn' = goExp pr fn
+      MkGoExpArgs args' = goExpArgs pr args
+  in MkGoExp $ call (typeAssert fn' (func' [fields ["a" ++ show i | i <- [1..length args]] $ tid' "any"] [fieldT $ tid' "any"])) args'
 goExp pr (NmCon fc n x tag xs) =
   let MkGoExp con = pr.support "Constructor"
       MkGoExpArgs args = goExpArgs pr xs
@@ -482,22 +489,20 @@ goConAlt pr v ((MkNConAlt name _ _ allArgs exp) :: alts) def n =
 
     goConAltBody : List Core.Name.Name -> Int -> GoStmtList
     goConAltBody [] _ =
-      let MkGoStmts stmt = fromGoStmtList $ goStatement pr exp
-          allArgs' = map (value . goName) allArgs
-          MkGoExpArgs goArgs = argList $ map id_ allArgs'
-      in case allArgs' of
-          [] => [ return
-                  [ call
-                    (funcL [] [fieldT $ tid' "any"] stmt)
-                    []
-                  ]
-                ]
-          _ => [ return
-                 [ call
-                    (funcL [fields allArgs' $ tid' "any"] [fieldT $ tid' "any"] stmt)
-                    goArgs
-                 ]
+      case allArgs of
+        [] =>
+          let MkGoExp exp' = goExp pr exp
+          in [ return [ exp' ] ]
+        _ =>
+          let MkGoStmts stmt = fromGoStmtList $ goStatement pr exp
+              allArgs' = map (value . goName) allArgs
+              MkGoExpArgs goArgs = argList $ map id_ allArgs'
+          in [ return
+               [ call
+                  (funcL [fields allArgs' $ tid' "any"] [fieldT $ tid' "any"] stmt)
+                  goArgs
                ]
+             ]
     goConAltBody (name :: args) n =
       (decl $ vars [ var [ id_ $ value $ goName name ] (tid' "any") [id_ v /./ "Args" `index` intL n]])
         :: goConAltBody args (n+1)
@@ -586,6 +591,7 @@ namespace GoImports
     (Go.Name, NamedDef) ->
     Imports
 
+  export
   goImportExp :
     (moduleName : String)->
     NamedCExp ->
@@ -713,6 +719,29 @@ goFile outDir outFile moduleName defs = do
     Right () => pure Nothing
     Left e => pure $ Just $ show e
 
+goMainFile :
+  (outDir : String) ->
+  (outFile : String) ->
+  (moduleName : String) ->
+  NamedCExp ->
+  Core (Maybe String)
+goMainFile outDir outFile moduleName exp = do
+  let currentImport = importForMain moduleName
+      imports = goImportExp moduleName exp
+      packageResolver = MkPackageResolver
+                          { project = goRef moduleName currentImport imports
+                          , support = goSupport moduleName imports
+                          }
+
+  let MkGoExp exp' = goExp packageResolver exp
+      src = Go.file outFile (package "main") (goImportSpecList currentImport imports)
+              [ func "main" [] void [expr exp'] ]
+
+  result <- coreLift $ printFile outDir src
+  case result of
+    Right () => pure Nothing
+    Left e => pure $ Just $ show e
+
 getGrouppedDefs :
   List (Core.Name.Name, FC, NamedDef) ->
   List (List1 (Go.Name, NamedDef))
@@ -765,8 +794,9 @@ compileGo :
   (outputDir : String) ->
   (outfile : String) ->
   List (Core.Name.Name, FC, NamedDef) ->
+  NamedCExp ->
   Core (Maybe String)
-compileGo outDir outFile defs = do
+compileGo outDir outFile defs exp = do
 
   ds <- getDirectives Go
   moduleName <- getGoModule ds
@@ -776,6 +806,8 @@ compileGo outDir outFile defs = do
 
   let grouppedDefs = getGrouppedDefs defs
   traverse_ (goFile outDir outFile moduleName) grouppedDefs
+
+  _ <- goMainFile outDir outFile moduleName exp
 
   pure Nothing
 

@@ -509,7 +509,7 @@ record TypeAssertExpression e t where
   type : t
 
 public export
-implementation Expression e => Expression t => Expression (TypeAssertExpression e t) where
+implementation Expression e => GoType t => Expression (TypeAssertExpression e t) where
 
 public export
 record StarExpression e where
