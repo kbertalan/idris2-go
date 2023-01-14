@@ -10,23 +10,21 @@ type Value struct {
 	Args []any
 }
 
-func Constructor(tag int, args ...any) any {
+func AsValue(v any) Value {
+	return v.(Value)
+}
+
+func Constructor(tag int, args ...any) Value {
 	return Value{
 		Tag:  tag,
 		Args: args,
 	}
 }
 
-func AsValue(v any) Value {
-	return v.(Value)
-}
+type IntegerType *big.Int
 
-func IntegerLiteral(i int64) *big.Int {
+func IntegerLiteral(i int64) IntegerType {
 	return big.NewInt(i)
-}
-
-func AsInteger(v any) *big.Int {
-	return v.(*big.Int)
 }
 
 type TypeValue int
@@ -53,83 +51,83 @@ type WorldType struct{}
 
 var World WorldType
 
-func IntegerAdd(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+func IntegerAdd(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := y.(IntegerType)
 	z := big.Int{}
 	return z.Add(a, b)
 }
 
-func IntegerSub(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+func IntegerSub(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := y.(IntegerType)
 	z := big.Int{}
 	return z.Sub(a, b)
 }
 
-func IntegerMul(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+func IntegerMul(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := y.(IntegerType)
 	z := big.Int{}
 	return z.Mul(a, b)
 }
 
-func IntegerDiv(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+func IntegerDiv(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := y.(IntegerType)
 	z := big.Int{}
 	return z.Div(a, b)
 }
 
-func IntegerMod(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+func IntegerMod(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := y.(IntegerType)
 	z := big.Int{}
 	return z.Mod(a, b)
 }
 
-func IntegerNeg(x any) *big.Int {
-	a := x.(*big.Int)
+func IntegerNeg(x any) IntegerType {
+	a := x.(IntegerType)
 	z := big.Int{}
 	return z.Neg(a)
 }
 
-func IntegerShiftL(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int).Uint64()
+func IntegerShiftL(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := (*big.Int)(y.(IntegerType)).Uint64()
 	z := big.Int{}
 	return z.Lsh(a, uint(b))
 }
 
-func IntegerShiftR(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int).Uint64()
+func IntegerShiftR(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := (*big.Int)(y.(IntegerType)).Uint64()
 	z := big.Int{}
 	return z.Rsh(a, uint(b))
 }
 
-func IntegerBAnd(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+func IntegerBAnd(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := y.(IntegerType)
 	z := big.Int{}
 	return z.And(a, b)
 }
 
-func IntegerBOr(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+func IntegerBOr(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := y.(IntegerType)
 	z := big.Int{}
 	return z.Or(a, b)
 }
 
-func IntegerBXOr(x, y any) *big.Int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+func IntegerBXOr(x, y any) IntegerType {
+	a := x.(IntegerType)
+	b := y.(IntegerType)
 	z := big.Int{}
 	return z.Xor(a, b)
 }
 
-func boolAsInt(b bool) int {
+func BoolAsInt(b bool) int {
 	if b {
 		return 1
 	}
@@ -137,45 +135,48 @@ func boolAsInt(b bool) int {
 }
 
 func IntegerLT(x, y any) int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+	a := (*big.Int)(x.(IntegerType))
+	b := y.(IntegerType)
 	c := a.Cmp(b)
-	return boolAsInt(c < 0)
+	return BoolAsInt(c < 0)
 }
 
 func IntegerLTE(x, y any) int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+	a := (*big.Int)(x.(IntegerType))
+	b := y.(IntegerType)
 	c := a.Cmp(b)
-	return boolAsInt(c <= 0)
+	return BoolAsInt(c <= 0)
 }
 
 func IntegerEQ(x, y any) int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+	a := (*big.Int)(x.(IntegerType))
+	b := y.(IntegerType)
 	c := a.Cmp(b)
-	return boolAsInt(c == 0)
+	return BoolAsInt(c == 0)
 }
 
 func IntegerGTE(x, y any) int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+	a := (*big.Int)(x.(IntegerType))
+	b := y.(IntegerType)
 	c := a.Cmp(b)
-	return boolAsInt(c >= 0)
+	return BoolAsInt(c >= 0)
 }
 
 func IntegerGT(x, y any) int {
-	a := x.(*big.Int)
-	b := y.(*big.Int)
+	a := (*big.Int)(x.(IntegerType))
+	b := y.(IntegerType)
 	c := a.Cmp(b)
-	return boolAsInt(c > 0)
+	return BoolAsInt(c > 0)
 }
 
-func StrCons(ch rune, str string) string {
+func StrCons(vch any, v any) string {
+	ch := rune(vch.(uint8))
+	str := v.(string)
 	return string([]rune{ch}) + str
 }
 
-func StrReverse(str string) string {
+func StrReverse(v any) string {
+	str := v.(string)
 	runes := make([]rune, 0, len(str))
 	for _, r := range str {
 		runes = append(runes, r)

@@ -51,7 +51,7 @@ keywords =
   , "bool", "byte", "rune", "string", "error"
   , "make", "len", "cap", "new", "append", "copy", "close"
   , "delete", "complex", "real", "imag", "panic", "recover"
-  , "any", "comparable"
+  , "any", "comparable", "func"
   ]
 
 export
@@ -65,6 +65,7 @@ safeGoIdentifier n =
     replaceChar : Char -> List Char
     replaceChar ' ' = ['_']
     replaceChar ',' = ['_']
+    replaceChar '.' = ['_']
     replaceChar  x  = 'u' :: unpack (show $ ord x)
 
     replaceSpecialChars : (first : Bool) -> List Char -> List Char
@@ -90,15 +91,20 @@ goLocationFromNS :
   Location
 goLocationFromNS ns =
   let parts = map toLower $ reverse $ unsafeUnfoldNamespace ns
-      renameMain = \name => case name of
-                              "main" => "mainish"
-                              a => a
-      parts' = map renameMain parts
-      package = case parts' of
-                  _::_ => last parts'
-                  _ => ""
+      endFn = case parts of
+                  _::_ => last parts
+                  _ => "_unknown"
+      startFn = concat $ intersperse "_" parts
 
-  in MkLocation (joinPath parts') (package ++ ".go") package
+  in MkLocation "" (startFn ++ "_" ++ endFn ++ ".go") "main"
+
+export
+goNameFromNS :
+  Namespace ->
+  String
+goNameFromNS ns =
+  let parts = map toLower $ reverse $ unsafeUnfoldNamespace ns
+  in concat $ intersperse "_" parts
 
 export
 goUserName :
@@ -112,9 +118,9 @@ export
 goName :
   Core.Name.Name ->
   Go.Name.Name
-goName orig@(NS ns n) = let sub = goName n in MkName (goLocationFromNS ns) sub.value orig
-goName orig@(UN un) = MkName (MkLocation "_gen/idris2" "user.go" "idris2") (goUserName un) orig
-goName orig@(MN mn i) = MkName (MkLocation "_gen/idris2" "generated.go" "idris2") (safeGoIdentifier $ mn ++ show i) orig
+goName orig@(NS ns n) = let sub = goName n in MkName (goLocationFromNS ns) (safeGoIdentifier $ goNameFromNS ns ++ "_" ++ sub.value) orig
+goName orig@(UN un) = MkName (MkLocation "" "user_generated.go" "main") (goUserName un) orig
+goName orig@(MN mn i) = MkName (MkLocation "" "machine_generated.go" "main") (safeGoIdentifier $ mn ++ show i) orig
 goName orig@(PV n i) = let sub = goName n in MkName sub.location (sub.value ++ show i) orig
 goName orig@(DN str n) = { original := orig } (goName n)
 goName orig@(Nested x n) = { original := orig } (goName n)

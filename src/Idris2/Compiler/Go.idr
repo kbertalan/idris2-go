@@ -72,6 +72,17 @@ namespace GoCaseStmtList
     let MkGoCaseStmts {ts} xs' = fromGoCaseStmtList xs
     in MkGoCaseStmts (x::xs')
 
+namespace Support
+
+  export
+  supportCast :
+    Expression e =>
+    GoType t =>
+    e ->
+    t ->
+    TypeAssertExpression (CastExpression TypeIdentifier e) t
+  supportCast e t = typeAssert (cast_ (tid' "any") e) t
+
 record PackageResolver where
   constructor MkPackageResolver
   project : Go.Name -> GoExp
@@ -92,19 +103,19 @@ goExpArgs pr (x::xs) =
 
 goPrimConst : PackageResolver -> Constant -> GoExp
 goPrimConst pr (I i) = MkGoExp $ intL i
-goPrimConst pr (I8 i) = MkGoExp $ cast_ int8 $ intL $ cast i
-goPrimConst pr (I16 i) = MkGoExp $ cast_ int16 $ intL $ cast i
-goPrimConst pr (I32 i) = MkGoExp $ cast_ int32 $ intL $ cast i
-goPrimConst pr (I64 i) = MkGoExp $ cast_ int64 $ intL $ cast i
+goPrimConst pr (I8 i) = MkGoExp $ MkBasicLiteral MkInt $ show i
+goPrimConst pr (I16 i) = MkGoExp $ MkBasicLiteral MkInt $ show i
+goPrimConst pr (I32 i) = MkGoExp $ MkBasicLiteral MkInt $ show i
+goPrimConst pr (I64 i) = MkGoExp $ MkBasicLiteral MkInt $ show i
 goPrimConst pr (BI i) =
   let MkGoExp fn = pr.support "IntegerLiteral"
   in MkGoExp $ call fn [MkBasicLiteral MkInt $ show i]
-goPrimConst pr (B8 m) = MkGoExp $ cast_ uint8 $ intL $ cast m
-goPrimConst pr (B16 m) = MkGoExp $ cast_ uint16 $ intL $ cast m
-goPrimConst pr (B32 m) = MkGoExp $ cast_ uint32 $ intL $ cast m
-goPrimConst pr (B64 m) = MkGoExp $ cast_ uint64 $ intL $ cast m
+goPrimConst pr (B8 m) = MkGoExp $ MkBasicLiteral MkInt $ show m
+goPrimConst pr (B16 m) = MkGoExp $ MkBasicLiteral MkInt $ show m
+goPrimConst pr (B32 m) = MkGoExp $ MkBasicLiteral MkInt $ show m
+goPrimConst pr (B64 m) = MkGoExp $ MkBasicLiteral MkInt $ show m
 goPrimConst pr (Str str) = MkGoExp $ stringL str
-goPrimConst pr (Ch c) = MkGoExp $ charL c
+goPrimConst pr (Ch c) = MkGoExp $ cast_ uint8 $ charL c
 goPrimConst pr (Db dbl) = MkGoExp $ floatL dbl
 goPrimConst pr (PrT pty) = 
   let tyName = case pty of
@@ -157,7 +168,7 @@ goExp pr (NmExtPrim _ p xs) =
   in MkGoExp $ call fn args
 goExp pr (NmForce fc lz x) =
   let MkGoExp x' = goExp pr x
-  in MkGoExp $ call (paren x') []
+  in MkGoExp $ call (typeAssert (paren x') (func' [] [fieldT $ tid' "any"])) []
 goExp pr (NmDelay fc lz x) =
   let MkGoExp x' = goExp pr x
   in MkGoExp $ funcL [] [fieldT $ tid' "any"] [ return [ x' ] ]
@@ -176,130 +187,158 @@ goExp pr exp@(NmCrash fc str) =
   in MkGoExp $ funcL [] [fieldT $ tid' "any"] x
 
 
+goPrimType : PrimType -> TypeIdentifier
+goPrimType IntType = int
+goPrimType Int8Type = int8
+goPrimType Int16Type = int16
+goPrimType Int32Type = int32
+goPrimType Int64Type = int64
+goPrimType IntegerType = tid' "support.IntegerType"
+goPrimType Bits8Type = uint8
+goPrimType Bits16Type = uint16
+goPrimType Bits32Type = uint32
+goPrimType Bits64Type = uint64
+goPrimType StringType = string
+goPrimType CharType = uint8
+goPrimType DoubleType = float64
+goPrimType WorldType = tid' "support.WorldType"
+
+goCastPrimType :
+  Expression e =>
+  e ->
+  PrimType ->
+  TypeAssertExpression (CastExpression TypeIdentifier e) TypeIdentifier
+goCastPrimType e t = supportCast e $ goPrimType t
+
 goOp pr (Add ty) [x,y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerAdd"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /+/ y'
+        _ => MkGoExp $ goCastPrimType x' ty /+/ goCastPrimType y' ty
 goOp pr (Sub ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerSub"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /-/ y'
+        _ => MkGoExp $ goCastPrimType x' ty /-/ goCastPrimType y' ty
 goOp pr (Mul ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerMul"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /*/ y'
+        _ => MkGoExp $ goCastPrimType x' ty /*/ goCastPrimType y' ty
 goOp pr (Div ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerDiv"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /// y'
+        _ => MkGoExp $ goCastPrimType x' ty /// goCastPrimType y' ty
 goOp pr (Mod ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerMod"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /%/ y'
+        _ => MkGoExp $ goCastPrimType x' ty /%/ goCastPrimType y' ty
 goOp pr (Neg ty) [x] =
   let MkGoExp x' = goExp pr x
       MkGoExp ifn = pr.support "IntegerNeg"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x']
-        _ => MkGoExp $ minus' x'
+        _ => MkGoExp $ minus' $ goCastPrimType x' ty
 goOp pr (ShiftL ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerShiftL"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /<</ y'
+        _ => MkGoExp $ goCastPrimType x' ty /<</ goCastPrimType y' ty
 goOp pr (ShiftR ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerShiftR"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' />>/ y'
+        _ => MkGoExp $ goCastPrimType x' ty />>/ goCastPrimType y' ty
 goOp pr (BAnd ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerBAnd"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /&/ y'
+        _ => MkGoExp $ goCastPrimType x' ty /&/ goCastPrimType y' ty
 goOp pr (BOr ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerBOr"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /|/ y'
+        _ => MkGoExp $ goCastPrimType x' ty /|/ goCastPrimType y' ty
 goOp pr (BXOr ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerBXOr"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /^/ y'
+        _ => MkGoExp $ goCastPrimType x' ty /^/ goCastPrimType y' ty
 goOp pr (LT ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerLT"
+      MkGoExp boolFn = pr.support "BoolAsInt"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /</ y'
+        _ => MkGoExp $ call boolFn [goCastPrimType x' ty /</ goCastPrimType y' ty]
 goOp pr (LTE ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerLTE"
+      MkGoExp boolFn = pr.support "BoolAsInt"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /<=/ y'
+        _ => MkGoExp $ call boolFn [goCastPrimType x' ty /<=/ goCastPrimType y' ty]
 goOp pr (EQ ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerEQ"
+      MkGoExp boolFn = pr.support "BoolAsInt"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' /==/ y'
+        _ => MkGoExp $ call boolFn [goCastPrimType x' ty /==/ goCastPrimType y' ty]
 goOp pr (GTE ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerGTE"
+      MkGoExp boolFn = pr.support "BoolAsInt"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' />=/ y'
+        _ => MkGoExp $ call boolFn [goCastPrimType x' ty />=/ goCastPrimType y' ty]
 goOp pr (GT ty) [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp ifn = pr.support "IntegerGT"
+      MkGoExp boolFn = pr.support "BoolAsInt"
   in case ty of
         IntegerType => MkGoExp $ call ifn [x', y']
-        _ => MkGoExp $ x' />/ y'
+        _ => MkGoExp $ call boolFn [goCastPrimType x' ty />/ goCastPrimType y' ty]
 goOp pr StrLength [x] =
   let MkGoExp x' = goExp pr x
-  in MkGoExp $ call (id_ "len") [x']
+  in MkGoExp $ call (id_ "len") [supportCast x' string]
 goOp pr StrHead [x] =
   let MkGoExp x' = goExp pr x
-  in MkGoExp $ x' `index` intL 0
+  in MkGoExp $ (supportCast x' string) `index` intL 0
 goOp pr StrTail [x] =
   let MkGoExp x' = goExp pr x
-  in MkGoExp $ sliceL x' $ intL 1
+  in MkGoExp $ sliceL (supportCast x' string) $ intL 1
 goOp pr StrIndex [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
-  in MkGoExp $ x' `index` y'
+  in MkGoExp $ supportCast x' string `index` (supportCast y' int)
 goOp pr StrCons [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
@@ -308,7 +347,7 @@ goOp pr StrCons [x, y] =
 goOp pr StrAppend [x, y] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
-  in MkGoExp $ x' /+/ y'
+  in MkGoExp $ supportCast x' string /+/ supportCast y' string
 goOp pr StrReverse [x] =
   let MkGoExp x' = goExp pr x
       MkGoExp strReverse = pr.support "StrReverse"
@@ -317,7 +356,7 @@ goOp pr StrSubstr [x, y, z] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp z' = goExp pr z
-  in MkGoExp $ sliceLH x' y' z'
+  in MkGoExp $ sliceLH (supportCast x' string) (supportCast y' int) (supportCast z' int)
 goOp pr DoubleExp [x] =
   let MkGoExp x' = goExp pr x
       MkGoExp fn = pr.support "DoubleExp"
@@ -370,9 +409,8 @@ goOp pr DoubleCeiling [x] =
 goOp pr (Cast pty1 pty2) [x] =
   let MkGoExp x' = goExp pr x
       MkGoExp fn = pr.support $ "Cast" ++ (category pty1) ++ "To" ++ (type pty2)
-  in case castTo pty1 of
-      Nothing => MkGoExp $ call fn [x']
-      Just ty => MkGoExp $ call fn [cast_ ty x']
+  in MkGoExp $ call fn [supportCast x' $ goPrimType pty1]
+
   where
     type : PrimType -> String
     type IntType = "Int"
@@ -406,22 +444,6 @@ goOp pr (Cast pty1 pty2) [x] =
     category DoubleType = "Number"
     category WorldType = "World"
 
-    castTo : PrimType -> Maybe TypeIdentifier
-    castTo IntType = Just int
-    castTo Int8Type = Just int8
-    castTo Int16Type = Just int16
-    castTo Int32Type = Just int32
-    castTo Int64Type = Just int64
-    castTo IntegerType = Nothing
-    castTo Bits8Type = Just uint8
-    castTo Bits16Type = Just uint16
-    castTo Bits32Type = Just uint32
-    castTo Bits64Type = Just uint64
-    castTo StringType = Just string
-    castTo CharType = Just rune
-    castTo DoubleType = Just float64
-    castTo WorldType = Nothing
-
 goOp pr BelieveMe [_,_,x] = goExp pr x
 goOp pr Crash [_,x] =
   let MkGoExp x' = goExp pr x
@@ -448,7 +470,8 @@ goIntegerConstAlt pr v [] Nothing =
 goIntegerConstAlt pr v ((MkNConstAlt c exp) :: alts) def =
   let MkGoExp exp' = goExp pr exp
       MkGoExp c' = goPrimConst pr c
-  in (case_ [ (call (id_ v /./ "Cmp") [c']) /==/ intL 0 ] [ return [ exp' ] ]) :: goIntegerConstAlt pr v alts def
+      MkGoExp equals = pr.support "IntegerEQ"
+  in (case_ [ (call equals [id_ v, c']) /==/ intL 1 ] [ return [ exp' ] ]) :: goIntegerConstAlt pr v alts def
 
 goConstCase pr exp alts def = cond [(isIntegerConst alts, goIntegerConstCase)] goDefaultConstCase
   where
@@ -466,9 +489,14 @@ goConstCase pr exp alts def = cond [(isIntegerConst alts, goIntegerConstCase)] g
     goIntegerConstCase =
       let MkGoExp exp' = goExp pr exp
           v = "__switch_var"
-          MkGoExp asInteger = pr.support "AsInteger"
           MkGoCaseStmts alts' = fromGoCaseStmtList $ goIntegerConstAlt pr v alts def
-      in [ switchS ([id_ v] /:=/ [call asInteger [exp']]) (boolL True) alts' ]
+      in [ switchS ([id_ v] /:=/ [supportCast exp' $ tid' "support.IntegerType"]) (boolL True) alts' ]
+
+idArgList : List Identifier -> GoExpArgs
+idArgList (x::xs) =
+  let MkGoExpArgs xs' = idArgList xs
+  in MkGoExpArgs (x::xs')
+idArgList [] = MkGoExpArgs []
 
 goConAlt : PackageResolver -> String -> List NamedConAlt -> Maybe NamedCExp -> Int -> GoCaseStmtList
 goConAlt pr _ [] (Just def) _ =
@@ -476,17 +504,12 @@ goConAlt pr _ [] (Just def) _ =
   in [ default_ [ return [ defc ] ] ]
 goConAlt _ _ [] Nothing _ =
   [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ]]
-goConAlt pr v ((MkNConAlt name _ _ allArgs exp) :: alts) def n =
+goConAlt pr v ((MkNConAlt name _ mTag allArgs exp) :: alts) def n =
   let MkGoStmts stmts@(_::_) = fromGoStmtList $ goConAltBody allArgs 0
         | MkGoStmts empty => []
-  in (case_ [ intL n ] stmts) :: goConAlt pr v alts def (n+1)
+      caseNum = fromMaybe n mTag
+  in (case_ [ intL caseNum ] stmts) :: goConAlt pr v alts def (n+1)
   where
-    argList : List Identifier -> GoExpArgs
-    argList (x::xs) =
-      let MkGoExpArgs xs' = argList xs
-      in MkGoExpArgs (x::xs')
-    argList [] = MkGoExpArgs []
-
     goConAltBody : List Core.Name.Name -> Int -> GoStmtList
     goConAltBody [] _ =
       case allArgs of
@@ -496,7 +519,7 @@ goConAlt pr v ((MkNConAlt name _ _ allArgs exp) :: alts) def n =
         _ =>
           let MkGoStmts stmt = fromGoStmtList $ goStatement pr exp
               allArgs' = map (value . goName) allArgs
-              MkGoExpArgs goArgs = argList $ map id_ allArgs'
+              MkGoExpArgs goArgs = idArgList $ map id_ allArgs'
           in [ return
                [ call
                   (funcL [fields allArgs' $ tid' "any"] [fieldT $ tid' "any"] stmt)
@@ -517,9 +540,18 @@ goConCase pr exp alts def =
 goStatement pr exp@(NmLocal _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
 goStatement pr exp@(NmRef _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
 goStatement pr exp@(NmLam _ _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
-goStatement pr exp@(NmLet _ n val x) =
-  let MkGoExp val' = goExp pr val 
-  in decl (vars [ var [id_ $ value $ goName n] (tid' "any") [val'] ]) :: goStatement pr x
+goStatement pr exp@(NmLet _ _ _ _) = lets exp []
+  where
+    lets : NamedCExp -> List String -> GoStmtList
+    lets (NmLet _ n val x) vs =
+      let MkGoExp val' = goExp pr val
+          name = value $ goName n
+      in decl (vars [ var [id_ name] (tid' "any") [val'] ]) :: lets x (name :: vs)
+    lets exp vs =
+      let argNames = reverse vs
+          MkGoExpArgs args = idArgList $ map id_ argNames
+          MkGoStmts body = fromGoStmtList $ goStatement pr exp
+      in [ return [ call (funcL [fields argNames $ tid' "any"] [fieldT $ tid' "any"] body) args ] ]
 goStatement pr exp@(NmApp fc x xs) = let MkGoExp x = goExp pr exp in [ return [x] ]
 goStatement pr exp@(NmCon fc n x tag xs) = let MkGoExp x = goExp pr exp in [ return [x] ]
 goStatement pr exp@(NmOp fc f xs) = let MkGoExp x = goExp pr exp in [ return [x] ]
@@ -562,16 +594,35 @@ goDefs :
 goDefs pr (n, nd) = defs nd
   where
     defs : NamedDef -> Core ()
+    defs (MkNmFun [] exp) = do
+      let MkGoStmts sts = fromGoStmtList $ goStatement pr exp
+          fnDecl = docs [show exp, show n.original] $
+                     func n.value [] [fieldT $ tid' "any"] sts
+      decls <- get Decls
+      put Decls (fnDecl :: decls)
+      pure ()
     defs (MkNmFun args exp) = do
       let MkGoStmts sts = fromGoStmtList $ goStatement pr exp
           fnDecl = docs [show exp, show n.original] $
-                    func (capitalize n.value) [fields (map (value . goName) args) $ tid' "any" ] [fieldT $ tid' "any"] sts
+                     func n.value [fields (map (value . goName) args) $ tid' "any"] [fieldT $ tid' "any"] sts
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
     defs (MkNmCon tag arity nt) = pure ()
-    defs (MkNmForeign ccs args type) = do
-      let fnDecl = func (capitalize n.value) [] void []
+    defs (MkNmForeign _ [] _) = do
+      let MkGoExp fn = pr.support $ capitalize n.value
+          fnDecl = func n.value [] [fieldT $ tid' "any"]
+                    [ return [call fn []]]
+                    |> docs [show n.original]
+      decls <- get Decls
+      put Decls (fnDecl :: decls)
+      pure ()
+    defs (MkNmForeign _ args _) = do
+      let args' = [ "v"++show v | v <- [0..cast (length args) - 1]]
+          MkGoExp fn = pr.support $ capitalize n.value
+          MkGoExpArgs as = idArgList $ map id_ args'
+          fnDecl = func n.value [fields args' $ tid' "any"] [fieldT $ tid' "any"]
+                    [ return [call fn as] ]
                     |> docs [show n.original]
       decls <- get Decls
       put Decls (fnDecl :: decls)
@@ -613,7 +664,7 @@ namespace GoImports
 
   goImportDef mod (n, (MkNmFun args x)) = goImportExp mod x
   goImportDef mod (n, (MkNmCon tag arity nt)) = empty
-  goImportDef mod (n, (MkNmForeign ccs fargs x)) = empty -- TODO parse imports from FFI
+  goImportDef mod (n, (MkNmForeign ccs fargs x)) = addImport (importForSupport mod) empty -- TODO parse imports from FFI
   goImportDef mod (n, (MkNmError x)) = goImportExp mod x
 
   goImportExp mod (NmLocal fc n) = empty
@@ -653,12 +704,12 @@ namespace GoImports
     GoExp
   goRef moduleName currentImport is n =
     let True = n.location /= empty
-          | False => MkGoExp $ id_ $ capitalize n.value
+          | False => MkGoExp $ id_ n.value
         i = importForProject moduleName n.location
         True = i /= currentImport
-          | False => MkGoExp $ id_ $ capitalize n.value
+          | False => MkGoExp $ id_ n.value
         package = packageForImport i is
-    in MkGoExp $ id_ package /./ capitalize n.value
+    in MkGoExp $ id_ package /./ n.value
 
   export
   goSupport :
@@ -801,7 +852,7 @@ compileGo outDir outFile defs exp = do
   ds <- getDirectives Go
   moduleName <- getGoModule ds
 
-  let supportFiles = ["support.go", "cast.go"]
+  let supportFiles = ["support.go", "cast.go", "prims.go"]
   for_ supportFiles $ copySupportFile outDir
 
   let grouppedDefs = getGrouppedDefs defs

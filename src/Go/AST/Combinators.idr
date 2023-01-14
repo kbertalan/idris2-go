@@ -98,7 +98,20 @@ namespace Literal
   runeL :
     Char ->
     BasicLiteral
-  runeL c = MkBasicLiteral MkChar $ pack [c]
+  runeL c = MkBasicLiteral MkChar $ escape c
+    where
+      escape : Char -> String
+      escape c = if (c >= ' ') && (c /= '\\')
+                    && (c /= '"') && (c /= '\'') && (c <= '~')
+                    then cast c
+                    else case c of
+                              '\0' => "\\0"
+                              '\'' => "\\'"
+                              '\r' => "\\r"
+                              '\n' => "\\n"
+                              '\\' => "\\\\"
+                              other => cast other
+
 
   export
   charL :
@@ -110,7 +123,23 @@ namespace Literal
   stringL :
     String ->
     BasicLiteral
-  stringL str = MkBasicLiteral MkString str
+  stringL str = MkBasicLiteral MkString escaped
+    where
+      escape : Char -> String
+      escape c = if (c >= ' ') && (c /= '\\')
+                    && (c /= '"') && (c /= '\'') && (c <= '~')
+                    then cast c
+                    else case c of
+                              '\0' => "\\0"
+                              '"' => "\\\""
+                              '\r' => "\\r"
+                              '\n' => "\\n"
+                              '\\' => "\\\\"
+                              other => cast other
+
+
+      escaped : String
+      escaped = concatMap escape $ unpack str
 
   export
   intL :

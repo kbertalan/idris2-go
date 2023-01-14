@@ -67,7 +67,7 @@ importForProject :
   Module ->
   Location ->
   Import
-importForProject mod loc = MkImport Project (mod ++ "/" ++ loc.dir) loc.package
+importForProject mod loc = MkImport Project mod loc.package
 
 export
 importForMain :

@@ -48,7 +48,7 @@ func CastNumberToUInt64[T numericType](x T) uint64 {
 	return uint64(x)
 }
 
-func CastNumberToInteger[T numericType](x T) *big.Int {
+func CastNumberToInteger[T numericType](x T) IntegerType {
 	return big.NewInt(int64(x))
 }
 
@@ -66,52 +66,56 @@ func CastNumberToFloat64[T numericType](x T) float64 {
 
 // Integer
 
+func asBigInt(v any) *big.Int {
+	return (*big.Int)(v.(IntegerType))
+}
+
 func CastIntegerToInt(x any) int {
-	return int(x.(*big.Int).Int64())
+	return int(asBigInt(x).Int64())
 }
 
 func CastIntegerToInt8(x any) int8 {
-	return int8(x.(*big.Int).Int64())
+	return int8(asBigInt(x).Int64())
 }
 
 func CastIntegerToInt16(x any) int16 {
-	return int16(x.(*big.Int).Int64())
+	return int16(asBigInt(x).Int64())
 }
 
 func CastIntegerToInt32(x any) int32 {
-	return int32(x.(*big.Int).Int64())
+	return int32(asBigInt(x).Int64())
 }
 
 func CastIntegerToInt64(x any) int64 {
-	return x.(*big.Int).Int64()
+	return asBigInt(x).Int64()
 }
 
 func CastIntegerToUInt8(x any) uint8 {
-	return uint8(x.(*big.Int).Uint64())
+	return uint8(asBigInt(x).Uint64())
 }
 
 func CastIntegerToUInt16(x any) uint16 {
-	return uint16(x.(*big.Int).Uint64())
+	return uint16(asBigInt(x).Uint64())
 }
 
 func CastIntegerToUInt32(x any) uint32 {
-	return uint32(x.(*big.Int).Uint64())
+	return uint32(asBigInt(x).Uint64())
 }
 
 func CastIntegerToUInt64(x any) uint64 {
-	return uint64(x.(*big.Int).Uint64())
+	return uint64(asBigInt(x).Uint64())
 }
 
-func CastIntegerToInteger(x any) *big.Int {
+func CastIntegerToInteger(x any) IntegerType {
 	return big.NewInt(CastIntegerToInt64(x))
 }
 
 func CastIntegerToString(x any) string {
-	return x.(*big.Int).String()
+	return asBigInt(x).String()
 }
 
 func CastIntegerToChar(x any) rune {
-	return rune(x.(*big.Int).Int64())
+	return rune(asBigInt(x).Int64())
 }
 
 func CastIntegerToFloat64(x any) float64 {
@@ -156,7 +160,7 @@ func CastStringToUInt64(x any) uint64 {
 	return uint64(must(strconv.ParseUint(x.(string), 10, 64)))
 }
 
-func CastStringToInteger(x any) *big.Int {
+func CastStringToInteger(x any) IntegerType {
 	return big.NewInt(CastStringToInt64(x))
 }
 
