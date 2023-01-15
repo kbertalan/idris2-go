@@ -3,6 +3,7 @@ package support
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"reflect"
@@ -19,7 +20,7 @@ var (
 
 func Idris2GoSlice[E any](v any) []E {
 	var slice []E
-	for value := v.(Value); value.Tag == 0; value = value.Args[1].(Value) {
+	for value := v.(Value); value.Tag == 1; value = value.Args[1].(Value) {
 		slice = append(slice, value.Args[0].(E))
 	}
 	return slice
@@ -230,7 +231,16 @@ func System_file_handle_prim__open(f, m, world any) *filePtr {
 	return &ptr
 }
 
-func System_file_readwrite_prim__eof(f, world any) any { panic("not implemented") }
+func System_file_readwrite_prim__eof(f, world any) any {
+	file := f.(*filePtr)
+	_, err := file.reader.Peek(1)
+	if err != nil {
+		if err == io.EOF || err == io.ErrUnexpectedEOF {
+			return 1
+		}
+	}
+	return 0
+}
 
 func System_file_readwrite_prim__readLine(f, world any) *string {
 	file := f.(*filePtr)
@@ -256,10 +266,10 @@ func System_file_readwrite_prim__writeLine(f, l, world any) any {
 	_, err := file.writer.WriteString(l.(string))
 	if err != nil {
 		lastFileError = err
-		return 1
+		return 0
 	}
 	lastFileError = nil
-	return 0
+	return 1
 }
 
 func Main_system_info_prim__os() any {
@@ -288,7 +298,7 @@ func System_prim__getEnv(v, world any) *string {
 }
 
 func System_prim__system(v, world any) any {
-	cmd := exec.Command(v.(string))
+	cmd := exec.Command("sh", "-c", v.(string))
 	err := cmd.Run()
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {

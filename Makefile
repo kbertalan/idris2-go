@@ -38,3 +38,4 @@ compile-test:
 	make test-clean
 	IDRIS2_DATA="${PWD}/support" ./build/exec/idris2-go --build tests/runtests.ipkg --directive module=github.com/kbertalan/idris2-go/tests
 	cd tests/build/exec && go mod init github.com/kbertalan/idris2-go/tests && go mod tidy && go build . && cd ../.. && ./build/exec/tests idris2 --timing --failure-file failures --threads 2
+
