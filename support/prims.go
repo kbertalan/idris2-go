@@ -2,6 +2,8 @@ package support
 
 import (
 	"bufio"
+	"bytes"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"os"
@@ -11,11 +13,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-)
-
-var (
-	stdin  = bufio.NewReader(os.Stdin)
-	stdout = bufio.NewWriter(os.Stdout)
 )
 
 func Idris2GoSlice[E any](v any) []E {
@@ -41,6 +38,17 @@ func Prelude_types_fastConcat(v any) string {
 
 func Prelude_io_prim__getString(v any) string {
 	return *v.(*string)
+}
+
+var (
+	stdin  = bufio.NewReader(os.Stdin)
+	stdout = bufio.NewWriter(os.Stdout)
+)
+
+func flushStdout() {
+	if err := stdout.Flush(); err != nil {
+		panic(err)
+	}
 }
 
 func Prelude_io_prim__putChar(v any) any {
@@ -309,8 +317,79 @@ func System_prim__system(v, world any) any {
 	return 0
 }
 
-func flushStdout() {
-	if err := stdout.Flush(); err != nil {
-		panic(err)
-	}
+func Main_data_ioref_prim__newIORef(tya, a, world any) *any {
+	return &a
+}
+
+func Main_data_ioref_prim__readIORef(tya, ref, world any) any {
+	return *ref.(*any)
+}
+
+func Main_data_ioref_prim__writeIORef(tya, ref, a, world any) any {
+	*ref.(*any) = a
+	return nil
+}
+
+type Buffer []byte
+
+func Data_buffer_prim__newBuffer(s, world any) Buffer {
+	return make([]byte, s.(int))
+}
+
+func Data_buffer_prim__bufferSize(b any) int {
+	return len(b.(Buffer))
+}
+
+func bufferWrite(b Buffer, o, s int, data any) any {
+	buffer := bytes.NewBuffer(b[o : o+s])
+	binary.Write(buffer, binary.LittleEndian, data)
+	return nil
+}
+
+func bufferRead[T any](b Buffer, o, s int) T {
+	var data T
+	buffer := bytes.NewBuffer(b[o : o+s])
+	binary.Read(buffer, binary.LittleEndian, &data)
+	return data
+}
+
+func Data_buffer_prim__getBits8(b, o, world any) uint8 {
+	return b.(Buffer)[o.(int)]
+}
+
+func Data_buffer_prim__setBits8(b, o, a, world any) any {
+	b.(Buffer)[o.(int)] = a.(byte)
+	return nil
+}
+
+func Data_buffer_prim__getInt(b, o, world any) int {
+	return bufferRead[int](b.(Buffer), o.(int), 4)
+}
+
+func Data_buffer_prim__setInt(b, o, a, world any) any {
+	return bufferWrite(b.(Buffer), o.(int), 4, a.(int))
+}
+
+func Data_buffer_prim__getDouble(b, o, world any) float64 {
+	return bufferRead[float64](b.(Buffer), o.(int), 8)
+}
+
+func Data_buffer_prim__setDouble(b, o, a, world any) any {
+	return bufferWrite(b.(Buffer), o.(int), 8, a.(float64))
+}
+
+func Data_buffer_prim__getString(b, o, l, world any) string {
+	offset := o.(int)
+	length := l.(int)
+	return string(append([]byte(nil), b.(Buffer)[offset:offset+length]...))
+}
+
+func Data_buffer_prim__setString(b, o, s, world any) any {
+	buffer := bytes.NewBuffer(b.(Buffer)[o.(int):])
+	buffer.WriteString(s.(string))
+	return nil
+}
+
+func Data_buffer_stringByteLength(s any) int {
+	return len([]byte(s.(string)))
 }

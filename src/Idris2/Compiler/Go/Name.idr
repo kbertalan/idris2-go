@@ -51,7 +51,12 @@ keywords =
   , "bool", "byte", "rune", "string", "error"
   , "make", "len", "cap", "new", "append", "copy", "close"
   , "delete", "complex", "real", "imag", "panic", "recover"
-  , "any", "comparable", "func"
+  , "any", "comparable"
+  , "break", "default", "func", "interface", "select"
+  , "case", "defer", "go", "map", "struct"
+  , "chan", "else", "goto", "package", "switch"
+  , "const", "fallthrough", "if", "range", "type"
+  , "continue", "for", "import", "return", "var"
   ]
 
 export
@@ -91,12 +96,9 @@ goLocationFromNS :
   Location
 goLocationFromNS ns =
   let parts = map toLower $ reverse $ unsafeUnfoldNamespace ns
-      endFn = case parts of
-                  _::_ => last parts
-                  _ => "_unknown"
-      startFn = concat $ intersperse "_" parts
+      name = concat $ intersperse "_" parts
 
-  in MkLocation "" (startFn ++ "_" ++ endFn ++ ".go") "main"
+  in MkLocation "" (name ++ ".go") "main"
 
 export
 goNameFromNS :
@@ -119,11 +121,11 @@ goName :
   Core.Name.Name ->
   Go.Name.Name
 goName orig@(NS ns n) = let sub = goName n in MkName (goLocationFromNS ns) (safeGoIdentifier $ goNameFromNS ns ++ "_" ++ sub.value) orig
-goName orig@(UN un) = MkName (MkLocation "" "user_generated.go" "main") (goUserName un) orig
-goName orig@(MN mn i) = MkName (MkLocation "" "machine_generated.go" "main") (safeGoIdentifier $ mn ++ show i) orig
-goName orig@(PV n i) = let sub = goName n in MkName sub.location (sub.value ++ show i) orig
-goName orig@(DN str n) = { original := orig } (goName n)
-goName orig@(Nested x n) = { original := orig } (goName n)
+goName orig@(UN un) = MkName (MkLocation "" "user_generated_.go" "main") (goUserName un) orig
+goName orig@(MN mn i) = MkName (MkLocation "" "machine_generated_.go" "main") (safeGoIdentifier $ mn ++ show i) orig
+goName orig@(PV n i) = let sub = goName n in MkName sub.location (sub.value ++ "_" ++ show i) orig
+goName orig@(DN str n) = let sub = goName n in MkName sub.location (safeGoIdentifier $ sub.value ++ "_" ++ str) orig
+goName orig@(Nested (x,y) n) = let sub = goName n in MkName sub.location (sub.value ++ "_" ++ show x ++ "_" ++ show y) orig
 goName orig@(CaseBlock str i) = MkName empty (safeGoIdentifier $ str ++ show i) orig
 goName orig@(WithBlock str i) = MkName empty (safeGoIdentifier $ str ++ show i) orig
 goName orig@(Resolved i) = MkName empty ("resolved" ++ show i) orig

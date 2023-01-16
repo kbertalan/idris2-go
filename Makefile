@@ -1,6 +1,6 @@
 ipkg=idris2-go.ipkg
 
-.PHONY: build install run clean dev dev-build test-clean test-build test dev-test compile-test
+.PHONY: build install run clean dev dev-build test-clean test-build test dev-test compile-test compile-self
  
 build:
 	pack build ${ipkg}
@@ -38,4 +38,13 @@ compile-test:
 	make test-clean
 	IDRIS2_DATA="${PWD}/support" ./build/exec/idris2-go --build tests/runtests.ipkg --directive module=github.com/kbertalan/idris2-go/tests
 	cd tests/build/exec && go mod init github.com/kbertalan/idris2-go/tests && go mod tidy && go build . && cd ../.. && ./build/exec/tests idris2 --timing --failure-file failures --threads 2
+
+compile-self:
+	make clean
+	bash -c "time make build"
+	mkdir build/go
+	mv ./build/exec/idris2-go* ./build/go/
+	rm -rf ./build/exec ./build/ttc
+	IDRIS2_DATA="${PWD}/support" bash -c "time ./build/go/idris2-go --build idris2-go.ipkg --directive module=github.com/kbertalan/idris2-go"
+	(cd build/exec && go mod init github.com/kbertalan/idris2-go && go build -o idris2-go)
 

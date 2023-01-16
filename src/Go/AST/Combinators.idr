@@ -105,7 +105,7 @@ namespace Literal
                     && (c /= '"') && (c /= '\'') && (c <= '~')
                     then cast c
                     else case c of
-                              '\0' => "\\0"
+                              '\0' => "\\x00"
                               '\'' => "\\'"
                               '\r' => "\\r"
                               '\n' => "\\n"
