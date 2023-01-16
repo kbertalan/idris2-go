@@ -47,10 +47,6 @@ const (
 	WorldTypeValue
 )
 
-type WorldType struct{}
-
-var World WorldType
-
 func IntegerAdd(x, y any) IntegerType {
 	a := x.(IntegerType)
 	b := y.(IntegerType)

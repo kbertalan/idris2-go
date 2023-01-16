@@ -2,10 +2,10 @@ package support
 
 import (
 	"bufio"
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"os/exec"
 	"reflect"
@@ -14,6 +14,18 @@ import (
 	"sync"
 	"time"
 )
+
+type WorldType struct {
+	stdin  *bufio.Reader
+	stdout *bufio.Writer
+}
+
+func NewWorld() *WorldType {
+	return &WorldType{
+		stdin:  bufio.NewReader(os.Stdin),
+		stdout: bufio.NewWriter(os.Stdout),
+	}
+}
 
 func Idris2GoSlice[E any](v any) []E {
 	var slice []E
@@ -40,28 +52,23 @@ func Prelude_io_prim__getString(v any) string {
 	return *v.(*string)
 }
 
-var (
-	stdin  = bufio.NewReader(os.Stdin)
-	stdout = bufio.NewWriter(os.Stdout)
-)
-
-func flushStdout() {
-	if err := stdout.Flush(); err != nil {
+func flushStdout(world *WorldType) {
+	if err := world.stdout.Flush(); err != nil {
 		panic(err)
 	}
 }
 
-func Prelude_io_prim__putChar(v any) any {
-	_, err := stdout.WriteRune(v.(rune))
+func Prelude_io_prim__putChar(v, world any) any {
+	_, err := world.(*WorldType).stdout.WriteRune(v.(rune))
 	if err != nil {
 		panic(err)
 	}
-	flushStdout()
+	flushStdout(world.(*WorldType))
 	return nil
 }
 
-func Prelude_io_prim__getChar() rune {
-	r, _, err := stdin.ReadRune()
+func Prelude_io_prim__getChar(world any) rune {
+	r, _, err := world.(*WorldType).stdin.ReadRune()
 	if err != nil {
 		panic(err)
 	}
@@ -69,7 +76,7 @@ func Prelude_io_prim__getChar() rune {
 }
 
 func Prelude_io_prim__getStr(world any) string {
-	line, err := stdin.ReadString('\n')
+	line, err := world.(*WorldType).stdin.ReadString('\n')
 	if err != nil {
 		panic(err)
 	}
@@ -77,11 +84,11 @@ func Prelude_io_prim__getStr(world any) string {
 }
 
 func Prelude_io_prim__putStr(v any, world any) any {
-	_, err := stdout.WriteString(v.(string))
+	_, err := world.(*WorldType).stdout.WriteString(v.(string))
 	if err != nil {
 		panic(err)
 	}
-	flushStdout()
+	flushStdout(world.(*WorldType))
 	return nil
 }
 
@@ -333,24 +340,38 @@ func Main_data_ioref_prim__writeIORef(tya, ref, a, world any) any {
 type Buffer []byte
 
 func Data_buffer_prim__newBuffer(s, world any) Buffer {
-	return make([]byte, s.(int))
+	return Buffer(make([]byte, s.(int)))
 }
 
 func Data_buffer_prim__bufferSize(b any) int {
 	return len(b.(Buffer))
 }
 
-func bufferWrite(b Buffer, o, s int, data any) any {
-	buffer := bytes.NewBuffer(b[o : o+s])
-	binary.Write(buffer, binary.LittleEndian, data)
+func bufferWrite16(b Buffer, o int, data uint16) any {
+	binary.LittleEndian.PutUint16(b[o:o+2], data)
 	return nil
 }
 
-func bufferRead[T any](b Buffer, o, s int) T {
-	var data T
-	buffer := bytes.NewBuffer(b[o : o+s])
-	binary.Read(buffer, binary.LittleEndian, &data)
-	return data
+func bufferWrite32(b Buffer, o int, data uint32) any {
+	binary.LittleEndian.PutUint32(b[o:o+4], data)
+	return nil
+}
+
+func bufferWrite64(b Buffer, o int, data uint64) any {
+	binary.LittleEndian.PutUint64(b[o:o+8], data)
+	return nil
+}
+
+func bufferRead16(b Buffer, o int) uint16 {
+	return binary.LittleEndian.Uint16(b[o : o+2])
+}
+
+func bufferRead32(b Buffer, o int) uint32 {
+	return binary.LittleEndian.Uint32(b[o : o+4])
+}
+
+func bufferRead64(b Buffer, o int) uint64 {
+	return binary.LittleEndian.Uint64(b[o : o+8])
 }
 
 func Data_buffer_prim__getBits8(b, o, world any) uint8 {
@@ -363,19 +384,19 @@ func Data_buffer_prim__setBits8(b, o, a, world any) any {
 }
 
 func Data_buffer_prim__getInt(b, o, world any) int {
-	return bufferRead[int](b.(Buffer), o.(int), 4)
+	return int(bufferRead32(b.(Buffer), o.(int)))
 }
 
 func Data_buffer_prim__setInt(b, o, a, world any) any {
-	return bufferWrite(b.(Buffer), o.(int), 4, a.(int))
+	return bufferWrite32(b.(Buffer), o.(int), uint32(a.(int)))
 }
 
 func Data_buffer_prim__getDouble(b, o, world any) float64 {
-	return bufferRead[float64](b.(Buffer), o.(int), 8)
+	return math.Float64frombits(bufferRead64(b.(Buffer), o.(int)))
 }
 
 func Data_buffer_prim__setDouble(b, o, a, world any) any {
-	return bufferWrite(b.(Buffer), o.(int), 8, a.(float64))
+	return bufferWrite64(b.(Buffer), o.(int), math.Float64bits(a.(float64)))
 }
 
 func Data_buffer_prim__getString(b, o, l, world any) string {
@@ -385,11 +406,17 @@ func Data_buffer_prim__getString(b, o, l, world any) string {
 }
 
 func Data_buffer_prim__setString(b, o, s, world any) any {
-	buffer := bytes.NewBuffer(b.(Buffer)[o.(int):])
-	buffer.WriteString(s.(string))
+	copy([]byte(s.(string)), b.(Buffer)[o.(int):])
 	return nil
 }
 
 func Data_buffer_stringByteLength(s any) int {
 	return len([]byte(s.(string)))
+}
+
+func Data_buffer_prim__copyData(b1, o1, l, b2, o2, world any) any {
+	length := l.(int)
+	offset1, offset2 := o1.(int), o2.(int)
+	copy(b1.(Buffer)[offset1:offset1+length], b2.(Buffer)[offset2:offset2+length])
+	return nil
 }

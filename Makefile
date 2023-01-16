@@ -40,10 +40,10 @@ compile-test:
 	cd tests/build/exec && go mod init github.com/kbertalan/idris2-go/tests && go mod tidy && go build . && cd ../.. && ./build/exec/tests idris2 --timing --failure-file failures --threads 2
 
 compile-self:
-	make clean
-	bash -c "time make build"
-	mkdir build/go
-	mv ./build/exec/idris2-go* ./build/go/
+	# make clean
+	# bash -c "time make build"
+	# mkdir build/go
+	# mv ./build/exec/idris2-go* ./build/go/
 	rm -rf ./build/exec ./build/ttc
 	IDRIS2_DATA="${PWD}/support" bash -c "time ./build/go/idris2-go --build idris2-go.ipkg --directive module=github.com/kbertalan/idris2-go"
 	(cd build/exec && go mod init github.com/kbertalan/idris2-go && go build -o idris2-go)

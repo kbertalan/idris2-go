@@ -134,7 +134,9 @@ goPrimConst pr (PrT pty) =
                  DoubleType => "DoubleTypeValue"
                  WorldType => "WorldTypeValue"
   in pr.support tyName
-goPrimConst pr WorldVal = pr.support "World"
+goPrimConst pr WorldVal =
+  let MkGoExp newWorld = pr.support "NewWorld"
+  in MkGoExp $ call newWorld []
 
 goExp _ (NmLocal _ n) = MkGoExp $ id_ $ value $ goName n
 goExp pr (NmRef _ n) = pr.project $ goName n
