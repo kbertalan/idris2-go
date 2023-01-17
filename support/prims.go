@@ -420,3 +420,20 @@ func Data_buffer_prim__copyData(b1, o1, l, b2, o2, world any) any {
 	copy(b1.(Buffer)[offset1:offset1+length], b2.(Buffer)[offset2:offset2+length])
 	return nil
 }
+
+func Main_data_ioarray_prims_prim__newArray(_, size, a, world any) []any {
+	arr := make([]any, size.(int))
+	for i := range arr {
+		arr[i] = a
+	}
+	return arr
+}
+
+func Main_data_ioarray_prims_prim__arrayGet(_, arr, i, world any) any {
+	return arr.([]any)[i.(int)]
+}
+
+func Main_data_ioarray_prims_prim__arraySet(_, arr, i, a, world any) any {
+	arr.([]any)[i.(int)] = a
+	return nil
+}
