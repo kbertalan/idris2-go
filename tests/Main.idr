@@ -58,6 +58,10 @@ tourOfGo = MkTestPool "Tour of Go" [] Nothing
   , "tour/moretypes25"
   ]
 
+goTest : TestPool
+goTest = MkTestPool "Compile to Go" [] Nothing
+  [ "go/simple" ]
+
 main : IO ()
-main = runner [ tourOfGo ]
+main = runner [ tourOfGo, goTest ]
 

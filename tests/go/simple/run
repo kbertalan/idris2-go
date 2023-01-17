@@ -1,0 +1,10 @@
+set -eo pipefail
+rm -rf build
+
+$1 --build test.ipkg --directive module=github.com/kbertalan/idris2-go/tests/go/simple
+cd build/exec
+go mod init github.com/kbertalan/idris2-go/tests/go/simple 2> /dev/null
+go build -o test
+cd ../..
+build/exec/test
+

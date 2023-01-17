@@ -688,6 +688,7 @@ namespace GoImports
         isc = merge ix $ goImportExp mod sc
     in foldl (\acc => merge acc . goImportConstAlt mod) isc xs
   goImportExp mod (NmPrimVal fc (BI _)) = addImport (importForSupport mod) empty
+  goImportExp mod (NmPrimVal fc WorldVal) = addImport (importForSupport mod) empty
   goImportExp mod (NmPrimVal fc cst) = empty
   goImportExp mod (NmErased fc) = empty
   goImportExp mod (NmCrash fc str) = empty

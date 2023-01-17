@@ -18,12 +18,14 @@ import (
 type WorldType struct {
 	stdin  *bufio.Reader
 	stdout *bufio.Writer
+	stderr *bufio.Writer
 }
 
 func NewWorld() *WorldType {
 	return &WorldType{
 		stdin:  bufio.NewReader(os.Stdin),
 		stdout: bufio.NewWriter(os.Stdout),
+		stderr: bufio.NewWriter(os.Stderr),
 	}
 }
 
@@ -80,7 +82,7 @@ func Prelude_io_prim__getStr(world any) string {
 	if err != nil {
 		panic(err)
 	}
-	return line
+	return line[:len(line)-1] // trim new line
 }
 
 func Prelude_io_prim__putStr(v any, world any) any {
@@ -146,7 +148,8 @@ func System_clock_prim__osClockSecond(v, world any) uint64 {
 func System_clock_prim__osClockValid(v, world any) any { panic("not implemented") }
 
 func System_concurrency_prim__channelGet(a, ch, world any) any {
-	return <-ch.(chan any)
+	result := <-ch.(chan any)
+	return result
 }
 
 func System_concurrency_prim__channelPut(a, ch, v, world any) any {
@@ -155,7 +158,7 @@ func System_concurrency_prim__channelPut(a, ch, v, world any) any {
 }
 
 func System_concurrency_prim__makeChannel(a, world any) chan any {
-	return make(chan any, 1)
+	return make(chan any)
 }
 
 func System_errno_prim__strerror(errno, world any) any {
@@ -283,6 +286,11 @@ func System_file_readwrite_prim__writeLine(f, l, world any) any {
 		lastFileError = err
 		return 0
 	}
+	err = file.writer.Flush()
+	if err != nil {
+		lastFileError = err
+		return 0
+	}
 	lastFileError = nil
 	return 1
 }
@@ -312,8 +320,12 @@ func System_prim__getEnv(v, world any) *string {
 	return &value
 }
 
-func System_prim__system(v, world any) any {
+func System_prim__system(v, w any) any {
+	world := w.(*WorldType)
 	cmd := exec.Command("sh", "-c", v.(string))
+
+	cmd.Stdout = world.stdout
+	cmd.Stderr = world.stderr
 	err := cmd.Run()
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
