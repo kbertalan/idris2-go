@@ -27,6 +27,10 @@ main = do
   printLn !(setEnv envVarName "b" False)
   Just value <- getEnv envVarName
     | Nothing => putStrLn "there was no env variable \{envVarName}"
-  putStrLn value
+  printLn $ filter (\(n,v) => n == envVarName) !getEnvironment
+  printLn !(unsetEnv envVarName)
+  Nothing <- getEnv envVarName
+    | Just value => putStrLn "there was an env variable \{envVarName} with value \{value}"
 
+  putStrLn "done"
 
