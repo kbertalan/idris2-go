@@ -16,4 +16,5 @@ sourcedir = "src"
 
 executable = idris2-go
 main = Main
+prebuild = "idris2 -x main Prebuild.idr"
 

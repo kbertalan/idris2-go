@@ -17,6 +17,7 @@ import Go.AST.Printer
 
 import Idris2.Compiler.Go.Import
 import Idris2.Compiler.Go.Name as Go
+import Idris2.Compiler.Go.Support.Gen
 
 import Libraries.Utils.Path
 
@@ -830,16 +831,16 @@ getGoModule directives
 Go : CG
 Go = Other "go"
 
-copySupportFile :
+copySupportFiles :
   {auto c : Ref Ctxt Defs} ->
   (outDir : String) ->
-  (fname : String) ->
   Core ()
-copySupportFile outDir fname = do
+copySupportFiles outDir = do
   let supportPath = outDir </> "_gen" </> "idris2" </> "support"
   ensureDirectoryExists supportPath
-  support <- readDataFile fname
-  writeFile (supportPath </> fname) support
+  for_ Gen.files $ \(fname, support) => do
+    content <- readDataFile fname `catch` const (pure support)
+    writeFile (supportPath </> fname) content
 
 export
 compileGo :
@@ -854,8 +855,7 @@ compileGo outDir outFile defs exp = do
   ds <- getDirectives Go
   moduleName <- getGoModule ds
 
-  let supportFiles = ["support.go", "cast.go", "prims.go"]
-  for_ supportFiles $ copySupportFile outDir
+  copySupportFiles outDir
 
   let grouppedDefs = getGrouppedDefs defs
   traverse_ (goFile outDir moduleName) grouppedDefs

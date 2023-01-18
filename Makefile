@@ -3,7 +3,7 @@ ipkg=idris2-go.ipkg
 .PHONY: build install run clean dev dev-build test-clean test-build test dev-test compile-test compile-self
  
 build:
-	pack build ${ipkg}
+	echo yes | pack build ${ipkg}
 
 install: build
 	idris2 --install ${ipkg}
