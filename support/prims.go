@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
+	"io/fs"
 	"math"
 	"os"
 	"os/exec"
@@ -16,16 +17,20 @@ import (
 )
 
 type WorldType struct {
-	stdin  *bufio.Reader
-	stdout *bufio.Writer
-	stderr *bufio.Writer
+	stdin           *bufio.Reader
+	stdout          *os.File
+	stderr          *os.File
+	lastFileInError *filePtr
+	lastError       error
 }
 
 func NewWorld() *WorldType {
 	return &WorldType{
-		stdin:  bufio.NewReader(os.Stdin),
-		stdout: bufio.NewWriter(os.Stdout),
-		stderr: bufio.NewWriter(os.Stderr),
+		stdin:           bufio.NewReader(os.Stdin),
+		stdout:          os.Stdout,
+		stderr:          os.Stderr,
+		lastFileInError: nil,
+		lastError:       nil,
 	}
 }
 
@@ -54,27 +59,22 @@ func Prelude_io_prim__getString(v any) string {
 	return *v.(*string)
 }
 
-func flushStdout(world *WorldType) {
-	if err := world.stdout.Flush(); err != nil {
-		panic(err)
-	}
-}
-
 func Prelude_io_prim__putChar(v, world any) any {
-	_, err := world.(*WorldType).stdout.WriteRune(v.(rune))
+	_, err := world.(*WorldType).stdout.Write([]byte{v.(byte)})
 	if err != nil {
 		panic(err)
 	}
-	flushStdout(world.(*WorldType))
 	return nil
 }
 
-func Prelude_io_prim__getChar(world any) rune {
-	r, _, err := world.(*WorldType).stdin.ReadRune()
+func Prelude_io_prim__getChar(w any) byte {
+	world := w.(*WorldType)
+	data := make([]byte, 1)
+	_, err := world.stdin.Read(data)
 	if err != nil {
-		panic(err)
+		world.lastError = err
 	}
-	return r
+	return data[0]
 }
 
 func Prelude_io_prim__getStr(world any) string {
@@ -83,24 +83,29 @@ func Prelude_io_prim__getStr(world any) string {
 		panic(err)
 	}
 	return line[:len(line)-1] // trim new line
+	// TODO check this on Windows
 }
 
-func Prelude_io_prim__putStr(v any, world any) any {
-	_, err := world.(*WorldType).stdout.WriteString(v.(string))
+func Prelude_io_prim__putStr(v any, w any) any {
+	world := w.(*WorldType)
+	_, err := world.stdout.WriteString(v.(string))
 	if err != nil {
-		panic(err)
+		world.lastError = err
 	}
-	flushStdout(world.(*WorldType))
 	return nil
 }
 
-func Prelude_io_prim__fork(f any, world any) any {
+func Prelude_io_prim__fork(f any, w any) any {
+	world := w.(*WorldType)
 	fn := f.(func(v any) any)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go (func() {
 		defer wg.Done()
-		fn(world)
+		forkedWorld := world
+		forkedWorld.lastError = nil
+		forkedWorld.lastFileInError = nil
+		fn(forkedWorld)
 	})()
 
 	return wg
@@ -169,43 +174,52 @@ func System_ffi_prim__free(v, world any) any {
 	return nil
 }
 
-var lastFileError error = nil
-
-func System_file_error_prim__fileErrno(world any) int {
-	switch lastFileError {
-	// TODO add read/write errors
-	// case ??: return 0 // FileReadError
-	// case ??: return 1 // FileWriteError
+func System_file_error_prim__fileErrno(w any) int {
+	world := w.(*WorldType)
+	switch world.lastFileInError.lastError {
+	case io.ErrShortBuffer:
+		return 0 // FileReadError
+	case io.EOF, io.ErrUnexpectedEOF, os.ErrClosed, io.ErrClosedPipe, io.ErrShortWrite:
+		return 1 // FileWriteError
 	case os.ErrNotExist:
 		return 2 // FileNotFound
 	case os.ErrPermission:
 		return 3 // PermissionDenied
 	case os.ErrExist:
 		return 4 // FileExists
-	default:
-		return 5
 	}
+
+	switch world.lastFileInError.lastError.(type) {
+	case *fs.PathError:
+		return 2 // FileNotFound
+	}
+
+	return 5 // GenericFileError
 }
 
 type filePtr struct {
-	file   *os.File
-	reader *bufio.Reader
-	writer *bufio.Writer
+	file      *os.File
+	reader    *bufio.Reader
+	writer    *bufio.Writer
+	eof       bool
+	lastError error
 }
 
-type bufferedReader interface {
-}
-
-func System_file_handle_prim__close(f, world any) any {
-	err := f.(*filePtr).file.Close()
+func System_file_handle_prim__close(f, w any) any {
+	world := w.(*WorldType)
+	filePtr := f.(*filePtr)
+	err := filePtr.file.Close()
 	if err != nil {
-		lastFileError = err
+		filePtr.lastError = err
+		world.lastFileInError = filePtr
 		return nil
 	}
+	world.lastFileInError = nil
 	return nil
 }
 
-func System_file_handle_prim__open(f, m, world any) *filePtr {
+func System_file_handle_prim__open(f, m, w any) *filePtr {
+	world := w.(*WorldType)
 	mode := 0
 	var reader, writer bool
 	switch m.(string) {
@@ -233,10 +247,14 @@ func System_file_handle_prim__open(f, m, world any) *filePtr {
 	}
 	file, err := os.OpenFile(f.(string), mode, 0644)
 	if err != nil {
-		lastFileError = err
+		filePtr := filePtr{
+			file:      file,
+			lastError: err,
+		}
+		world.lastFileInError = &filePtr
 		return nil
 	}
-	lastFileError = nil
+	world.lastFileInError = nil
 	ptr := filePtr{
 		file: file,
 	}
@@ -249,25 +267,27 @@ func System_file_handle_prim__open(f, m, world any) *filePtr {
 	return &ptr
 }
 
-func System_file_readwrite_prim__eof(f, world any) any {
+func System_file_readwrite_prim__eof(f, w any) any {
 	file := f.(*filePtr)
-	_, err := file.reader.Peek(1)
-	if err != nil {
-		if err == io.EOF || err == io.ErrUnexpectedEOF {
-			return 1
-		}
+	if file.eof {
+		return 1
 	}
 	return 0
 }
 
-func System_file_readwrite_prim__readLine(f, world any) *string {
+func System_file_readwrite_prim__readLine(f, w any) *string {
+	world := w.(*WorldType)
 	file := f.(*filePtr)
 	line, err := file.reader.ReadString('\n')
 	if err != nil {
-		lastFileError = err
-		return nil
+		if err != io.EOF {
+			file.lastError = err
+			world.lastFileInError = file
+			return nil
+		}
+		file.eof = true
 	}
-	lastFileError = nil
+	world.lastFileInError = nil
 	return &line
 }
 
@@ -279,19 +299,22 @@ func System_file_readwrite_prim__seekLine(f, world any) any {
 	return 0
 }
 
-func System_file_readwrite_prim__writeLine(f, l, world any) any {
+func System_file_readwrite_prim__writeLine(f, l, w any) any {
+	world := w.(*WorldType)
 	file := f.(*filePtr)
 	_, err := file.writer.WriteString(l.(string))
 	if err != nil {
-		lastFileError = err
+		file.lastError = err
+		world.lastFileInError = file
 		return 0
 	}
 	err = file.writer.Flush()
 	if err != nil {
-		lastFileError = err
+		file.lastError = err
+		world.lastFileInError = file
 		return 0
 	}
-	lastFileError = nil
+	world.lastFileInError = nil
 	return 1
 }
 
@@ -318,6 +341,23 @@ func System_prim__getEnv(v, world any) *string {
 		return nil
 	}
 	return &value
+}
+
+func System_prim__setEnv(n, v, o, w any) int {
+	world := w.(*WorldType)
+	name := n.(string)
+	value := v.(string)
+	overwrite := o.(int) != 0
+	_, exists := os.LookupEnv(name)
+	if exists && !overwrite {
+		return 0
+	}
+	err := os.Setenv(name, value)
+	if err != nil {
+		world.lastError = err
+		return 1
+	}
+	return 0
 }
 
 func System_prim__system(v, w any) any {

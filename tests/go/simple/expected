@@ -1,5 +1,17 @@
 1/1: Building Simple (Simple.idr)
 Now compiling the executable: test
-executing system call a
+executing a system call
 something
 0
+printing numbers
+1
+2
+3
+text in color
+[1;31mHello [1;34mWorld![1;0m
+unpack a string and display it one by one
+this is the unpacked string
+manipulating env
+True
+True
+a
