@@ -747,11 +747,10 @@ namespace GoImports
 
 goFile :
   (outDir : String) ->
-  (outFile : String) ->
   (moduleName : String) ->
   (List1 (Go.Name, NamedDef)) ->
   Core (Maybe String)
-goFile outDir outFile moduleName defs = do
+goFile outDir moduleName defs = do
   let (name, _) = head defs
   ensureDirectoryExists (outDir </> name.location.dir)
   let currentImport = importForProject moduleName name.location
@@ -788,7 +787,7 @@ goMainFile outDir outFile moduleName exp = do
                           }
 
   let MkGoExp exp' = goExp packageResolver exp
-      src = Go.file outFile (package "main") (goImportSpecList currentImport imports)
+      src = Go.file (outFile ++ ".go") (package "main") (goImportSpecList currentImport imports)
               [ func "main" [] void [expr exp'] ]
 
   result <- coreLift $ printFile outDir src
@@ -845,8 +844,8 @@ copySupportFile outDir fname = do
 export
 compileGo :
   {auto c : Ref Ctxt Defs} ->
-  (outputDir : String) ->
-  (outfile : String) ->
+  (outDir : String) ->
+  (outFile : String) ->
   List (Core.Name.Name, FC, NamedDef) ->
   NamedCExp ->
   Core (Maybe String)
@@ -859,7 +858,7 @@ compileGo outDir outFile defs exp = do
   for_ supportFiles $ copySupportFile outDir
 
   let grouppedDefs = getGrouppedDefs defs
-  traverse_ (goFile outDir outFile moduleName) grouppedDefs
+  traverse_ (goFile outDir moduleName) grouppedDefs
 
   _ <- goMainFile outDir outFile moduleName exp
 

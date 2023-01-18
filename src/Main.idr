@@ -15,15 +15,14 @@ compileExpr :
   Ref Ctxt Defs ->
   Ref Syn SyntaxInfo ->
   (tmpDir : String) ->
-  (outputDir : String) ->
+  (outDir : String) ->
   ClosedTerm ->
-  (outfile : String) ->
+  (outFile : String) ->
   Core (Maybe String)
-compileExpr c s _ outputDir tm outfile = do
-  let out = outfile ++ ".go"
+compileExpr c s tmpDir outDir tm outFile = do
   cdata <- getCompileData False Cases tm
   let defs = namedDefs cdata
-  compileGo outputDir out defs $ forget cdata.mainExpr
+  compileGo outDir outFile defs $ forget cdata.mainExpr
 
 export
 executeExpr :

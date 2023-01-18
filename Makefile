@@ -42,14 +42,10 @@ tests/build/exec/runtests: build/exec/idris2-go
 	cd tests/build/exec && go mod init github.com/kbertalan/idris2-go/tests && go mod tidy && go build -o runtests
 
 run-go-test: build/exec/idris2-go tests/build/exec/runtests
-	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --interactive --timing --failure-file failures --threads 1 --only "go/"
+	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --timing --failure-file tests/failures --threads 1 --only "go/"
 
-compile-test:
-	make clean
-	make build
-	make test-clean
-	IDRIS2_DATA="${PWD}/support" ./build/exec/idris2-go --build tests/runtests.ipkg --directive module=github.com/kbertalan/idris2-go/tests
-	cd tests/build/exec && go mod init github.com/kbertalan/idris2-go/tests && go mod tidy && go build . && cd ../.. && IDRIS2_DATA="${PWD}/support" ./build/exec/tests "${PWD}/build/exec/idris2-go" --timing --failure-file failures --threads 2 --only "go/"
+compile-test: build/exec/idris2-go tests/build/exec/runtests
+	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --timing --failure-file tests/failures --threads 2 --only "tour/basics10"
 
 compile-self:
 	make clean
