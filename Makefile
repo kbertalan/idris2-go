@@ -1,6 +1,6 @@
 ipkg=idris2-go.ipkg
 
-.PHONY: build install run clean dev dev-build test-clean test-build test dev-test compile-test compile-self
+.PHONY: build install run clean dev dev-build test-clean test-build test dev-test go-simple-test go-test compile-self
  
 build:
 	echo yes | pack build ${ipkg}
@@ -34,24 +34,23 @@ dev-test:
 
 build/exec/idris2-go:
 	make clean
-	make build
+	time make build
 
 tests/build/exec/runtests: build/exec/idris2-go
 	make test-clean
 	./build/exec/idris2-go --build tests/runtests.ipkg
 
-run-go-test: build/exec/idris2-go tests/build/exec/runtests
-	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --timing --failure-file failures --threads 4 # --only "go/"
+go-simple-test: build/exec/idris2-go tests/build/exec/runtests
+	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --interactive --timing --failure-file failures --threads 4 --only "go/"
 
-compile-test: build/exec/idris2-go tests/build/exec/runtests
-	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --timing --failure-file failures --threads 2 --only "tour/basics10"
+go-test: build/exec/idris2-go tests/build/exec/runtests
+	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --timing --failure-file failures --threads 4
 
-compile-self:
-	make clean
-	bash -c "time make build"
+build/go/idris2-go: build/exec/idris2-go
 	mkdir build/go
 	mv ./build/exec/idris2-go* ./build/go/
+
+compile-self: build/go/idris2-go
 	rm -rf ./build/exec ./build/ttc
-	IDRIS2_DATA="${PWD}/support" bash -c "time ./build/go/idris2-go --build idris2-go.ipkg --directive module=github.com/kbertalan/idris2-go"
-	(cd build/exec && go mod init github.com/kbertalan/idris2-go && go build -o idris2-go)
+	IDRIS2_DATA="${PWD}/support" time ./build/go/idris2-go --build idris2-go.ipkg
 

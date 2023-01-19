@@ -16,5 +16,6 @@ sourcedir = "src"
 
 executable = idris2-go
 main = Main
+opts = "--directive module=github.com/kbertalan/idris2-go"
 prebuild = "idris2 -x main Prebuild.idr"
 
