@@ -22,6 +22,7 @@ type WorldType struct {
 	stderr          *os.File
 	lastFileInError *filePtr
 	lastError       error
+	threadStartTime time.Time
 }
 
 func NewWorld() *WorldType {
@@ -31,7 +32,16 @@ func NewWorld() *WorldType {
 		stderr:          os.Stderr,
 		lastFileInError: nil,
 		lastError:       nil,
+		threadStartTime: time.Now(),
 	}
+}
+
+func (w *WorldType) Fork() *WorldType {
+	world := *w
+	world.lastError = nil
+	world.lastFileInError = nil
+	world.threadStartTime = time.Now()
+	return &world
 }
 
 func Idris2GoSlice[E any](v any) []E {
@@ -102,10 +112,7 @@ func Prelude_io_prim__fork(f any, w any) any {
 	wg.Add(1)
 	go (func() {
 		defer wg.Done()
-		forkedWorld := world
-		forkedWorld.lastError = nil
-		forkedWorld.lastFileInError = nil
-		fn(forkedWorld)
+		fn(world.Fork())
 	})()
 
 	return wg
@@ -132,22 +139,47 @@ func Primio_prim__nullAnyPtr(v any) int {
 	return 0
 }
 
-func System_clock_prim__clockTimeGcCpu(world any) any     { panic("not implemented") }
-func System_clock_prim__clockTimeGcReal(world any) any    { panic("not implemented") }
-func System_clock_prim__clockTimeMonotonic(world any) any { panic("not implemented") }
-func System_clock_prim__clockTimeProcess(world any) any   { panic("not implemented") }
-func System_clock_prim__clockTimeThread(world any) any    { panic("not implemented") }
+func System_clock_prim__clockTimeGcCpu(world any) any  { panic("not implemented") }
+func System_clock_prim__clockTimeGcReal(world any) any { panic("not implemented") }
+
+func System_clock_prim__clockTimeMonotonic(world any) time.Time {
+	// go's time is monotonic between 1885 and 2157 years
+	return time.Now()
+}
+
+var processStartTime = time.Now()
+
+func System_clock_prim__clockTimeProcess(world any) time.Duration {
+	return time.Since(processStartTime)
+}
+
+func System_clock_prim__clockTimeThread(w any) any {
+	world := w.(*WorldType)
+	return time.Since(world.threadStartTime)
+}
 
 func System_clock_prim__clockTimeUtc(world any) time.Time {
 	return time.Now().UTC()
 }
 
 func System_clock_prim__osClockNanosecond(v, world any) uint64 {
-	return uint64(v.(time.Time).Nanosecond())
+	switch t := v.(type) {
+	case time.Time:
+		return uint64(t.Nanosecond())
+	case time.Duration:
+		return uint64(t % 1e9)
+	}
+	panic(fmt.Sprintf("unknown time type %T", v))
 }
 
 func System_clock_prim__osClockSecond(v, world any) uint64 {
-	return uint64(v.(time.Time).Second())
+	switch t := v.(type) {
+	case time.Time:
+		return uint64(t.Unix())
+	case time.Duration:
+		return uint64(t / 1e9)
+	}
+	panic(fmt.Sprintf("unknown time type %T", v))
 }
 
 func System_clock_prim__osClockValid(v, world any) any { panic("not implemented") }

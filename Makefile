@@ -38,7 +38,7 @@ build/exec/idris2-go:
 
 tests/build/exec/runtests: build/exec/idris2-go
 	make test-clean
-	./build/exec/idris2-go --build tests/runtests.ipkg
+	IDRIS2_DATA="${PWD}/support" ./build/exec/idris2-go --build tests/runtests.ipkg
 
 go-simple-test: build/exec/idris2-go tests/build/exec/runtests
 	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --interactive --timing --failure-file failures --threads 4 --only "go/"
