@@ -4,4 +4,4 @@ depends = idris2-go
 modules = Basics7
 main = Basics7
 executable = test
-opts = "--no-color --console-width 0"
+opts = "--no-color --console-width 0 --directive module=github.com/kbertalan/idris2-go/tests/tour/basics7"

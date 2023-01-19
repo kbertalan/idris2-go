@@ -3,12 +3,12 @@ package idris2-go
 depends = idris2, contrib
 
 modules = Data.List.All,
-  Data.List.Last,
   Go.Token,
   Go.AST,
   Go.AST.Combinators,
   Go.AST.Printer,
   Idris2.Compiler.Go,
+  Idris2.Compiler.Go.GoC,
   Idris2.Compiler.Go.Import,
   Idris2.Compiler.Go.Name
 

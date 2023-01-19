@@ -4,4 +4,5 @@ depends = contrib, test
 
 main = Main
 executable = runtests
+opts = "--directive module=github.com/kbertalan/idris2-go/tests"
 

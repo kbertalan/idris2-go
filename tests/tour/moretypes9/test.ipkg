@@ -4,4 +4,4 @@ depends = idris2-go
 modules = MoreTypes9
 main = MoreTypes9
 executable = test
-opts = "--no-color --console-width 0"
+opts = "--no-color --console-width 0 --directive module=github.com/kbertalan/idris2-go/tests/tour/moretypes9"

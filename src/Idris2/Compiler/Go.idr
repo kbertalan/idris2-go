@@ -15,6 +15,7 @@ import Go.AST
 import Go.AST.Combinators as Go
 import Go.AST.Printer
 
+import Idris2.Compiler.Go.GoC
 import Idris2.Compiler.Go.Import
 import Idris2.Compiler.Go.Name as Go
 import Idris2.Compiler.Go.Support.Gen
@@ -809,24 +810,9 @@ getGrouppedDefs defs =
 
 getGoModule : List String -> Core String
 getGoModule directives
-    = do let Just mod = getFirstArg directives
+    = do let Just mod = getFirstArg directives "module"
               | Nothing => throw (UserError "no go module has been specified, please use --directive module=<go-module-name>")
          pure mod
-  where
-    getArg : String -> Maybe String
-    getArg directive =
-      let (k,v) = break (== '=') directive
-      in
-        if (trim k) == "module"
-          then Just $ trim $ substr 1 (length v) v
-          else Nothing
-
-    getFirstArg : List String -> Maybe String
-    getFirstArg [] = Nothing
-    getFirstArg (x::xs) =
-      let Just arg = getArg x
-            | Nothing => getFirstArg xs
-      in Just arg
 
 Go : CG
 Go = Other "go"
@@ -861,6 +847,9 @@ compileGo outDir outFile defs exp = do
   traverse_ (goFile outDir moduleName) grouppedDefs
 
   _ <- goMainFile outDir outFile moduleName exp
+
+  Just _ <- GoC.compileProgram ds moduleName outDir outFile
+    | Nothing => pure $ Just "go compilation failed"
 
   pure Nothing
 
