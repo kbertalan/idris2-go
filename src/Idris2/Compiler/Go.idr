@@ -452,7 +452,6 @@ goOp pr BelieveMe [_,_,x] = goExp pr x
 goOp pr Crash [_,x] =
   let MkGoExp x' = goExp pr x
   in MkGoExp $ call (paren $ funcL [] [fieldT $ tid' "any"] [ expr $ call (id_ "panic") [x'] ]) []
-goOp _ _ _ = MkGoExp $ intL (-3)
 
 goConstAlt : PackageResolver -> List NamedConstAlt -> Maybe NamedCExp -> GoCaseStmtList
 goConstAlt pr [] (Just def) =
@@ -652,6 +651,13 @@ namespace GoImports
     NamedCExp ->
     Imports
 
+  goImportOp :
+    (moduleName : String)->
+    { 0 arity : _ } ->
+    PrimFn arity ->
+    Vect arity NamedCExp ->
+    Imports
+
   goImportConAlt :
     (moduleName : String) ->
     NamedConAlt ->
@@ -677,7 +683,8 @@ namespace GoImports
   goImportExp mod (NmLet fc x y z) = merge (goImportExp mod y) $ goImportExp mod z
   goImportExp mod (NmApp fc x xs) = foldl (\acc => merge acc . goImportExp mod) (goImportExp mod x) xs
   goImportExp mod (NmCon fc n x tag xs) = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
-  goImportExp mod (NmOp fc f xs) = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
+  goImportExp mod (NmOp fc f xs) = goImportOp mod f xs
+   -- addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
   goImportExp mod (NmExtPrim fc p xs) = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
   goImportExp mod (NmForce fc lz x) = addImport (importForSupport mod) $ goImportExp mod x
   goImportExp mod (NmDelay fc lz x) = addImport (importForSupport mod) $ goImportExp mod x
@@ -694,6 +701,45 @@ namespace GoImports
   goImportExp mod (NmPrimVal fc cst) = empty
   goImportExp mod (NmErased fc) = empty
   goImportExp mod (NmCrash fc str) = empty
+
+  addSupportForOp :
+    (moduleName : String) ->
+    { 0 arity : _ } ->
+    Vect arity NamedCExp ->
+    Imports
+  addSupportForOp mod xs = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
+
+  goImportOp mod (Add IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (Sub IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (Mul IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (Div IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (Mod IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (Neg IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (ShiftL IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (ShiftR IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (BAnd IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (BOr IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (BXOr IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (LT IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (LTE IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (EQ IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (GTE IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod (GT IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod StrReverse xs = addSupportForOp mod xs
+  goImportOp mod DoubleExp xs = addSupportForOp mod xs
+  goImportOp mod DoubleLog xs = addSupportForOp mod xs
+  goImportOp mod DoublePow xs = addSupportForOp mod xs
+  goImportOp mod DoubleSin xs = addSupportForOp mod xs
+  goImportOp mod DoubleCos xs = addSupportForOp mod xs
+  goImportOp mod DoubleTan xs = addSupportForOp mod xs
+  goImportOp mod DoubleASin xs = addSupportForOp mod xs
+  goImportOp mod DoubleACos xs = addSupportForOp mod xs
+  goImportOp mod DoubleATan xs = addSupportForOp mod xs
+  goImportOp mod DoubleSqrt xs = addSupportForOp mod xs
+  goImportOp mod DoubleFloor xs = addSupportForOp mod xs
+  goImportOp mod DoubleCeiling xs = addSupportForOp mod xs
+  goImportOp mod (Cast pty pty1) xs = addSupportForOp mod xs
+  goImportOp mod _ xs = foldl (\acc => merge acc . goImportExp mod) empty xs
 
   goImportConAlt mod (MkNConAlt n x tag args y) = addImport (importForSupport mod) $ goImportExp mod y
 
