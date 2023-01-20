@@ -10,7 +10,7 @@ main = do
               [ import_ "fmt" ]
               [ func "main" [] void
                 [ [id_ "v"] /:=/ [intL 42] |> comment " change me!"
-                , expr $ call (id_ "fmt" /./ "Printf") [stringL "v is of type %T\\n", id_ "v"]
+                , expr $ call (id_ "fmt" /./ "Printf") [stringL "v is of type %T\n", id_ "v"]
                 ]
               ]
 

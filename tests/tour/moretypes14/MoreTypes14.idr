@@ -28,7 +28,7 @@ main = do
                 , [ ((id_ "board") `index` intL 0) `index` intL 2 ] /=/ [ stringL "X" ]
                 , for_ ([id_ "i"] /:=/ [intL 0]) (id_ "i" /</ call (id_ "len") [id_ "board"]) (inc $ id_ "i")
                   [ expr $ call (id_ "fmt" /./ "Printf")
-                    [ stringL "%s\\n"
+                    [ stringL "%s\n"
                     , call (id_ "strings" /./ "Join") [ id_ "board" `index` id_ "i", stringL " " ]
                     ]
                   ]

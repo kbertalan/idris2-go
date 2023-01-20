@@ -106,9 +106,14 @@ namespace Literal
                     then cast c
                     else case c of
                               '\0' => "\\x00"
-                              '\'' => "\\'"
-                              '\r' => "\\r"
+                              '\a' => "\\a"
+                              '\b' => "\\b"
+                              '\f' => "\\f"
                               '\n' => "\\n"
+                              '\r' => "\\r"
+                              '\t' => "\\t"
+                              '\v' => "\\v"
+                              '\'' => "\\'"
                               '\\' => "\\\\"
                               other => cast other
 
@@ -130,13 +135,17 @@ namespace Literal
                     && (c /= '"') && (c /= '\'') && (c <= '~')
                     then cast c
                     else case c of
-                              '\0' => "\\0"
-                              '"' => "\\\""
-                              '\r' => "\\r"
+                              '\0' => "\\x00"
+                              '\a' => "\\a"
+                              '\b' => "\\b"
+                              '\f' => "\\f"
                               '\n' => "\\n"
+                              '\r' => "\\r"
+                              '\t' => "\\t"
+                              '\v' => "\\v"
                               '\\' => "\\\\"
+                              '"'  => "\\\""
                               other => cast other
-
 
       escaped : String
       escaped = concatMap escape $ unpack str

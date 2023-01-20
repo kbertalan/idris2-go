@@ -13,7 +13,7 @@ main = do
                 , decl $ vars [ var [id_ "f"] float64 [] ]
                 , decl $ vars [ var [id_ "b"] bool [] ]
                 , decl $ vars [ var [id_ "s"] string [] ]
-                , expr $ call (id_ "fmt" /./ "Printf") [stringL "%v %v %v %q\\n", id_ "i", id_ "f", id_ "b", id_ "s"]
+                , expr $ call (id_ "fmt" /./ "Printf") [stringL "%v %v %v %q\n", id_ "i", id_ "f", id_ "b", id_ "s"]
                 ]
               ]
 

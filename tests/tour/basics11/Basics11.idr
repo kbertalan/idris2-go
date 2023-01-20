@@ -16,9 +16,9 @@ main = do
                 , var [id_ "z"] complex128 [call (id_ "cmplx" /./ "Sqrt") [intL (-5) /+/ imagL 12]]
                 ]
               , func "main" [] void
-                [ expr $ call (id_ "fmt" /./ "Printf") [stringL "Type: %T Value: %v\\n", id_ "ToBe", id_ "ToBe"]
-                , expr $ call (id_ "fmt" /./ "Printf") [stringL "Type: %T Value: %v\\n", id_ "MaxInt", id_ "MaxInt"]
-                , expr $ call (id_ "fmt" /./ "Printf") [stringL "Type: %T Value: %v\\n", id_ "z", id_ "z"]
+                [ expr $ call (id_ "fmt" /./ "Printf") [stringL "Type: %T Value: %v\n", id_ "ToBe", id_ "ToBe"]
+                , expr $ call (id_ "fmt" /./ "Printf") [stringL "Type: %T Value: %v\n", id_ "MaxInt", id_ "MaxInt"]
+                , expr $ call (id_ "fmt" /./ "Printf") [stringL "Type: %T Value: %v\n", id_ "z", id_ "z"]
                 ]
               ]
 

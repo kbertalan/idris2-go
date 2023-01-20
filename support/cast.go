@@ -56,11 +56,65 @@ func CastNumberToString[T numericType](x T) string {
 	return fmt.Sprintf("%v", x)
 }
 
-func CastNumberToChar[T numericType](x T) rune {
-	return rune(x)
+func CastNumberToChar[T numericType](x T) byte {
+	return byte(x)
 }
 
 func CastNumberToFloat64[T numericType](x T) float64 {
+	return float64(x)
+}
+
+// Char
+
+func CastCharToInt(x byte) int {
+	return int(x)
+}
+
+func CastCharToInt8(x byte) int8 {
+	return int8(x)
+}
+
+func CastCharToInt16(x byte) int16 {
+	return int16(x)
+}
+
+func CastCharToInt32(x byte) int32 {
+	return int32(x)
+}
+
+func CastCharToInt64(x byte) int64 {
+	return int64(x)
+}
+
+func CastCharToUInt8(x byte) uint8 {
+	return uint8(x)
+}
+
+func CastCharToUInt16(x byte) uint16 {
+	return uint16(x)
+}
+
+func CastCharToUInt32(x byte) uint32 {
+	return uint32(x)
+}
+
+func CastCharToUInt64(x byte) uint64 {
+	return uint64(x)
+}
+
+func CastCharToInteger(x byte) IntegerType {
+	return big.NewInt(int64(x))
+}
+
+func CastCharToString(x byte) string {
+	return string([]byte{x})
+}
+
+func CastCharToChar(x byte) byte {
+	return byte(x)
+}
+
+func CastCharToFloat64(x byte) float64 {
 	return float64(x)
 }
 
@@ -114,8 +168,8 @@ func CastIntegerToString(x any) string {
 	return asBigInt(x).String()
 }
 
-func CastIntegerToChar(x any) rune {
-	return rune(asBigInt(x).Int64())
+func CastIntegerToChar(x any) byte {
+	return byte(asBigInt(x).Int64())
 }
 
 func CastIntegerToFloat64(x any) float64 {

@@ -17,9 +17,6 @@ import (
 )
 
 type WorldType struct {
-	stdin           *bufio.Reader
-	stdout          *os.File
-	stderr          *os.File
 	lastFileInError *filePtr
 	lastError       error
 	threadStartTime time.Time
@@ -27,9 +24,6 @@ type WorldType struct {
 
 func NewWorld() *WorldType {
 	return &WorldType{
-		stdin:           bufio.NewReader(os.Stdin),
-		stdout:          os.Stdout,
-		stderr:          os.Stderr,
 		lastFileInError: nil,
 		lastError:       nil,
 		threadStartTime: time.Now(),
@@ -70,7 +64,7 @@ func Prelude_io_prim__getString(v any) string {
 }
 
 func Prelude_io_prim__putChar(v, world any) any {
-	_, err := world.(*WorldType).stdout.Write([]byte{v.(byte)})
+	_, err := os.Stdout.Write([]byte{v.(byte)})
 	if err != nil {
 		panic(err)
 	}
@@ -80,7 +74,7 @@ func Prelude_io_prim__putChar(v, world any) any {
 func Prelude_io_prim__getChar(w any) byte {
 	world := w.(*WorldType)
 	data := make([]byte, 1)
-	_, err := world.stdin.Read(data)
+	_, err := os.Stdin.Read(data)
 	if err != nil {
 		world.lastError = err
 	}
@@ -88,7 +82,7 @@ func Prelude_io_prim__getChar(w any) byte {
 }
 
 func Prelude_io_prim__getStr(world any) string {
-	line, err := world.(*WorldType).stdin.ReadString('\n')
+	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
 	if err != nil {
 		panic(err)
 	}
@@ -98,7 +92,7 @@ func Prelude_io_prim__getStr(world any) string {
 
 func Prelude_io_prim__putStr(v any, w any) any {
 	world := w.(*WorldType)
-	_, err := world.stdout.WriteString(v.(string))
+	_, err := os.Stdout.WriteString(v.(string))
 	if err != nil {
 		world.lastError = err
 	}
@@ -231,8 +225,6 @@ func System_file_error_prim__fileErrno(w any) int {
 
 type filePtr struct {
 	file      *os.File
-	reader    *bufio.Reader
-	writer    *bufio.Writer
 	eof       bool
 	lastError error
 }
@@ -253,29 +245,19 @@ func System_file_handle_prim__close(f, w any) any {
 func System_file_handle_prim__open(f, m, w any) *filePtr {
 	world := w.(*WorldType)
 	mode := 0
-	var reader, writer bool
 	switch m.(string) {
 	case "r", "rb":
 		mode |= os.O_RDONLY
-		reader = true
 	case "w", "wb":
 		mode |= os.O_WRONLY | os.O_TRUNC | os.O_CREATE
-		writer = true
 	case "a", "ab":
 		mode |= os.O_WRONLY | os.O_APPEND
-		writer = true
 	case "r+", "rb+":
 		mode |= os.O_RDWR
-		reader = true
-		writer = true
 	case "w+", "wb+":
 		mode |= os.O_RDWR | os.O_TRUNC | os.O_CREATE
-		reader = true
-		writer = true
 	case "a+", "ab+":
 		mode |= os.O_RDWR | os.O_APPEND
-		reader = true
-		writer = true
 	}
 	file, err := os.OpenFile(f.(string), mode, 0644)
 	if err != nil {
@@ -290,12 +272,6 @@ func System_file_handle_prim__open(f, m, w any) *filePtr {
 	ptr := filePtr{
 		file: file,
 	}
-	if reader {
-		ptr.reader = bufio.NewReader(file)
-	}
-	if writer {
-		ptr.writer = bufio.NewWriter(file)
-	}
 	return &ptr
 }
 
@@ -309,15 +285,15 @@ func System_file_readwrite_prim__eof(f, w any) any {
 
 func System_file_readwrite_prim__readLine(f, w any) *string {
 	world := w.(*WorldType)
-	file := f.(*filePtr)
-	line, err := file.reader.ReadString('\n')
+	ptr := f.(*filePtr)
+	line, err := bufio.NewReader(ptr.file).ReadString('\n')
 	if err != nil {
 		if err != io.EOF {
-			file.lastError = err
-			world.lastFileInError = file
+			ptr.lastError = err
+			world.lastFileInError = ptr
 			return nil
 		}
-		file.eof = true
+		ptr.eof = true
 	}
 	world.lastFileInError = nil
 	return &line
@@ -333,17 +309,11 @@ func System_file_readwrite_prim__seekLine(f, world any) any {
 
 func System_file_readwrite_prim__writeLine(f, l, w any) any {
 	world := w.(*WorldType)
-	file := f.(*filePtr)
-	_, err := file.writer.WriteString(l.(string))
+	ptr := f.(*filePtr)
+	_, err := ptr.file.WriteString(l.(string))
 	if err != nil {
-		file.lastError = err
-		world.lastFileInError = file
-		return 0
-	}
-	err = file.writer.Flush()
-	if err != nil {
-		file.lastError = err
-		world.lastFileInError = file
+		ptr.lastError = err
+		world.lastFileInError = ptr
 		return 0
 	}
 	world.lastFileInError = nil
@@ -412,11 +382,10 @@ func System_prim__unsetEnv(n, w any) int {
 }
 
 func System_prim__system(v, w any) any {
-	world := w.(*WorldType)
 	cmd := exec.Command("sh", "-c", v.(string))
 
-	cmd.Stdout = world.stdout
-	cmd.Stderr = world.stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	err := cmd.Run()
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
@@ -557,12 +526,12 @@ func Libraries_data_string_iterator_uncons(s, i any) Value {
 func Libraries_system_file_buffer_prim__readBufferData(f, b, o, m, w any) int {
 	offset := o.(int)
 	buffer := b.(Buffer)[offset : offset+m.(int)]
-	file := f.(*filePtr)
-	n, err := file.reader.Read(buffer)
+	ptr := f.(*filePtr)
+	n, err := ptr.file.Read(buffer)
 	if err != nil {
-		file.lastError = err
+		ptr.lastError = err
 		world := w.(*WorldType)
-		world.lastFileInError = file
+		world.lastFileInError = ptr
 		return -1
 	}
 
@@ -572,15 +541,14 @@ func Libraries_system_file_buffer_prim__readBufferData(f, b, o, m, w any) int {
 func Libraries_system_file_buffer_prim__writeBufferData(f, b, o, s, w any) int {
 	offset := o.(int)
 	buffer := b.(Buffer)[offset : offset+s.(int)]
-	file := f.(*filePtr)
-	n, err := file.writer.Write(buffer)
+	ptr := f.(*filePtr)
+	n, err := ptr.file.Write(buffer)
 	if err != nil {
-		file.lastError = err
+		ptr.lastError = err
 		world := w.(*WorldType)
-		world.lastFileInError = file
+		world.lastFileInError = ptr
 		return -1
 	}
-	file.writer.Flush()
 	return n
 }
 
@@ -645,6 +613,23 @@ func System_file_process_prim__pclose(a, w any) any                  { panic("no
 func System_file_process_prim__popen(a, b, w any) any                { panic("not implemented") }
 func System_file_readwrite_prim__readChar(a, w any) any              { panic("not implemented") }
 func System_file_readwrite_prim__removeFile(a, w any) any            { panic("not implemented") }
-func System_file_virtual_prim__stdin() any                           { panic("not implemented") }
-func System_file_virtual_prim__stdout() any                          { panic("not implemented") }
-func Main_system_info_prim__codegen() any                            { panic("not implemented") }
+
+func System_file_virtual_prim__stdin() *filePtr {
+	return &filePtr{
+		file: os.Stdin,
+	}
+}
+
+func System_file_virtual_prim__stdout() *filePtr {
+	return &filePtr{
+		file: os.Stdout,
+	}
+}
+
+func System_file_virtual_prim__stderr() *filePtr {
+	return &filePtr{
+		file: os.Stderr,
+	}
+}
+
+func Main_system_info_prim__codegen() any { panic("not implemented") }

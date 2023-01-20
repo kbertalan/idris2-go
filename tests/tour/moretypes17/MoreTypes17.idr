@@ -15,7 +15,7 @@ main = do
                     |> comment " == 2**i"
                   ]
                 , rangeKV "_" "value" (id_ "pow")
-                  [ expr $ call (id_ "fmt" /./ "Printf") [ stringL "%d\\n", id_ "value" ]
+                  [ expr $ call (id_ "fmt" /./ "Printf") [ stringL "%d\n", id_ "value" ]
                   ]
                 ]
               ]

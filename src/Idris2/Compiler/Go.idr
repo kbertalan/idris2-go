@@ -444,7 +444,7 @@ goOp pr (Cast pty1 pty2) [x] =
     category Bits32Type = "Number"
     category Bits64Type = "Number"
     category StringType = "String"
-    category CharType = "Number"
+    category CharType = "Char"
     category DoubleType = "Number"
     category WorldType = "World"
 

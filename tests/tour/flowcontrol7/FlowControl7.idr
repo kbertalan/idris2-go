@@ -13,7 +13,7 @@ main = do
               [ func "pow" [fields ["x","n","lim"] float64] [fieldT float64]
                 [ ifSE ([id_ "v"] /:=/ [call (id_ "math" /./ "Pow") [id_ "x", id_ "n"]]) (id_ "v" /</ id_ "lim")
                   [ return [ id_ "v" ] ]
-                  $ block [ expr $ call (id_ "fmt" /./ "Printf") [stringL "%g >= %g \\n", id_ "v", id_ "lim"] ]
+                  $ block [ expr $ call (id_ "fmt" /./ "Printf") [stringL "%g >= %g \n", id_ "v", id_ "lim"] ]
                 , return [ id_ "lim" ]
                   |> doc " can't use v here, though"
                 ]

@@ -18,7 +18,7 @@ main = do
                   , case_ [stringL "linux"]
                     [ expr $ call (id_ "fmt" /./ "Println") [stringL "Linux."] ]
                   , default_
-                    [ expr (call (id_ "fmt" /./ "Printf") [stringL "%s os.\\n", id_ "os"])
+                    [ expr (call (id_ "fmt" /./ "Printf") [stringL "%s os.\n", id_ "os"])
                       |> docs
                         [ " freebsd, openbsd,"
                         , " plan9, windows..."

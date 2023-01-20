@@ -23,7 +23,7 @@ main = do
                 ]
               , func "printSlice" [field "s" $ array' int] void
                 [ expr $ call (id_ "fmt" /./ "Printf")
-                  [ stringL "len=%d cap=%d %v\\n"
+                  [ stringL "len=%d cap=%d %v\n"
                   , call (id_ "len") [id_ "s"]
                   , call (id_ "cap") [id_ "s"]
                   , id_ "s"
