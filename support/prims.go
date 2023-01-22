@@ -5,14 +5,12 @@ import (
 )
 
 type WorldType struct {
-	lastFileInError *filePtr
 	lastError       error
 	threadStartTime time.Time
 }
 
 func NewWorld() *WorldType {
 	return &WorldType{
-		lastFileInError: nil,
 		lastError:       nil,
 		threadStartTime: time.Now(),
 	}
@@ -21,7 +19,6 @@ func NewWorld() *WorldType {
 func (w *WorldType) Fork() *WorldType {
 	world := *w
 	world.lastError = nil
-	world.lastFileInError = nil
 	world.threadStartTime = time.Now()
 	return &world
 }
