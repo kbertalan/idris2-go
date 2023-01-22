@@ -27,7 +27,7 @@ func Prelude_io_prim__putChar(v, world any) any {
 func Prelude_io_prim__getChar(w any) byte {
 	world := w.(*WorldType)
 	data := make([]byte, 1)
-	_, err := bufferedStdin.Read(data)
+	_, err := stdin.reader.Read(data)
 	if err != nil {
 		world.lastError = err
 	}
@@ -35,7 +35,7 @@ func Prelude_io_prim__getChar(w any) byte {
 }
 
 func Prelude_io_prim__getStr(world any) string {
-	line, err := bufferedStdin.ReadString('\n')
+	line, err := stdin.reader.ReadString('\n')
 	if err != nil {
 		panic(err)
 	}

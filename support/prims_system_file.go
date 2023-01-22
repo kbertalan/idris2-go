@@ -10,9 +10,23 @@ import (
 type filePtr struct {
 	file      *os.File
 	reader    *bufio.Reader
+	writer    *bufio.Writer
 	eof       bool
 	lastError error
 }
+
+var (
+	stdin = &filePtr{
+		file:   os.Stdin,
+		reader: bufio.NewReader(os.Stdin),
+	}
+	stdout = &filePtr{
+		file: os.Stdout,
+	}
+	stderr = &filePtr{
+		file: os.Stderr,
+	}
+)
 
 func System_file_error_prim__fileErrno(w any) int {
 	world := w.(*WorldType)
@@ -40,6 +54,9 @@ func System_file_error_prim__fileErrno(w any) int {
 func System_file_handle_prim__close(f, w any) any {
 	world := w.(*WorldType)
 	filePtr := f.(*filePtr)
+	if filePtr.writer != nil {
+		filePtr.writer.Flush()
+	}
 	err := filePtr.file.Close()
 	if err != nil {
 		filePtr.lastError = err
@@ -54,23 +71,29 @@ func System_file_handle_prim__open(f, m, w any) *filePtr {
 	world := w.(*WorldType)
 	mode := 0
 	createReader := false
+	createWriter := false
 	switch m.(string) {
 	case "r", "rb":
 		mode |= os.O_RDONLY
 		createReader = true
 	case "w", "wb":
 		mode |= os.O_WRONLY | os.O_TRUNC | os.O_CREATE
+		createWriter = true
 	case "a", "ab":
 		mode |= os.O_WRONLY | os.O_APPEND
+		createWriter = true
 	case "r+", "rb+":
 		mode |= os.O_RDWR
 		createReader = true
+		createWriter = true
 	case "w+", "wb+":
 		mode |= os.O_RDWR | os.O_TRUNC | os.O_CREATE
 		createReader = true
+		createWriter = true
 	case "a+", "ab+":
 		mode |= os.O_RDWR | os.O_APPEND
 		createReader = true
+		createWriter = true
 	}
 	file, err := os.OpenFile(f.(string), mode, 0644)
 	if err != nil {
@@ -88,6 +111,9 @@ func System_file_handle_prim__open(f, m, w any) *filePtr {
 	if createReader {
 		ptr.reader = bufio.NewReader(file)
 	}
+	if createWriter {
+		ptr.writer = bufio.NewWriter(file)
+	}
 	return &ptr
 }
 
@@ -97,6 +123,39 @@ func System_file_readwrite_prim__eof(f, w any) any {
 		return 1
 	}
 	return 0
+}
+
+func System_file_readwrite_prim__readChar(f, w any) int {
+	world := w.(*WorldType)
+	ptr := f.(*filePtr)
+	data, err := ptr.reader.ReadByte()
+	if err != nil {
+		ptr.lastError = err
+		world.lastFileInError = ptr
+	}
+	ptr.lastError = nil
+	world.lastFileInError = nil
+	return int(data)
+}
+
+func System_file_readwrite_prim__readChars(m, f, w any) *string {
+	world := w.(*WorldType)
+	max := m.(int)
+	ptr := f.(*filePtr)
+	data := make([]byte, 0, max)
+	_, err := ptr.reader.Read(data)
+	if err != nil {
+		if err != io.EOF {
+			ptr.lastError = err
+			world.lastFileInError = ptr
+			return nil
+		}
+		ptr.eof = true
+	}
+	ptr.lastError = nil
+	world.lastFileInError = nil
+	line := string(data)
+	return &line
 }
 
 func System_file_readwrite_prim__readLine(f, w any) *string {
@@ -126,7 +185,7 @@ func System_file_readwrite_prim__seekLine(f, world any) any {
 func System_file_readwrite_prim__writeLine(f, l, w any) any {
 	world := w.(*WorldType)
 	ptr := f.(*filePtr)
-	_, err := ptr.file.WriteString(l.(string))
+	_, err := ptr.writer.WriteString(l.(string))
 	if err != nil {
 		ptr.lastError = err
 		world.lastFileInError = ptr
@@ -155,7 +214,7 @@ func System_file_buffer_prim__writeBufferData(f, b, o, s, w any) int {
 	offset := o.(int)
 	buffer := b.(Buffer)[offset : offset+s.(int)]
 	ptr := f.(*filePtr)
-	n, err := ptr.file.Write(buffer)
+	n, err := ptr.writer.Write(buffer)
 	if err != nil {
 		ptr.lastError = err
 		world := w.(*WorldType)
@@ -197,10 +256,23 @@ func System_file_permissions_prim__chmod(f, p, w any) int {
 	return 0
 }
 
-func System_file_process_prim__flush(a, w any) any      { panic("not implemented") }
-func System_file_process_prim__pclose(a, w any) any     { panic("not implemented") }
-func System_file_process_prim__popen(a, b, w any) any   { panic("not implemented") }
-func System_file_readwrite_prim__readChar(a, w any) any { panic("not implemented") }
+func System_file_process_prim__flush(f, w any) int {
+	world := w.(*WorldType)
+	ptr := f.(*filePtr)
+	if ptr.writer == nil {
+		return 0
+	}
+	err := ptr.writer.Flush()
+	if err != nil {
+		ptr.lastError = err
+		world.lastFileInError = ptr
+		return 1
+	}
+	return 0
+}
+
+func System_file_process_prim__pclose(f, w any) any   { panic("not implemented") }
+func System_file_process_prim__popen(f, m, w any) any { panic("not implemented") }
 
 func System_file_readwrite_prim__removeFile(f, w any) int {
 	world := w.(*WorldType)
@@ -217,20 +289,13 @@ func System_file_readwrite_prim__removeFile(f, w any) int {
 }
 
 func System_file_virtual_prim__stdin() *filePtr {
-	return &filePtr{
-		file:   os.Stdin,
-		reader: bufferedStdin,
-	}
+	return stdin
 }
 
 func System_file_virtual_prim__stdout() *filePtr {
-	return &filePtr{
-		file: os.Stdout,
-	}
+	return stdout
 }
 
 func System_file_virtual_prim__stderr() *filePtr {
-	return &filePtr{
-		file: os.Stderr,
-	}
+	return stderr
 }

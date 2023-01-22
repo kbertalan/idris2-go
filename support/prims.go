@@ -1,12 +1,8 @@
 package support
 
 import (
-	"bufio"
-	"os"
 	"time"
 )
-
-var bufferedStdin = bufio.NewReader(os.Stdin)
 
 type WorldType struct {
 	lastFileInError *filePtr
