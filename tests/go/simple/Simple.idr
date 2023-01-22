@@ -1,6 +1,8 @@
 module Simple
 
+import Data.String
 import System
+import System.File
 
 main : IO ()
 main = do
@@ -33,4 +35,21 @@ main = do
     | Just value => putStrLn "there was an env variable \{envVarName} with value \{value}"
 
   putStrLn "done"
+
+  putStrLn "writing file"
+  let fileName = "./file-under-test.txt"
+      fileContent = unlines $ [ "line \{show i}" | i <- [the Int 1..1000] ]
+  Right () <- writeFile fileName fileContent
+    | Left e => putStrLn $ show e
+  putStrLn "reading file"
+  Right readContent <- readFile fileName
+    | Left e => putStrLn $ show e
+
+  if fileContent == readContent then putStrLn "contents are matching"
+                                else putStrLn "contents are different\nexpected:\n\{fileContent}\n\ngot:\n\{readContent}"
+
+  Right () <- removeFile fileName
+    | Left e => putStrLn $ show e
+
+  pure ()
 

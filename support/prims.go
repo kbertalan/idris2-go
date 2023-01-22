@@ -13,8 +13,12 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
+	"unsafe"
 )
+
+var bufferedStdin = bufio.NewReader(os.Stdin)
 
 type WorldType struct {
 	lastFileInError *filePtr
@@ -74,7 +78,7 @@ func Prelude_io_prim__putChar(v, world any) any {
 func Prelude_io_prim__getChar(w any) byte {
 	world := w.(*WorldType)
 	data := make([]byte, 1)
-	_, err := os.Stdin.Read(data)
+	_, err := bufferedStdin.Read(data)
 	if err != nil {
 		world.lastError = err
 	}
@@ -82,7 +86,7 @@ func Prelude_io_prim__getChar(w any) byte {
 }
 
 func Prelude_io_prim__getStr(world any) string {
-	line, err := bufio.NewReader(os.Stdin).ReadString('\n')
+	line, err := bufferedStdin.ReadString('\n')
 	if err != nil {
 		panic(err)
 	}
@@ -196,6 +200,14 @@ func System_errno_prim__strerror(errno, world any) any {
 	return fmt.Sprintf("Error number: %d", errno.(int))
 }
 
+func System_errno_prim__getErrno(w any) any {
+	world := w.(*WorldType)
+	if world.lastError != nil {
+		return 1 // TODO find out what errno-s can be extracted from errors
+	}
+	return -1
+}
+
 func System_ffi_prim__free(v, world any) any {
 	return nil
 }
@@ -225,6 +237,7 @@ func System_file_error_prim__fileErrno(w any) int {
 
 type filePtr struct {
 	file      *os.File
+	reader    *bufio.Reader
 	eof       bool
 	lastError error
 }
@@ -245,19 +258,24 @@ func System_file_handle_prim__close(f, w any) any {
 func System_file_handle_prim__open(f, m, w any) *filePtr {
 	world := w.(*WorldType)
 	mode := 0
+	createReader := false
 	switch m.(string) {
 	case "r", "rb":
 		mode |= os.O_RDONLY
+		createReader = true
 	case "w", "wb":
 		mode |= os.O_WRONLY | os.O_TRUNC | os.O_CREATE
 	case "a", "ab":
 		mode |= os.O_WRONLY | os.O_APPEND
 	case "r+", "rb+":
 		mode |= os.O_RDWR
+		createReader = true
 	case "w+", "wb+":
 		mode |= os.O_RDWR | os.O_TRUNC | os.O_CREATE
+		createReader = true
 	case "a+", "ab+":
 		mode |= os.O_RDWR | os.O_APPEND
+		createReader = true
 	}
 	file, err := os.OpenFile(f.(string), mode, 0644)
 	if err != nil {
@@ -271,6 +289,9 @@ func System_file_handle_prim__open(f, m, w any) *filePtr {
 	world.lastFileInError = nil
 	ptr := filePtr{
 		file: file,
+	}
+	if createReader {
+		ptr.reader = bufio.NewReader(file)
 	}
 	return &ptr
 }
@@ -286,7 +307,7 @@ func System_file_readwrite_prim__eof(f, w any) any {
 func System_file_readwrite_prim__readLine(f, w any) *string {
 	world := w.(*WorldType)
 	ptr := f.(*filePtr)
-	line, err := bufio.NewReader(ptr.file).ReadString('\n')
+	line, err := ptr.reader.ReadString('\n')
 	if err != nil {
 		if err != io.EOF {
 			ptr.lastError = err
@@ -322,6 +343,10 @@ func System_file_readwrite_prim__writeLine(f, l, w any) any {
 
 func Main_system_info_prim__os() any {
 	return runtime.GOOS
+}
+
+func Main_system_info_prim__codegen() string {
+	return "go"
 }
 
 func System_prim__exit(code, world any) any {
@@ -527,7 +552,7 @@ func Libraries_system_file_buffer_prim__readBufferData(f, b, o, m, w any) int {
 	offset := o.(int)
 	buffer := b.(Buffer)[offset : offset+m.(int)]
 	ptr := f.(*filePtr)
-	n, err := ptr.file.Read(buffer)
+	n, err := ptr.reader.Read(buffer)
 	if err != nil {
 		ptr.lastError = err
 		world := w.(*WorldType)
@@ -552,71 +577,207 @@ func Libraries_system_file_buffer_prim__writeBufferData(f, b, o, s, w any) int {
 	return n
 }
 
-func Idris_idemode_repl_prim__idrnet_fdopen(a, b, w any) any         { panic("not implemented") }
-func Libraries_utils_scheme_prim__evalOkay(w any) any                { panic("not implemented") }
-func Libraries_utils_scheme_prim__evalResult(w any) any              { panic("not implemented") }
-func Libraries_utils_scheme_prim__evalScheme(w any) any              { panic("not implemented") }
-func Libraries_utils_scheme_prim_isBox(w any) any                    { panic("not implemented") }
-func Libraries_utils_scheme_prim_isChar(w any) any                   { panic("not implemented") }
-func Libraries_utils_scheme_prim_isFloat(w any) any                  { panic("not implemented") }
-func Libraries_utils_scheme_prim_isInteger(w any) any                { panic("not implemented") }
-func Libraries_utils_scheme_prim_isPair(w any) any                   { panic("not implemented") }
-func Libraries_utils_scheme_prim_isProcedure(w any) any              { panic("not implemented") }
-func Libraries_utils_scheme_prim_isString(w any) any                 { panic("not implemented") }
-func Libraries_utils_scheme_prim_isSymbol(w any) any                 { panic("not implemented") }
-func Libraries_utils_scheme_prim_isVector(w any) any                 { panic("not implemented") }
-func Libraries_utils_scheme_unsafeApply(a, w any) any                { panic("not implemented") }
-func Libraries_utils_scheme_unsafeForce(w any) any                   { panic("not implemented") }
-func Libraries_utils_scheme_unsafeFst(w any) any                     { panic("not implemented") }
-func Libraries_utils_scheme_unsafeGetChar(w any) any                 { panic("not implemented") }
-func Libraries_utils_scheme_unsafeGetFloat(w any) any                { panic("not implemented") }
-func Libraries_utils_scheme_unsafeGetInteger(w any) any              { panic("not implemented") }
-func Libraries_utils_scheme_unsafeGetString(w any) any               { panic("not implemented") }
-func Libraries_utils_scheme_unsafeReadSymbol(w any) any              { panic("not implemented") }
-func Libraries_utils_scheme_unsafeSnd(w any) any                     { panic("not implemented") }
-func Libraries_utils_scheme_unsafeUnbox(w any) any                   { panic("not implemented") }
-func Libraries_utils_scheme_unsafeVectorLength(w any) any            { panic("not implemented") }
-func Libraries_utils_scheme_unsafeVectorRef(a, w any) any            { panic("not implemented") }
-func Libraries_utils_scheme_unsafeVectorToList(w any) any            { panic("not implemented") }
-func Libraries_utils_term_prim__getTermCols(w any) any               { panic("not implemented") }
-func Libraries_utils_term_prim__setupTerm(w any) any                 { panic("not implemented") }
-func Network_ffi_prim__idrnet_accept(a, b, w any) any                { panic("not implemented") }
-func Network_ffi_prim__idrnet_bind(a, b, c, d, e, w any) any         { panic("not implemented") }
-func Network_ffi_prim__idrnet_create_sockaddr(w any) any             { panic("not implemented") }
-func Network_ffi_prim__idrnet_listen(a, b, w any) any                { panic("not implemented") }
-func Network_ffi_prim__idrnet_sockaddr_family(a, w any) any          { panic("not implemented") }
-func Network_ffi_prim__idrnet_sockaddr_ipv4(a, w any) any            { panic("not implemented") }
-func Network_ffi_prim__idrnet_sockaddr_port(a, w any) any            { panic("not implemented") }
-func Network_ffi_prim__idrnet_sockaddr_unix(a, w any) any            { panic("not implemented") }
-func Network_ffi_prim__idrnet_socket(a, b, c, w any) any             { panic("not implemented") }
-func Network_socket_data_prim__idrnet_af_inet(w any) any             { panic("not implemented") }
-func Network_socket_data_prim__idrnet_af_inet6(w any) any            { panic("not implemented") }
-func Network_socket_data_prim__idrnet_af_unix(w any) any             { panic("not implemented") }
-func Network_socket_data_prim__idrnet_af_unspec(w any) any           { panic("not implemented") }
-func Network_socket_data_prim__idrnet_errno(w any) any               { panic("not implemented") }
-func Main_prelude_uninhabited_prim__void(a, w any) any               { panic("not implemented") }
-func System_directory_prim__changeDir(a, w any) any                  { panic("not implemented") }
-func System_directory_prim__closeDir(a, w any) any                   { panic("not implemented") }
-func System_directory_prim__createDir(a, w any) any                  { panic("not implemented") }
-func System_directory_prim__currentDir(w any) any                    { panic("not implemented") }
-func System_directory_prim__dirEntry(a, w any) any                   { panic("not implemented") }
-func System_directory_prim__openDir(a, w any) any                    { panic("not implemented") }
-func System_errno_prim__getErrno(w any) any                          { panic("not implemented") }
-func System_file_buffer_prim__readBufferData(a, b, c, d, w any) any  { panic("not implemented") }
-func System_file_buffer_prim__writeBufferData(a, b, c, d, w any) any { panic("not implemented") }
-func System_file_error_prim__error(a, w any) any                     { panic("not implemented") }
-func System_file_meta_prim__fileModifiedTime(a, w any) any           { panic("not implemented") }
-func System_file_meta_prim__fileSize(a, w any) any                   { panic("not implemented") }
-func System_file_permissions_prim__chmod(a, b, w any) any            { panic("not implemented") }
-func System_file_process_prim__flush(a, w any) any                   { panic("not implemented") }
-func System_file_process_prim__pclose(a, w any) any                  { panic("not implemented") }
-func System_file_process_prim__popen(a, b, w any) any                { panic("not implemented") }
-func System_file_readwrite_prim__readChar(a, w any) any              { panic("not implemented") }
-func System_file_readwrite_prim__removeFile(a, w any) any            { panic("not implemented") }
+func Idris_idemode_repl_prim__idrnet_fdopen(a, b, w any) any { panic("not implemented") }
+func Libraries_utils_scheme_prim__evalOkay(w any) any        { panic("not implemented") }
+func Libraries_utils_scheme_prim__evalResult(w any) any      { panic("not implemented") }
+func Libraries_utils_scheme_prim__evalScheme(w any) any      { panic("not implemented") }
+func Libraries_utils_scheme_prim_isBox(w any) any            { panic("not implemented") }
+func Libraries_utils_scheme_prim_isChar(w any) any           { panic("not implemented") }
+func Libraries_utils_scheme_prim_isFloat(w any) any          { panic("not implemented") }
+func Libraries_utils_scheme_prim_isInteger(w any) any        { panic("not implemented") }
+func Libraries_utils_scheme_prim_isPair(w any) any           { panic("not implemented") }
+func Libraries_utils_scheme_prim_isProcedure(w any) any      { panic("not implemented") }
+func Libraries_utils_scheme_prim_isString(w any) any         { panic("not implemented") }
+func Libraries_utils_scheme_prim_isSymbol(w any) any         { panic("not implemented") }
+func Libraries_utils_scheme_prim_isVector(w any) any         { panic("not implemented") }
+func Libraries_utils_scheme_unsafeApply(a, w any) any        { panic("not implemented") }
+func Libraries_utils_scheme_unsafeForce(w any) any           { panic("not implemented") }
+func Libraries_utils_scheme_unsafeFst(w any) any             { panic("not implemented") }
+func Libraries_utils_scheme_unsafeGetChar(w any) any         { panic("not implemented") }
+func Libraries_utils_scheme_unsafeGetFloat(w any) any        { panic("not implemented") }
+func Libraries_utils_scheme_unsafeGetInteger(w any) any      { panic("not implemented") }
+func Libraries_utils_scheme_unsafeGetString(w any) any       { panic("not implemented") }
+func Libraries_utils_scheme_unsafeReadSymbol(w any) any      { panic("not implemented") }
+func Libraries_utils_scheme_unsafeSnd(w any) any             { panic("not implemented") }
+func Libraries_utils_scheme_unsafeUnbox(w any) any           { panic("not implemented") }
+func Libraries_utils_scheme_unsafeVectorLength(w any) any    { panic("not implemented") }
+func Libraries_utils_scheme_unsafeVectorRef(a, w any) any    { panic("not implemented") }
+func Libraries_utils_scheme_unsafeVectorToList(w any) any    { panic("not implemented") }
+
+type winsize struct {
+	Row    uint16
+	Col    uint16
+	Xpixel uint16
+	Ypixel uint16
+}
+
+func Libraries_utils_term_prim__getTermCols(w any) any {
+	ws := &winsize{}
+	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
+		uintptr(syscall.Stdin),
+		uintptr(syscall.TIOCGWINSZ),
+		uintptr(unsafe.Pointer(ws)))
+
+	if int(retCode) == -1 {
+		panic(errno)
+	}
+	return uint(ws.Col)
+}
+
+func Libraries_utils_term_prim__setupTerm(w any) any {
+	return nil
+}
+
+func Network_ffi_prim__idrnet_accept(a, b, w any) any        { panic("not implemented") }
+func Network_ffi_prim__idrnet_bind(a, b, c, d, e, w any) any { panic("not implemented") }
+func Network_ffi_prim__idrnet_create_sockaddr(w any) any     { panic("not implemented") }
+func Network_ffi_prim__idrnet_listen(a, b, w any) any        { panic("not implemented") }
+func Network_ffi_prim__idrnet_sockaddr_family(a, w any) any  { panic("not implemented") }
+func Network_ffi_prim__idrnet_sockaddr_ipv4(a, w any) any    { panic("not implemented") }
+func Network_ffi_prim__idrnet_sockaddr_port(a, w any) any    { panic("not implemented") }
+func Network_ffi_prim__idrnet_sockaddr_unix(a, w any) any    { panic("not implemented") }
+func Network_ffi_prim__idrnet_socket(a, b, c, w any) any     { panic("not implemented") }
+func Network_socket_data_prim__idrnet_af_inet(w any) any     { panic("not implemented") }
+func Network_socket_data_prim__idrnet_af_inet6(w any) any    { panic("not implemented") }
+func Network_socket_data_prim__idrnet_af_unix(w any) any     { panic("not implemented") }
+func Network_socket_data_prim__idrnet_af_unspec(w any) any   { panic("not implemented") }
+func Network_socket_data_prim__idrnet_errno(w any) any       { panic("not implemented") }
+
+func Main_prelude_uninhabited_prim__void(a, w any) any {
+	panic("executed void")
+}
+
+func System_directory_prim__changeDir(d, w any) int {
+	err := os.Chdir(d.(string))
+	if err != nil {
+		w.(*WorldType).lastError = err
+		return 1
+	}
+	return 0
+}
+
+type dirPtr struct {
+	entries []os.DirEntry
+	current int
+}
+
+func System_directory_prim__closeDir(d, w any) any {
+	ptr := d.(*dirPtr)
+	ptr.entries = nil
+	ptr.current = 0
+	return nil
+}
+
+func System_directory_prim__createDir(d, w any) int {
+	err := os.Mkdir(d.(string), 0750)
+	if err != nil {
+		w.(*WorldType).lastError = err
+		return 1
+	}
+	return 0
+}
+
+func System_directory_prim__currentDir(w any) *string {
+	cwd, err := os.Getwd()
+	if err != nil {
+		w.(*WorldType).lastError = err
+		return nil
+	}
+	return &cwd
+}
+
+func System_directory_prim__dirEntry(d, w any) *string {
+	w.(*WorldType).lastError = nil
+	ptr := d.(*dirPtr)
+	if ptr.current < len(ptr.entries) {
+		name := ptr.entries[ptr.current].Name()
+		ptr.current++
+		return &name
+	}
+	return nil
+}
+
+func System_directory_prim__openDir(d, w any) *dirPtr {
+	entries, err := os.ReadDir(d.(string))
+	if err != nil {
+		w.(*WorldType).lastError = err
+		return nil
+	}
+	return &dirPtr{
+		entries: entries,
+		current: 0,
+	}
+}
+
+func System_directory_prim__removeDir(d, w any) any {
+	err := os.Remove(d.(string))
+	w.(*WorldType).lastError = err
+	return nil
+}
+
+func System_file_buffer_prim__readBufferData(f, b, o, m, w any) any {
+	return Libraries_system_file_buffer_prim__readBufferData(f, b, o, m, w)
+}
+
+func System_file_buffer_prim__writeBufferData(f, b, o, s, w any) any {
+	return Libraries_system_file_buffer_prim__writeBufferData(f, b, o, s, w)
+}
+
+func System_file_error_prim__error(f, w any) int {
+	if f.(*filePtr).lastError != nil {
+		return 1
+	}
+	return 0
+}
+
+func System_file_meta_prim__fileModifiedTime(f, w any) int {
+	fname := f.(string)
+	info, _ := os.Stat(fname)
+	return int(info.ModTime().Unix())
+}
+
+func System_file_meta_prim__fileSize(f, w any) any {
+	fname := f.(string)
+	info, _ := os.Stat(fname)
+	return int(info.Size())
+}
+
+func System_file_permissions_prim__chmod(f, p, w any) int {
+	world := w.(*WorldType)
+	err := os.Chmod(f.(string), os.FileMode(p.(int)))
+	if err != nil {
+		world.lastFileInError = &filePtr{
+			lastError: err,
+		}
+		return 1
+	}
+	world.lastFileInError = nil
+	return 0
+}
+
+func System_file_process_prim__flush(a, w any) any      { panic("not implemented") }
+func System_file_process_prim__pclose(a, w any) any     { panic("not implemented") }
+func System_file_process_prim__popen(a, b, w any) any   { panic("not implemented") }
+func System_file_readwrite_prim__readChar(a, w any) any { panic("not implemented") }
+
+func System_file_readwrite_prim__removeFile(f, w any) int {
+	world := w.(*WorldType)
+	fname := f.(string)
+	err := os.Remove(fname)
+	if err != nil {
+		world.lastFileInError = &filePtr{
+			lastError: err,
+		}
+		return 1
+	}
+	world.lastFileInError = nil
+	return 0
+}
 
 func System_file_virtual_prim__stdin() *filePtr {
 	return &filePtr{
-		file: os.Stdin,
+		file:   os.Stdin,
+		reader: bufferedStdin,
 	}
 }
 
@@ -631,5 +792,3 @@ func System_file_virtual_prim__stderr() *filePtr {
 		file: os.Stderr,
 	}
 }
-
-func Main_system_info_prim__codegen() any { panic("not implemented") }

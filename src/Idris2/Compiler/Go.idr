@@ -854,11 +854,11 @@ getGrouppedDefs defs =
     locationOf : (Go.Name, _) -> Location
     locationOf = location . fst
 
-getGoModule : List String -> Core String
-getGoModule directives
-    = do let Just mod = getFirstArg directives "module"
-              | Nothing => throw (UserError "no go module has been specified, please use --directive module=<go-module-name>")
-         pure mod
+getGoModule : List String -> String -> Core String
+getGoModule directives outFile = do
+  let Nothing = getFirstArg directives "module"
+              | Just mod => pure mod
+  pure outFile
 
 Go : CG
 Go = Other "go"
@@ -885,7 +885,7 @@ compileGo :
 compileGo outDir outFile defs exp = do
 
   ds <- getDirectives Go
-  moduleName <- getGoModule ds
+  moduleName <- getGoModule ds outFile
 
   copySupportFiles outDir
 

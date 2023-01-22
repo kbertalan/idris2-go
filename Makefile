@@ -1,12 +1,17 @@
-ipkg=idris2-go.ipkg
+package=idris2-go
+ipkg=${package}.ipkg
 
 .PHONY: build install run clean dev dev-build test-clean test-build test dev-test go-simple-test go-test compile-self
  
 build:
 	echo yes | pack build ${ipkg}
 
-install: build
-	idris2 --install ${ipkg}
+install: build/exec/idris2-go
+	# pack install-app ${package}
+	rm -rf ~/bin/idris2-go-app/*
+	mkdir -p ~/bin/idris2-go-app
+	cp -ar ./build/exec/* ~/bin/idris2-go-app
+	ln -fs ~/bin/idris2-go-app/idris2-go ~/bin/idris2-go
 
 run:
 	pack run ${ipkg}
