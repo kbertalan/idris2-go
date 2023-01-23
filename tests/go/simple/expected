@@ -20,3 +20,20 @@ done
 writing file
 reading file
 contents are matching
+listing directory
+Simple.idr
+build
+expected
+run
+test.ipkg
+listing directory ended
+testing file reading and buffers
+187
+package test
+
+depends = idris2-go
+modules = Simple
+main = Simple
+executable = test
+opts = "--no-color --console-width 0 --directive module=github.com/kbertalan/idris2-go/tests/go/simple"
+testing file reading and buffers ended

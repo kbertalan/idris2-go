@@ -1,7 +1,9 @@
 module Simple
 
+import Data.Buffer
 import Data.String
 import System
+import System.Directory
 import System.File
 
 main : IO ()
@@ -50,6 +52,24 @@ main = do
 
   Right () <- removeFile fileName
     | Left e => putStrLn $ show e
+
+  putStrLn "listing directory"
+  Just cwd <- currentDir
+    | Nothing => putStrLn "there is no current directory"
+  Right files <- listDir cwd
+    | Left err => putStrLn $ show err
+  for_ (filter ((/=) "output") files) $ \f => do
+    putStrLn f
+  putStrLn "listing directory ended"
+
+  putStrLn "testing file reading and buffers"
+  Right buffer <- createBufferFromFile "test.ipkg"
+    | Left err => putStrLn $ show err
+
+  len <- rawSize buffer
+  putStrLn $ show len
+  putStr $ !(getString buffer 0 len)
+  putStrLn "testing file reading and buffers ended"
 
   pure ()
 

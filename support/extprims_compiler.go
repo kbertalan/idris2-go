@@ -60,7 +60,7 @@ type winsize struct {
 	Ypixel uint16
 }
 
-func Libraries_utils_term_prim__getTermCols(w any) any {
+func Libraries_utils_term_prim__getTermCols(w any) int {
 	ws := &winsize{}
 	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
 		uintptr(syscall.Stdin),
@@ -70,7 +70,20 @@ func Libraries_utils_term_prim__getTermCols(w any) any {
 	if int(retCode) == -1 {
 		panic(errno)
 	}
-	return uint(ws.Col)
+	return int(ws.Col)
+}
+
+func Libraries_utils_term_prim__getTermLines(w any) int {
+	ws := &winsize{}
+	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
+		uintptr(syscall.Stdin),
+		uintptr(syscall.TIOCGWINSZ),
+		uintptr(unsafe.Pointer(ws)))
+
+	if int(retCode) == -1 {
+		panic(errno)
+	}
+	return int(ws.Row)
 }
 
 func Libraries_utils_term_prim__setupTerm(w any) any {

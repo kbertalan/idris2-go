@@ -11,5 +11,5 @@ func System_errno_prim__getErrno(w any) any {
 	if world.lastError != nil {
 		return 1 // TODO find out what errno-s can be extracted from errors
 	}
-	return -1
+	return 0
 }

@@ -1,6 +1,8 @@
 package support
 
-import "os"
+import (
+	"os"
+)
 
 func System_directory_prim__changeDir(d, w any) int {
 	err := os.Chdir(d.(string))
@@ -38,6 +40,7 @@ func System_directory_prim__currentDir(w any) *string {
 		w.(*WorldType).lastError = err
 		return nil
 	}
+	w.(*WorldType).lastError = nil
 	return &cwd
 }
 
@@ -58,6 +61,7 @@ func System_directory_prim__openDir(d, w any) *dirPtr {
 		w.(*WorldType).lastError = err
 		return nil
 	}
+	w.(*WorldType).lastError = nil
 	return &dirPtr{
 		entries: entries,
 		current: 0,

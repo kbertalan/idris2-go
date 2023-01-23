@@ -223,14 +223,17 @@ func System_file_error_prim__error(f, w any) int {
 }
 
 func System_file_meta_prim__fileModifiedTime(f, w any) int {
-	fname := f.(string)
-	info, _ := os.Stat(fname)
+	ptr := f.(*filePtr)
+	info, _ := ptr.file.Stat()
 	return int(info.ModTime().Unix())
 }
 
 func System_file_meta_prim__fileSize(f, w any) any {
-	fname := f.(string)
-	info, _ := os.Stat(fname)
+	ptr := f.(*filePtr)
+	info, err := ptr.file.Stat()
+	if err != nil {
+		panic(err)
+	}
 	return int(info.Size())
 }
 
