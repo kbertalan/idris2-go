@@ -51,6 +51,30 @@ func Data_buffer_prim__setBits8(b, o, a, world any) any {
 	return nil
 }
 
+func Data_buffer_prim__getBits16(b, o, world any) uint16 {
+	return bufferRead16(b.(Buffer), o.(int))
+}
+
+func Data_buffer_prim__setBits16(b, o, a, world any) any {
+	return bufferWrite16(b.(Buffer), o.(int), a.(uint16))
+}
+
+func Data_buffer_prim__getBits32(b, o, world any) uint32 {
+	return bufferRead32(b.(Buffer), o.(int))
+}
+
+func Data_buffer_prim__setBits32(b, o, a, world any) any {
+	return bufferWrite32(b.(Buffer), o.(int), a.(uint32))
+}
+
+func Data_buffer_prim__getBits64(b, o, world any) uint64 {
+	return bufferRead64(b.(Buffer), o.(int))
+}
+
+func Data_buffer_prim__setBits64(b, o, a, world any) any {
+	return bufferWrite64(b.(Buffer), o.(int), a.(uint64))
+}
+
 func Data_buffer_prim__getInt(b, o, world any) int {
 	return int(bufferRead32(b.(Buffer), o.(int)))
 }
@@ -74,7 +98,7 @@ func Data_buffer_prim__getString(b, o, l, world any) string {
 }
 
 func Data_buffer_prim__setString(b, o, s, world any) any {
-	copy([]byte(s.(string)), b.(Buffer)[o.(int):])
+	copy(b.(Buffer)[o.(int):], []byte(s.(string)))
 	return nil
 }
 
@@ -85,6 +109,6 @@ func Data_buffer_stringByteLength(s any) int {
 func Data_buffer_prim__copyData(b1, o1, l, b2, o2, world any) any {
 	length := l.(int)
 	offset1, offset2 := o1.(int), o2.(int)
-	copy(b1.(Buffer)[offset1:offset1+length], b2.(Buffer)[offset2:offset2+length])
+	copy(b2.(Buffer)[offset2:offset2+length], b1.(Buffer)[offset1:offset1+length])
 	return nil
 }

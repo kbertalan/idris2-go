@@ -36,4 +36,20 @@ modules = Simple
 main = Simple
 executable = test
 opts = "--no-color --console-width 0 --directive module=github.com/kbertalan/idris2-go/tests/go/simple"
+0
+1
+2
+3
+4
+5
+6
+7
+256
+770
+1284
+1798
+50462976
+117835012
+506097522914230528
+12345678
 testing file reading and buffers ended

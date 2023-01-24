@@ -69,6 +69,15 @@ main = do
   len <- rawSize buffer
   putStrLn $ show len
   putStr $ !(getString buffer 0 len)
+  Just buffer <- newBuffer 8
+    | Nothing => putStrLn "could not create a buffer with length 8"
+  for_ [0..7] $ \offset => setBits8 buffer offset $ cast offset
+  for_ [0..7] $ \offset => putStrLn $ show $ !(getBits8 buffer offset)
+  for_ [0..3] $ \offset => putStrLn $ show $ !(getBits16 buffer $ offset*2)
+  for_ [0..1] $ \offset => putStrLn $ show $ !(getBits32 buffer $ offset*4)
+  putStrLn $ show $ !(getBits64 buffer 0)
+  setString buffer 0 "12345678"
+  putStrLn !(getString buffer 0 8)
   putStrLn "testing file reading and buffers ended"
 
   pure ()
