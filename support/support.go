@@ -188,6 +188,18 @@ func StrReverse(v any) string {
 	return string(runes)
 }
 
+func StrSubstr(o, l, s any) string {
+	offset := o.(int)
+	length := l.(int)
+	till := offset + length
+	str := s.(string)
+	strLen := len(str)
+	if till > strLen {
+		till = strLen
+	}
+	return str[offset:till]
+}
+
 func DoubleExp(x any) float64 {
 	return math.Exp(x.(float64))
 }

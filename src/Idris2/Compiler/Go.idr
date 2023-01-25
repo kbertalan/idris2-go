@@ -360,7 +360,8 @@ goOp pr StrSubstr [x, y, z] =
   let MkGoExp x' = goExp pr x
       MkGoExp y' = goExp pr y
       MkGoExp z' = goExp pr z
-  in MkGoExp $ sliceLH (supportCast z' string) (supportCast x' int) (supportCast x' int /+/ supportCast y' int)
+      MkGoExp strSubstr = pr.support "StrSubstr"
+  in MkGoExp $ call strSubstr [x', y', z']
 goOp pr DoubleExp [x] =
   let MkGoExp x' = goExp pr x
       MkGoExp fn = pr.support "DoubleExp"
