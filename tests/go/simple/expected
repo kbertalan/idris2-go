@@ -53,3 +53,4 @@ opts = "--no-color --console-width 0 --directive module=github.com/kbertalan/idr
 506097522914230528
 12345678
 testing file reading and buffers ended
+234

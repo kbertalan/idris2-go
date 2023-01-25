@@ -16,7 +16,7 @@ getArg directive key =
   let (k,v) = break (== '=') directive
   in
     if (trim k) == key
-      then Just $ trim $ substr 1 (length v) v
+      then Just $ trim $ substr 1 (fromInteger $ cast (length v) - 1) v
       else Nothing
 
 export

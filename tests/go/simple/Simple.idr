@@ -80,5 +80,6 @@ main = do
   putStrLn !(getString buffer 0 8)
   putStrLn "testing file reading and buffers ended"
 
+  putStrLn $ substr 1 3 "1234567890" 
   pure ()
 
