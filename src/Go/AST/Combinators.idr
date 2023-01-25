@@ -1,5 +1,6 @@
 module Go.AST.Combinators
 
+import Data.Bits
 import public Data.List
 import public Data.List1
 import public Data.List.Quantifiers
@@ -94,6 +95,17 @@ file name (MkPackage pkg) imports decls = MkFile Nothing name (id_ pkg) decls im
 
 namespace Literal
 
+  hexDigit : Int -> Char
+  hexDigit v = if v < 10 then chr $ v + ord '0'
+                         else chr $ v - 10 + ord 'a'
+
+  hexLiteral : Char -> String
+  hexLiteral c =
+    let v = ord c
+        low = hexDigit $ v .&. 0x0f
+        high = hexDigit $ (v .&. 0xf0) `shiftR` 4
+    in pack $ [ '\\', 'x', high, low ]
+
   export
   runeL :
     Char ->
@@ -115,8 +127,7 @@ namespace Literal
                               '\v' => "\\v"
                               '\'' => "\\'"
                               '\\' => "\\\\"
-                              other => cast other
-
+                              other => hexLiteral other
 
   export
   charL :
@@ -145,7 +156,7 @@ namespace Literal
                               '\v' => "\\v"
                               '\\' => "\\\\"
                               '"'  => "\\\""
-                              other => cast other
+                              other => hexLiteral other
 
       escaped : String
       escaped = concatMap escape $ unpack str
