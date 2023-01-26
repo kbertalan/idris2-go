@@ -56,7 +56,7 @@ initGoMod ds outDir moduleName go = do
   where
     goSumFrom : String -> String
     goSumFrom goMod =
-      let parts = reverse $ forget $ split (=='c') goMod
+      let parts = reverse $ forget $ split (=='.') goMod
           sum = case parts of
                   "mod" :: xs => "sum" :: xs
                   xs => xs
