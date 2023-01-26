@@ -10,6 +10,10 @@ import Idris.Syntax
 
 import Idris2.Compiler.Go
 
+import Libraries.Utils.Path
+
+import System
+
 export
 compileExpr :
   Ref Ctxt Defs ->
@@ -31,7 +35,15 @@ executeExpr :
   (execDir : String) ->
   ClosedTerm -> 
   Core ()
-executeExpr c s tmpDir tm = pure ()
+executeExpr c s execDir tm = do
+  cdata <- getCompileData False Cases tm
+  let defs = namedDefs cdata
+      outFile = "expr_run"
+  Nothing <- compileGo execDir outFile defs $ forget cdata.mainExpr
+    | Just e => throw $ Fatal $ GenericMsg emptyFC e
+  0 <- coreLift $ system $ execDir </> outFile
+    | code => throw $ Fatal $ GenericMsg emptyFC "execution returned with non-zero exit code: \{show code}"
+  pure ()
 
 export
 goCG : Codegen
