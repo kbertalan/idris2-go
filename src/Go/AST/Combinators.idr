@@ -99,12 +99,15 @@ namespace Literal
   hexDigit v = if v < 10 then chr $ v + ord '0'
                          else chr $ v - 10 + ord 'a'
 
-  hexLiteral : Char -> String
-  hexLiteral c =
+  unicodeLiteral : Char -> String
+  unicodeLiteral c =
     let v = ord c
-        low = hexDigit $ v .&. 0x0f
-        high = hexDigit $ (v .&. 0xf0) `shiftR` 4
-    in pack $ [ '\\', 'x', high, low ]
+        low1 = v .&. 0x0f
+        high1 = (v `shiftR` 4) .&. 0x0f
+        low2 = (v `shiftR` 8) .&. 0x0f
+        high2 = (v `shiftR` 12) .&. 0x0f
+    in if high2 > 0 || low2 > 0 then pack $ [ '\\', 'u', hexDigit high2, hexDigit low2, hexDigit high1, hexDigit low1 ]
+                                else pack $ [ '\\', 'x', hexDigit high1, hexDigit low1 ]
 
   export
   runeL :
@@ -127,7 +130,7 @@ namespace Literal
                               '\v' => "\\v"
                               '\'' => "\\'"
                               '\\' => "\\\\"
-                              other => hexLiteral other
+                              other => unicodeLiteral other
 
   export
   charL :
@@ -156,7 +159,7 @@ namespace Literal
                               '\v' => "\\v"
                               '\\' => "\\\\"
                               '"'  => "\\\""
-                              other => hexLiteral other
+                              other => unicodeLiteral other
 
       escaped : String
       escaped = concatMap escape $ unpack str
