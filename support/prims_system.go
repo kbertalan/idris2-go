@@ -3,6 +3,7 @@ package support
 import (
 	"os"
 	"os/exec"
+	"time"
 )
 
 func System_prim__exit(code, world any) any {
@@ -75,4 +76,24 @@ func System_prim__system(v, w any) any {
 		return -1
 	}
 	return 0
+}
+
+func System_prim__sleep(s, w any) any {
+	sec := time.Duration(s.(int))
+	time.Sleep(sec * time.Second)
+	return nil
+}
+
+func System_prim__usleep(u, w any) any {
+	usec := time.Duration(u.(int))
+	time.Sleep(usec * time.Microsecond)
+	return nil
+}
+
+func System_prim__time(w any) int {
+	return int(time.Now().Unix())
+}
+
+func System_prim__getPID(w any) int {
+	return os.Getpid()
 }
