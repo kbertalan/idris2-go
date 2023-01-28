@@ -63,23 +63,25 @@ addImport :
 addImport i is = merge is $ singleton i.package (singleton i)
 
 export
+importForSupport :
+  Module ->
+  Import
+importForSupport mod = MkImport Support (mod ++ "/_gen/idris2/support") "support"
+
+export
 importForProject :
   Module ->
   Location ->
   Import
-importForProject mod loc = MkImport Project mod loc.package
+importForProject mod loc =
+  if loc == goSupportLocation then importForSupport mod
+                              else MkImport Project mod loc.package
 
 export
 importForMain :
   Module ->
   Import
 importForMain mod = MkImport Project mod "main"
-
-export
-importForSupport :
-  Module ->
-  Import
-importForSupport mod = MkImport Support (mod ++ "/_gen/idris2/support") "support"
 
 export
 importForExternal :

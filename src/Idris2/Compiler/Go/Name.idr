@@ -1,6 +1,7 @@
 module Idris2.Compiler.Go.Name
 
 import Core.Name
+import Core.Name.Namespace
 
 import Data.String
 
@@ -91,13 +92,24 @@ safeGoIdentifier n =
                            else n
 
 export
+goSupportNamespace : Namespace
+goSupportNamespace = unsafeFoldNamespace ["support", "idris2", "_gen"]
+
+export
+goSupportLocation : Location
+goSupportLocation = (MkLocation ("_gen" </> "idris2" </> "support") "support.go" "support")
+
+export
+goTailRecName : Core.Name.Name
+goTailRecName = NS goSupportNamespace (UN $ Basic "TailRec")
+
+export
 goLocationFromNS :
   Namespace ->
   Location
 goLocationFromNS ns =
   let parts = map toLower $ reverse $ unsafeUnfoldNamespace ns
       name = concat $ intersperse "_" parts
-
   in MkLocation "" (name ++ ".go") "main"
 
 export
@@ -120,7 +132,10 @@ export
 goName :
   Core.Name.Name ->
   Go.Name.Name
-goName orig@(NS ns n) = let sub = goName n in MkName (goLocationFromNS ns) (safeGoIdentifier $ goNameFromNS ns ++ "_" ++ sub.value) orig
+goName orig@(NS ns n) = 
+  case orig == goTailRecName of
+    True => let sub = goName n in MkName goSupportLocation sub.value orig
+    False => let sub = goName n in MkName (goLocationFromNS ns) (safeGoIdentifier $ goNameFromNS ns ++ "_" ++ sub.value) orig
 goName orig@(UN un) = MkName (MkLocation "" "user_generated_.go" "main") (goUserName un) orig
 goName orig@(MN mn i) = MkName (MkLocation "" "machine_generated_.go" "main") (safeGoIdentifier $ mn ++ show i) orig
 goName orig@(PV n i) = let sub = goName n in MkName sub.location (sub.value ++ "_" ++ show i) orig

@@ -1,5 +1,7 @@
 module Idris2.Compiler.Go
 
+import Compiler.ES.TailRec
+
 import Core.CompileExpr
 import Core.Context
 import Core.Directory
@@ -591,30 +593,46 @@ namespace GoDecls
     let MkGoDecls {ts} {ds} {ps} xs' = fromGoDecls xs
     in MkGoDecls {ts=t::ts} {ds=d::ds} {ps=p::ps} $ x :: xs'
 
+record Foreign where
+  constructor MkForeign
+  ccs : List String
+  args : List CFType
+  type : CFType
+
+data Definition : Type where
+  FN : Function -> Definition
+  FFI : Foreign -> Definition
+
+namedDefToFFIDef : (Core.Name.Name, FC, NamedDef) -> Maybe (Core.Name.Name, Definition)
+namedDefToFFIDef (name, _, (MkNmForeign ccs args type)) = Just $ (name, FFI $ MkForeign ccs args type)
+namedDefToFFIDef _ = Nothing
+
+functionToFNDef : Function -> (Core.Name.Name, Definition)
+functionToFNDef fn = (fn.name, FN fn)
+
 goDefs :
   {auto s : Ref Decls GoDeclList} ->
   PackageResolver ->
-  (Go.Name,NamedDef) ->
+  (Go.Name, Definition) ->
   Core ()
 goDefs pr (n, nd) = defs nd
   where
-    defs : NamedDef -> Core ()
-    defs (MkNmFun [] exp) = do
+    defs : Definition -> Core ()
+    defs (FN $ MkFunction _ [] exp) = do
       let MkGoStmts sts = fromGoStmtList $ goStatement pr exp
           fnDecl = docs [show exp, show n.original] $
                      func n.value [] [fieldT $ tid' "any"] sts
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
-    defs (MkNmFun args exp) = do
+    defs (FN $ MkFunction _ args exp) = do
       let MkGoStmts sts = fromGoStmtList $ goStatement pr exp
           fnDecl = docs [show exp, show n.original] $
                      func n.value [fields (map (value . goName) args) $ tid' "any"] [fieldT $ tid' "any"] sts
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
-    defs (MkNmCon tag arity nt) = pure ()
-    defs (MkNmForeign _ [] _) = do
+    defs (FFI $ MkForeign _ [] _) = do
       let MkGoExp fn = pr.support $ capitalize n.value
           fnDecl = func n.value [] [fieldT $ tid' "any"]
                     [ return [call fn []]]
@@ -622,7 +640,7 @@ goDefs pr (n, nd) = defs nd
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
-    defs (MkNmForeign _ args _) = do
+    defs (FFI $ MkForeign _ args _) = do
       let args' = [ "v"++show v | v <- [0..cast (length args) - 1]]
           MkGoExp fn = pr.support $ capitalize n.value
           MkGoExpArgs as = idArgList $ map id_ args'
@@ -632,19 +650,18 @@ goDefs pr (n, nd) = defs nd
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
-    defs (MkNmError exp) = assert_total $ idris_crash ("Error with expression: " ++ show exp)
 
 namespace GoImports
 
   export
   goImportDefs :
     (moduleName : String) ->
-    List (Go.Name, NamedDef) ->
+    List (Go.Name, Definition) ->
     Imports
 
   goImportDef :
     (moduleName : String) ->
-    (Go.Name, NamedDef) ->
+    (Go.Name, Definition) ->
     Imports
 
   export
@@ -674,10 +691,8 @@ namespace GoImports
   goImportDefs mod (x::xs) =
     merge (goImportDef mod x) $ goImportDefs mod xs
 
-  goImportDef mod (n, (MkNmFun args x)) = goImportExp mod x
-  goImportDef mod (n, (MkNmCon tag arity nt)) = empty
-  goImportDef mod (n, (MkNmForeign ccs fargs x)) = addImport (importForSupport mod) empty -- TODO parse imports from FFI
-  goImportDef mod (n, (MkNmError x)) = goImportExp mod x
+  goImportDef mod (n, (FN fn)) = goImportExp mod fn.body
+  goImportDef mod (n, (FFI ffi)) = addImport (importForSupport mod) empty -- TODO parse imports from FFI
 
   goImportExp mod (NmLocal fc n) = empty
   goImportExp mod (NmRef fc n) = let name = goName n in addImport (importForProject mod name.location) empty
@@ -797,7 +812,7 @@ namespace GoImports
 goFile :
   (outDir : String) ->
   (moduleName : String) ->
-  (List1 (Go.Name, NamedDef)) ->
+  (List1 (Go.Name, Definition)) ->
   Core (Maybe String)
 goFile outDir moduleName defs = do
   let (name, _) = head defs
@@ -845,12 +860,12 @@ goMainFile outDir outFile moduleName exp = do
     Left e => pure $ Just $ show e
 
 getGrouppedDefs :
-  List (Core.Name.Name, FC, NamedDef) ->
-  List (List1 (Go.Name, NamedDef))
+  List (Core.Name.Name, Definition) ->
+  List (List1 (Go.Name, Definition))
 getGrouppedDefs defs =
   groupBy ((==) `on` locationOf)
     $ sortBy (compare `on` locationOf)
-    $ map (\(n, _, d) => (goName n,d)) defs
+    $ map (mapFst goName) defs
   where
     locationOf : (Go.Name, _) -> Location
     locationOf = location . fst
@@ -890,7 +905,9 @@ compileGo outDir outFile defs exp = do
 
   copySupportFiles outDir
 
-  let grouppedDefs = getGrouppedDefs defs
+  let ffiDefs = mapMaybe namedDefToFFIDef defs
+      fnDefs = map functionToFNDef $ TailRec.functions goTailRecName defs
+      grouppedDefs = getGrouppedDefs $ fnDefs ++ ffiDefs
   traverse_ (goFile outDir moduleName) grouppedDefs
 
   _ <- goMainFile outDir outFile moduleName exp

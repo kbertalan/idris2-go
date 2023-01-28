@@ -263,3 +263,16 @@ func DoubleFloor(x any) float64 {
 func DoubleCeiling(x any) float64 {
 	return math.Ceil(x.(float64))
 }
+
+func TailRec(f, v any) any {
+	fn := f.(func(any) any)
+	value := v.(Value)
+	for {
+		switch value.Tag {
+		case 0:
+			return value.Args[0]
+		default:
+			value = fn(value).(Value)
+		}
+	}
+}
