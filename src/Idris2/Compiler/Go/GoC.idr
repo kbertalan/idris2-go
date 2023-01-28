@@ -6,6 +6,7 @@ import System
 import System.File
 
 import Core.Core
+import Core.Context
 import Libraries.Utils.Path
 
 %default total
@@ -51,7 +52,7 @@ initGoMod ds outDir moduleName go = do
       pure Nothing
     Nothing => do
       0 <- coreLift $ system "cd \{outDir} && \{go} mod init \{moduleName} 2> /dev/null"
-        | _ => pure $ Just " go.mod init failed"
+        | _ => pure $ Just "go.mod init failed"
       pure Nothing
   where
     goSumFrom : String -> String
@@ -72,7 +73,7 @@ compileProgram :
 compileProgram ds moduleName outDir outFile = do
   go <- coreLift findGo
   Nothing <- initGoMod ds outDir moduleName go
-    | Just _ => pure Nothing
+    | Just e => throw $ Fatal $ GenericMsg emptyFC $ show e
 
   0 <- coreLift $ system "cd \{outDir} && \{go} build -o \{outFile}"
     | _ => pure Nothing

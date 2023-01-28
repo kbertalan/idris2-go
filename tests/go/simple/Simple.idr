@@ -16,6 +16,9 @@ main = do
   for_ [1,2,3] $ \i => do
     printLn i
 
+  for_ [1.0,2.1,3.2] $ \d => do
+    printLn d
+
   putStrLn "text in color"
   putStrLn "\x1b[1;31mHello \x1b[1;34mWorld!\x1b[1;0m"
 

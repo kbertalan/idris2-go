@@ -39,6 +39,8 @@ executeExpr c s execDir tm = do
   cdata <- getCompileData False Cases tm
   let defs = namedDefs cdata
       outFile = "expr_run"
+  0 <- coreLift $ system "rm -rf \{execDir </> "*"}"
+    | code => throw $ Fatal $ GenericMsg emptyFC "cleanup of exec folder returned with non-zero exit code: \{show code}"
   Nothing <- compileGo execDir outFile defs $ forget cdata.mainExpr
     | Just e => throw $ Fatal $ GenericMsg emptyFC e
   0 <- coreLift $ system $ execDir </> outFile

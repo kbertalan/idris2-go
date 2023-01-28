@@ -3,7 +3,14 @@ package support
 import "runtime"
 
 func Main_system_info_prim__os() any {
-	return runtime.GOOS
+	switch runtime.GOOS {
+	case "windows":
+		return "windows"
+	case "darwin":
+		return "darwin"
+	default:
+		return "unix"
+	}
 }
 
 func Main_system_info_prim__codegen() string {
