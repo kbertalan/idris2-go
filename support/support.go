@@ -47,6 +47,22 @@ const (
 	WorldTypeValue
 )
 
+func Delay(fn func() any) any {
+	var (
+		result    any = nil
+		completed     = false
+	)
+
+	return func() any {
+		if completed {
+			return result
+		}
+		result = fn()
+		completed = true
+		return result
+	}
+}
+
 func IntegerAdd(x, y any) IntegerType {
 	a := x.(IntegerType)
 	b := y.(IntegerType)

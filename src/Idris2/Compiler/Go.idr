@@ -175,7 +175,8 @@ goExp pr (NmForce fc lz x) =
   in MkGoExp $ call (typeAssert (paren x') (func' [] [fieldT $ tid' "any"])) []
 goExp pr (NmDelay fc lz x) =
   let MkGoExp x' = goExp pr x
-  in MkGoExp $ funcL [] [fieldT $ tid' "any"] [ return [ x' ] ]
+      MkGoExp delay = pr.support "Delay"
+  in MkGoExp $ call delay [funcL [] [fieldT $ tid' "any"] [ return [ x' ] ]]
 goExp pr (NmConCase fc sc alts x) =
   let MkGoStmts stmts = fromGoStmtList $ goConCase pr sc alts x
   in MkGoExp $ call (funcL [] [fieldT $ tid' "any"] stmts) []
@@ -685,9 +686,8 @@ namespace GoImports
   goImportExp mod (NmApp fc x xs) = foldl (\acc => merge acc . goImportExp mod) (goImportExp mod x) xs
   goImportExp mod (NmCon fc n x tag xs) = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
   goImportExp mod (NmOp fc f xs) = goImportOp mod f xs
-   -- addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
   goImportExp mod (NmExtPrim fc p xs) = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
-  goImportExp mod (NmForce fc lz x) = addImport (importForSupport mod) $ goImportExp mod x
+  goImportExp mod (NmForce fc lz x) = goImportExp mod x
   goImportExp mod (NmDelay fc lz x) = addImport (importForSupport mod) $ goImportExp mod x
   goImportExp mod (NmConCase fc sc xs x) =
     let ix = maybe empty (goImportExp mod) x
