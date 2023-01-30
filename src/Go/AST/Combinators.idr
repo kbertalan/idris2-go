@@ -117,7 +117,7 @@ namespace Literal
     where
       escape : Char -> String
       escape c = if (c >= ' ') && (c /= '\\')
-                    && (c /= '"') && (c /= '\'') && (c <= '~')
+                    && (c /= '\'') && (c <= '~')
                     then cast c
                     else case c of
                               '\0' => "\\x00"
@@ -146,7 +146,7 @@ namespace Literal
     where
       escape : Char -> String
       escape c = if (c >= ' ') && (c /= '\\')
-                    && (c /= '"') && (c /= '\'') && (c <= '~')
+                    && (c /= '"') && (c <= '~')
                     then cast c
                     else case c of
                               '\0' => "\\x00"
