@@ -2,7 +2,6 @@ package support
 
 import (
 	"syscall"
-	"unsafe"
 )
 
 func Libraries_data_string_iterator_fromString(s any) int {
@@ -53,35 +52,18 @@ func Libraries_utils_scheme_unsafeVectorLength(w any) any    { panic("not implem
 func Libraries_utils_scheme_unsafeVectorRef(a, w any) any    { panic("not implemented") }
 func Libraries_utils_scheme_unsafeVectorToList(w any) any    { panic("not implemented") }
 
-type winsize struct {
-	Row    uint16
-	Col    uint16
-	Xpixel uint16
-	Ypixel uint16
-}
-
 func Libraries_utils_term_prim__getTermCols(w any) int {
-	ws := &winsize{}
-	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
-		uintptr(syscall.Stdin),
-		uintptr(syscall.TIOCGWINSZ),
-		uintptr(unsafe.Pointer(ws)))
-
-	if int(retCode) == -1 {
-		panic(errno)
+	ws, err := system_file_meta_prim__file_winsz(stdout.file.Fd())
+	if errno, ok := err.(syscall.Errno); err != nil && (!ok || errno != 0) {
+		panic(err)
 	}
 	return int(ws.Col)
 }
 
 func Libraries_utils_term_prim__getTermLines(w any) int {
-	ws := &winsize{}
-	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
-		uintptr(syscall.Stdin),
-		uintptr(syscall.TIOCGWINSZ),
-		uintptr(unsafe.Pointer(ws)))
-
-	if int(retCode) == -1 {
-		panic(errno)
+	ws, err := system_file_meta_prim__file_winsz(stdout.file.Fd())
+	if errno, ok := err.(syscall.Errno); err != nil && (!ok || errno != 0) {
+		panic(err)
 	}
 	return int(ws.Row)
 }

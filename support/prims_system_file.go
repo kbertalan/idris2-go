@@ -5,6 +5,8 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"syscall"
+	"unsafe"
 )
 
 type filePtr struct {
@@ -286,4 +288,34 @@ func System_file_virtual_prim__stdout() *filePtr {
 
 func System_file_virtual_prim__stderr() *filePtr {
 	return stderr
+}
+
+type winsize struct {
+	Row    uint16
+	Col    uint16
+	Xpixel uint16
+	Ypixel uint16
+}
+
+func system_file_meta_prim__file_winsz(fptr uintptr) (*winsize, error) {
+	ws := &winsize{}
+	retCode, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
+		fptr,
+		uintptr(syscall.TIOCGWINSZ),
+		uintptr(unsafe.Pointer(ws)))
+
+	if int(retCode) == -1 {
+		return nil, errno
+	}
+	return ws, nil
+}
+
+func System_file_meta_prim__fileIsTTY(f, w any) int {
+	ptr := f.(*filePtr)
+
+	_, err := system_file_meta_prim__file_winsz(ptr.file.Fd())
+	if err != nil {
+		return 0
+	}
+	return 1
 }
