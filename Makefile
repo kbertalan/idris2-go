@@ -1,29 +1,23 @@
+IDRIS2 ?= idris2
 package=idris2-go
 ipkg=${package}.ipkg
 
-.PHONY: build install run clean dev dev-build test-clean test-build test dev-test go-simple-test go-test compile-self
+.PHONY: build scheme-build go-build install-lib clean test-clean test-build scheme-test-build go-test-build test scheme-test go-test
  
-build:
-	echo yes | pack build ${ipkg}
+build: scheme-build
 
-install: build/exec/idris2-go
-	# pack install-app ${package}
-	rm -rf ~/bin/idris2-go-app/*
-	mkdir -p ~/bin/idris2-go-app
-	cp -ar ./build/exec/* ~/bin/idris2-go-app
-	ln -fs ~/bin/idris2-go-app/idris2-go ~/bin/idris2-go
+# build idris2-go, which will be a scheme executable
+scheme-build: build/scheme/idris2-go
 
-run:
-	pack run ${ipkg}
+# build idris2-go, which will be a native (go) executable
+go-build: build/go/idris2-go
+
+# install as library, needed for running tests
+install-lib:
+	${IDRIS2} --install ${ipkg}
 
 clean:
-	rm -rf build/
-
-dev:
-	find src/ -name '*.idr' | entr -d bash -c 'time make run'
-
-dev-build:
-	find src/ -name '*.idr' | entr -d bash -c 'time make build'
+	rm -rf build
 
 test-clean:
 	make -C tests clean
@@ -31,31 +25,37 @@ test-clean:
 test-build:
 	make -C tests build
 
-test:
-	make -C tests test
+# build test executable using idris2-go (scheme executable) to product native (go) executable
+scheme-test-build:
+	IDRIS2="${PWD}/build/scheme/idris2-go" IDRIS2_DATA="${PWD}/support" make -C tests build
 
-dev-test:
-	find . -name *.idr | threads=4 INTERACTIVE="" entr make test
+# build test executable using idris2-go (go executable) to product native (go) executable
+go-test-build:
+	IDRIS2="${PWD}/build/go/idris2-go" IDRIS2_DATA="${PWD}/support" make -C tests build
+
+# test using your installed idris2 executable
+test:
+	threads=4 make -C tests test
+
+# test using idris2-go (scheme executable) which builds go executables for tests
+scheme-test: build/scheme/idris2-go
+	IDRIS2="${PWD}/build/scheme/idris2-go" IDRIS2_DATA="${PWD}/support" threads=4 make -C tests test
+
+# test using idris2-go (go executable) which builds go executables for tests
+go-test: build/go/idris2-go
+	IDRIS2="${PWD}/build/go/idris2-go" IDRIS2_DATA="${PWD}/support" threads=4 make -C tests test
+
 
 build/exec/idris2-go:
-	make clean
-	time make build
+	echo yes | time pack build ${ipkg}
 
-tests/build/exec/runtests: build/exec/idris2-go
-	make test-clean
-	IDRIS2_DATA="${PWD}/support" ./build/exec/idris2-go --build tests/runtests.ipkg
+build/scheme/idris2-go: build/exec/idris2-go
+	mkdir -p build/scheme
+	cp -ar build/exec/idris2-go* build/scheme/
 
-go-simple-test: build/exec/idris2-go tests/build/exec/runtests
-	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --interactive --timing --failure-file failures --threads 4 --only "go/"
-
-go-test: build/exec/idris2-go tests/build/exec/runtests
-	cd tests && IDRIS2_DATA="${PWD}/support" ./build/exec/runtests "${PWD}/build/exec/idris2-go" --timing --failure-file failures --threads 4
-
-build/go/idris2-go: build/exec/idris2-go
-	mkdir build/go
-	mv ./build/exec/idris2-go* ./build/go/
-
-compile-self: build/go/idris2-go
+build/go/idris2-go: build/scheme/idris2-go
 	rm -rf ./build/exec ./build/ttc
-	IDRIS2_DATA="${PWD}/support" time ./build/go/idris2-go --build idris2-go.ipkg
+	IDRIS2_DATA="${PWD}/support" time ./build/scheme/idris2-go --build ${ipkg}
+	mkdir -p build/go
+	cp -ar ./build/exec/idris2-go ./build/go/
 

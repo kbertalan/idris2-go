@@ -1,4 +1,5 @@
 package idris2-go
+version = 0.0.1
 
 depends = idris2, contrib
 
