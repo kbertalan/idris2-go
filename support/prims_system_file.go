@@ -5,12 +5,14 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"syscall"
 	"unsafe"
 )
 
 type filePtr struct {
 	file      *os.File
+	cmd       *exec.Cmd
 	reader    *bufio.Reader
 	writer    *bufio.Writer
 	eof       bool
@@ -55,18 +57,15 @@ func System_file_error_prim__fileErrno(w any) int {
 
 func System_file_handle_prim__close(f, w any) any {
 	world := w.(*WorldType)
-	filePtr := f.(*filePtr)
-	if filePtr.writer != nil {
-		filePtr.writer.Flush()
+	ptr := f.(*filePtr)
+	if ptr.writer != nil {
+		ptr.writer.Flush()
 	}
-	err := filePtr.file.Close()
-	if err != nil {
-		filePtr.lastError = err
+	if ptr.file != nil {
+		err := ptr.file.Close()
+		ptr.lastError = err
 		world.lastError = err
-		return nil
 	}
-	filePtr.lastError = nil
-	world.lastError = nil
 	return nil
 }
 
@@ -226,12 +225,18 @@ func System_file_error_prim__error(f, w any) int {
 
 func System_file_meta_prim__fileModifiedTime(f, w any) int {
 	ptr := f.(*filePtr)
+	if ptr.file == nil { // if this is a pipe for a command
+		return 0
+	}
 	info, _ := ptr.file.Stat()
 	return int(info.ModTime().Unix())
 }
 
 func System_file_meta_prim__fileSize(f, w any) any {
 	ptr := f.(*filePtr)
+	if ptr.file == nil {
+		return -1
+	}
 	info, err := ptr.file.Stat()
 	if err != nil {
 		panic(err)
@@ -264,8 +269,69 @@ func System_file_process_prim__flush(f, w any) int {
 	return 0
 }
 
-func System_file_process_prim__pclose(f, w any) any   { panic("not implemented") }
-func System_file_process_prim__popen(f, m, w any) any { panic("not implemented") }
+func System_file_process_prim__pclose(f, w any) int {
+	ptr := f.(*filePtr)
+	if ptr.cmd == nil {
+		System_file_handle_prim__close(ptr, w)
+		if ptr.lastError != nil {
+			return -1
+		}
+	}
+	err := ptr.cmd.Wait()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return exitErr.ProcessState.ExitCode()
+		}
+		return -1
+	}
+	return 0
+}
+
+func System_file_process_prim__popen(c, m, w any) *filePtr {
+	world := w.(*WorldType)
+	mode := m.(string)
+	read, write := false, false
+	switch mode {
+	case "r", "rb":
+		read = true
+	case "r+", "rb+":
+		read = true
+		write = true
+	case "w", "wb", "a", "ab":
+		write = true
+	case "w+", "wb+", "a+", "ab+":
+		read = true
+		write = true
+	}
+	cmd := exec.Command("sh", "-c", c.(string))
+	ptr := filePtr{
+		file: nil,
+		cmd:  cmd,
+	}
+	if write {
+		w, err := cmd.StdinPipe()
+		if err != nil {
+			world.lastError = err
+			return nil
+		}
+		ptr.writer = bufio.NewWriter(w)
+	}
+	if read {
+		r, err := cmd.StdoutPipe()
+		if err != nil {
+			world.lastError = err
+			return nil
+		}
+		ptr.reader = bufio.NewReader(r)
+	}
+
+	err := ptr.cmd.Start()
+	if err != nil {
+		world.lastError = err
+		return nil
+	}
+	return &ptr
+}
 
 func System_file_readwrite_prim__removeFile(f, w any) int {
 	world := w.(*WorldType)
