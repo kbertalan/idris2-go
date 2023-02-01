@@ -1,9 +1,12 @@
 package support
 
-import "fmt"
+import (
+	"syscall"
+)
 
-func System_errno_prim__strerror(errno, world any) any {
-	return fmt.Sprintf("Error number: %d", errno.(int))
+func System_errno_prim__strerror(e, world any) any {
+	errno := syscall.Errno(e.(int))
+	return errno.Error()
 }
 
 func System_errno_prim__getErrno(w any) any {
