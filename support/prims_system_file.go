@@ -276,6 +276,7 @@ func System_file_process_prim__pclose(f, w any) int {
 		if ptr.lastError != nil {
 			return -1
 		}
+		return 0
 	}
 	err := ptr.cmd.Wait()
 	if err != nil {
