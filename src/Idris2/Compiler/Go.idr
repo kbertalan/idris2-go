@@ -449,7 +449,7 @@ goOp pr (Cast pty1 pty2) [x] =
     category Bits64Type = "Number"
     category StringType = "String"
     category CharType = "Char"
-    category DoubleType = "Number"
+    category DoubleType = "Double"
     category WorldType = "World"
 
 goOp pr BelieveMe [_,_,x] = goExp pr x

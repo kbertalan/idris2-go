@@ -4,63 +4,126 @@ import (
 	"fmt"
 	"math/big"
 	"strconv"
+	"strings"
 )
 
 // Int
 
-type numericType interface {
-	int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64 | float32 | float64
+type intType interface {
+	int | int8 | int16 | int32 | int64 | uint8 | uint16 | uint32 | uint64
 }
 
-func CastNumberToInt[T numericType](x T) int {
+func CastNumberToInt[T intType](x T) int {
 	return int(x)
 }
 
-func CastNumberToInt8[T numericType](x T) int8 {
+func CastNumberToInt8[T intType](x T) int8 {
 	return int8(x)
 }
 
-func CastNumberToInt16[T numericType](x T) int16 {
+func CastNumberToInt16[T intType](x T) int16 {
 	return int16(x)
 }
 
-func CastNumberToInt32[T numericType](x T) int32 {
+func CastNumberToInt32[T intType](x T) int32 {
 	return int32(x)
 }
 
-func CastNumberToInt64[T numericType](x T) int64 {
+func CastNumberToInt64[T intType](x T) int64 {
 	return int64(x)
 }
 
-func CastNumberToUInt8[T numericType](x T) uint8 {
+func CastNumberToUInt8[T intType](x T) uint8 {
 	return uint8(x)
 }
 
-func CastNumberToUInt16[T numericType](x T) uint16 {
+func CastNumberToUInt16[T intType](x T) uint16 {
 	return uint16(x)
 }
 
-func CastNumberToUInt32[T numericType](x T) uint32 {
+func CastNumberToUInt32[T intType](x T) uint32 {
 	return uint32(x)
 }
 
-func CastNumberToUInt64[T numericType](x T) uint64 {
+func CastNumberToUInt64[T intType](x T) uint64 {
 	return uint64(x)
 }
 
-func CastNumberToInteger[T numericType](x T) IntegerType {
+func CastNumberToInteger[T intType](x T) IntegerType {
 	return big.NewInt(int64(x))
 }
 
-func CastNumberToString[T numericType](x T) string {
-	return fmt.Sprintf("%v", x)
+func CastNumberToString[T intType](x T) string {
+	return fmt.Sprintf("%d", x)
 }
 
-func CastNumberToChar[T numericType](x T) byte {
+func CastNumberToChar[T intType](x T) byte {
 	return byte(x)
 }
 
-func CastNumberToFloat64[T numericType](x T) float64 {
+func CastNumberToFloat64[T intType](x T) float64 {
+	return float64(x)
+}
+
+// Double
+
+type doubleType interface {
+	float32 | float64
+}
+
+func CastDoubleToInt[T doubleType](x T) int {
+	return int(x)
+}
+
+func CastDoubleToInt8[T doubleType](x T) int8 {
+	return int8(x)
+}
+
+func CastDoubleToInt16[T doubleType](x T) int16 {
+	return int16(x)
+}
+
+func CastDoubleToInt32[T doubleType](x T) int32 {
+	return int32(x)
+}
+
+func CastDoubleToInt64[T doubleType](x T) int64 {
+	return int64(x)
+}
+
+func CastDoubleToUInt8[T doubleType](x T) uint8 {
+	return uint8(x)
+}
+
+func CastDoubleToUInt16[T doubleType](x T) uint16 {
+	return uint16(x)
+}
+
+func CastDoubleToUInt32[T doubleType](x T) uint32 {
+	return uint32(x)
+}
+
+func CastDoubleToUInt64[T doubleType](x T) uint64 {
+	return uint64(x)
+}
+
+func CastDoubleToInteger[T doubleType](x T) IntegerType {
+	return big.NewInt(int64(x))
+}
+
+func CastDoubleToString[T doubleType](x T) string {
+	str := strconv.FormatFloat(float64(x), 'f', -1, 64)
+	if strings.IndexRune(str, '.') < 0 {
+		return str + ".0"
+	}
+	return str
+}
+
+func CastDoubleToChar[T doubleType](x T) byte {
+	return byte(x)
+}
+
+func CastDoubleToFloat64[T doubleType](x T) float64 {
 	return float64(x)
 }
 
