@@ -113,7 +113,7 @@ goPrimConst pr (I32 i) = MkGoExp $ cast_ int32 $ MkBasicLiteral MkInt $ show i
 goPrimConst pr (I64 i) = MkGoExp $ cast_ int64 $ MkBasicLiteral MkInt $ show i
 goPrimConst pr (BI i) =
   let MkGoExp fn = pr.support "IntegerLiteral"
-  in MkGoExp $ call fn [MkBasicLiteral MkInt $ show i]
+  in MkGoExp $ call fn [stringL $ show i]
 goPrimConst pr (B8 m) = MkGoExp $ cast_ uint8 $ MkBasicLiteral MkInt $ show m
 goPrimConst pr (B16 m) = MkGoExp $ cast_ uint16 $ MkBasicLiteral MkInt $ show m
 goPrimConst pr (B32 m) = MkGoExp $ cast_ uint32 $ MkBasicLiteral MkInt $ show m

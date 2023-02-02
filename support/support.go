@@ -1,6 +1,7 @@
 package support
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 )
@@ -23,8 +24,13 @@ func Constructor(tag int, args ...any) Value {
 
 type IntegerType *big.Int
 
-func IntegerLiteral(i int64) IntegerType {
-	return big.NewInt(i)
+func IntegerLiteral(i string) IntegerType {
+	z := &big.Int{}
+	n, ok := z.SetString(i, 10)
+	if !ok {
+		panic(fmt.Sprintf("could not create big.Int from %s", i))
+	}
+	return n
 }
 
 type TypeValue int
