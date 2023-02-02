@@ -139,42 +139,42 @@ func IntegerBXOr(x, y any) IntegerType {
 	return z.Xor(a, b)
 }
 
-func BoolAsInt(b bool) int {
+func BoolAsInt(b bool) uint8 {
 	if b {
 		return 1
 	}
 	return 0
 }
 
-func IntegerLT(x, y any) int {
+func IntegerLT(x, y any) uint8 {
 	a := (*big.Int)(x.(IntegerType))
 	b := y.(IntegerType)
 	c := a.Cmp(b)
 	return BoolAsInt(c < 0)
 }
 
-func IntegerLTE(x, y any) int {
+func IntegerLTE(x, y any) uint8 {
 	a := (*big.Int)(x.(IntegerType))
 	b := y.(IntegerType)
 	c := a.Cmp(b)
 	return BoolAsInt(c <= 0)
 }
 
-func IntegerEQ(x, y any) int {
+func IntegerEQ(x, y any) uint8 {
 	a := (*big.Int)(x.(IntegerType))
 	b := y.(IntegerType)
 	c := a.Cmp(b)
 	return BoolAsInt(c == 0)
 }
 
-func IntegerGTE(x, y any) int {
+func IntegerGTE(x, y any) uint8 {
 	a := (*big.Int)(x.(IntegerType))
 	b := y.(IntegerType)
 	c := a.Cmp(b)
 	return BoolAsInt(c >= 0)
 }
 
-func IntegerGT(x, y any) int {
+func IntegerGT(x, y any) uint8 {
 	a := (*big.Int)(x.(IntegerType))
 	b := y.(IntegerType)
 	c := a.Cmp(b)

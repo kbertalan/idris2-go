@@ -107,17 +107,17 @@ goExpArgs pr (x::xs) =
 
 goPrimConst : PackageResolver -> Constant -> GoExp
 goPrimConst pr (I i) = MkGoExp $ intL i
-goPrimConst pr (I8 i) = MkGoExp $ MkBasicLiteral MkInt $ show i
-goPrimConst pr (I16 i) = MkGoExp $ MkBasicLiteral MkInt $ show i
-goPrimConst pr (I32 i) = MkGoExp $ MkBasicLiteral MkInt $ show i
-goPrimConst pr (I64 i) = MkGoExp $ MkBasicLiteral MkInt $ show i
+goPrimConst pr (I8 i) = MkGoExp $ cast_ int8 $ MkBasicLiteral MkInt $ show i
+goPrimConst pr (I16 i) = MkGoExp $ cast_ int16 $ MkBasicLiteral MkInt $ show i
+goPrimConst pr (I32 i) = MkGoExp $ cast_ int32 $ MkBasicLiteral MkInt $ show i
+goPrimConst pr (I64 i) = MkGoExp $ cast_ int64 $ MkBasicLiteral MkInt $ show i
 goPrimConst pr (BI i) =
   let MkGoExp fn = pr.support "IntegerLiteral"
   in MkGoExp $ call fn [MkBasicLiteral MkInt $ show i]
-goPrimConst pr (B8 m) = MkGoExp $ MkBasicLiteral MkInt $ show m
-goPrimConst pr (B16 m) = MkGoExp $ MkBasicLiteral MkInt $ show m
-goPrimConst pr (B32 m) = MkGoExp $ MkBasicLiteral MkInt $ show m
-goPrimConst pr (B64 m) = MkGoExp $ MkBasicLiteral MkInt $ show m
+goPrimConst pr (B8 m) = MkGoExp $ cast_ uint8 $ MkBasicLiteral MkInt $ show m
+goPrimConst pr (B16 m) = MkGoExp $ cast_ uint16 $ MkBasicLiteral MkInt $ show m
+goPrimConst pr (B32 m) = MkGoExp $ cast_ uint32 $ MkBasicLiteral MkInt $ show m
+goPrimConst pr (B64 m) = MkGoExp $ cast_ uint64 $ MkBasicLiteral MkInt $ show m
 goPrimConst pr (Str str) = MkGoExp $ stringL str
 goPrimConst pr (Ch c) = MkGoExp $ cast_ uint8 $ charL c
 goPrimConst pr (Db dbl) = MkGoExp $ floatL dbl
