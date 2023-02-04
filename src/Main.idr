@@ -13,6 +13,7 @@ import Idris2.Compiler.Go
 import Libraries.Utils.Path
 
 import System
+import System.Clock
 
 export
 compileExpr :
@@ -37,14 +38,11 @@ executeExpr :
   Core ()
 executeExpr c s execDir tm = do
   cdata <- getCompileData False Cases tm
+  now <- coreLift $ clockTime UTC
   let defs = namedDefs cdata
-      outFile = "expr_run"
-  0 <- coreLift $ system "rm -rf \{execDir </> "*"}"
-    | code => throw $ Fatal $ GenericMsg emptyFC "cleanup of exec folder returned with non-zero exit code: \{show code}"
-  Nothing <- compileGo execDir outFile defs $ forget cdata.mainExpr
-    | Just e => throw $ Fatal $ GenericMsg emptyFC e
-  0 <- coreLift $ system $ execDir </> outFile
-    | code => throw $ Fatal $ GenericMsg emptyFC "execution returned with non-zero exit code: \{show code}"
+      outFile = "expr_run_" ++ (show $ seconds now) ++ "_" ++ (show $ nanoseconds now)
+  _ <- compileGo execDir outFile defs $ forget cdata.mainExpr
+  coreLift_ $ system $ execDir </> outFile
   pure ()
 
 export

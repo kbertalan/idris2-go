@@ -902,17 +902,18 @@ compileGo outDir outFile defs exp = do
 
   ds <- getDirectives Go
   moduleName <- getGoModule ds outFile
+  let ownOutDir = outDir </> outFile ++ "-src"
 
-  copySupportFiles outDir
+  copySupportFiles ownOutDir
 
   let ffiDefs = mapMaybe namedDefToFFIDef defs
       fnDefs = map functionToFNDef $ TailRec.functions goTailRecName defs
       grouppedDefs = getGrouppedDefs $ fnDefs ++ ffiDefs
-  traverse_ (goFile outDir moduleName) grouppedDefs
+  traverse_ (goFile ownOutDir moduleName) grouppedDefs
 
-  _ <- goMainFile outDir outFile moduleName exp
+  _ <- goMainFile ownOutDir outFile moduleName exp
 
-  Just _ <- GoC.compileProgram ds moduleName outDir outFile
+  Just _ <- GoC.compileProgram ds moduleName ownOutDir $ ".." </> outFile
     | Nothing => pure $ Just "go compilation failed"
 
   pure Nothing
