@@ -56,9 +56,9 @@ func System_signal_prim__handleNextCollectedSignal(w any) int {
 }
 
 func System_signal_prim__raiseSignal(s, w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	err := syscall.Kill(syscall.Getpid(), syscall.Signal(s.(int)))
-	world.lastError = err
+	world.SetLastError(err)
 	return 0
 }
 

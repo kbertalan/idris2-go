@@ -25,12 +25,10 @@ func Prelude_io_prim__putChar(v, world any) any {
 }
 
 func Prelude_io_prim__getChar(w any) byte {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	data := make([]byte, 1)
 	_, err := stdin.reader.Read(data)
-	if err != nil {
-		world.lastError = err
-	}
+	world.SetLastError(err)
 	return data[0]
 }
 
@@ -44,16 +42,14 @@ func Prelude_io_prim__getStr(world any) string {
 }
 
 func Prelude_io_prim__putStr(v any, w any) any {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	_, err := os.Stdout.WriteString(v.(string))
-	if err != nil {
-		world.lastError = err
-	}
+	world.SetLastError(err)
 	return nil
 }
 
 func Prelude_io_prim__fork(f any, w any) any {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	fn := f.(func(v any) any)
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

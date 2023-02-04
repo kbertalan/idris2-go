@@ -16,11 +16,43 @@ func NewWorld() *WorldType {
 	}
 }
 
+func GetWorld(w any) *WorldType {
+	switch w.(type) {
+	case *WorldType:
+		return w.(*WorldType)
+	default: // assuming the value was erased
+		return nil
+	}
+}
+
 func (w *WorldType) Fork() *WorldType {
-	world := *w
+	world := WorldType{}
+	if w != nil {
+		world = *w
+	}
 	world.lastError = nil
 	world.threadStartTime = time.Now()
 	return &world
+}
+
+func (w *WorldType) SetLastError(err error) {
+	if w != nil {
+		w.lastError = err
+	}
+}
+
+func (w *WorldType) GetLastError() error {
+	if w != nil {
+		return w.lastError
+	}
+	return nil
+}
+
+func (w *WorldType) GetThreadStartTime() time.Time {
+	if w != nil {
+		return w.threadStartTime
+	}
+	return time.Time{}
 }
 
 func Idris2GoSlice[E any](v any) []E {

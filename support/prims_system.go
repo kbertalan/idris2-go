@@ -38,7 +38,7 @@ func System_prim__getEnvPair(n, w any) *string {
 }
 
 func System_prim__setEnv(n, v, o, w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	name := n.(string)
 	value := v.(string)
 	overwrite := o.(int) != 0
@@ -48,7 +48,7 @@ func System_prim__setEnv(n, v, o, w any) int {
 	}
 	err := os.Setenv(name, value)
 	if err != nil {
-		world.lastError = err
+		world.SetLastError(err)
 		return 1
 	}
 	return 0
@@ -56,8 +56,8 @@ func System_prim__setEnv(n, v, o, w any) int {
 
 func System_prim__unsetEnv(n, w any) int {
 	if err := os.Unsetenv(n.(string)); err != nil {
-		world := w.(*WorldType)
-		world.lastError = err
+		world := GetWorld(w)
+		world.SetLastError(err)
 		return 1
 	}
 	return 0

@@ -20,8 +20,8 @@ func System_clock_prim__clockTimeProcess(world any) time.Duration {
 }
 
 func System_clock_prim__clockTimeThread(w any) time.Duration {
-	world := w.(*WorldType)
-	return time.Since(world.threadStartTime)
+	world := GetWorld(w)
+	return time.Since(world.GetThreadStartTime())
 }
 
 func System_clock_prim__clockTimeUtc(world any) time.Time {

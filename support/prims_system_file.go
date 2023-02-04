@@ -33,7 +33,7 @@ var (
 )
 
 func System_file_error_prim__fileErrno(w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	switch world.lastError {
 	case io.ErrShortBuffer:
 		return 0 // FileReadError
@@ -56,7 +56,7 @@ func System_file_error_prim__fileErrno(w any) int {
 }
 
 func System_file_handle_prim__close(f, w any) any {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	ptr := f.(*filePtr)
 	if ptr.writer != nil {
 		ptr.writer.Flush()
@@ -64,13 +64,13 @@ func System_file_handle_prim__close(f, w any) any {
 	if ptr.file != nil {
 		err := ptr.file.Close()
 		ptr.lastError = err
-		world.lastError = err
+		world.SetLastError(err)
 	}
 	return nil
 }
 
 func System_file_handle_prim__open(f, m, w any) *filePtr {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	mode := 0
 	createReader := false
 	createWriter := false
@@ -99,7 +99,7 @@ func System_file_handle_prim__open(f, m, w any) *filePtr {
 	}
 	file, err := os.OpenFile(f.(string), mode, 0644)
 	if err != nil {
-		world.lastError = err
+		world.SetLastError(err)
 		return nil
 	}
 	world.lastError = nil
@@ -124,11 +124,11 @@ func System_file_readwrite_prim__eof(f, w any) any {
 }
 
 func System_file_readwrite_prim__readChar(f, w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	ptr := f.(*filePtr)
 	data, err := ptr.reader.ReadByte()
 	ptr.lastError = err
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		return -1
 	}
@@ -136,13 +136,13 @@ func System_file_readwrite_prim__readChar(f, w any) int {
 }
 
 func System_file_readwrite_prim__readChars(m, f, w any) *string {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	max := m.(int)
 	ptr := f.(*filePtr)
 	data := make([]byte, 0, max)
 	_, err := ptr.reader.Read(data)
 	ptr.lastError = err
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		if err != io.EOF {
 			return nil
@@ -154,11 +154,11 @@ func System_file_readwrite_prim__readChars(m, f, w any) *string {
 }
 
 func System_file_readwrite_prim__readLine(f, w any) *string {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	ptr := f.(*filePtr)
 	line, err := ptr.reader.ReadString('\n')
 	ptr.lastError = err
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		if err != io.EOF {
 			return nil
@@ -177,11 +177,11 @@ func System_file_readwrite_prim__seekLine(f, world any) any {
 }
 
 func System_file_readwrite_prim__writeLine(f, l, w any) any {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	ptr := f.(*filePtr)
 	_, err := ptr.writer.WriteString(l.(string))
 	ptr.lastError = err
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		return 0
 	}
@@ -189,13 +189,13 @@ func System_file_readwrite_prim__writeLine(f, l, w any) any {
 }
 
 func System_file_buffer_prim__readBufferData(f, b, o, m, w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	offset := o.(int)
 	buffer := b.(Buffer)[offset : offset+m.(int)]
 	ptr := f.(*filePtr)
 	n, err := ptr.reader.Read(buffer)
 	ptr.lastError = err
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		return -1
 	}
@@ -203,13 +203,13 @@ func System_file_buffer_prim__readBufferData(f, b, o, m, w any) int {
 }
 
 func System_file_buffer_prim__writeBufferData(f, b, o, s, w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	offset := o.(int)
 	buffer := b.(Buffer)[offset : offset+s.(int)]
 	ptr := f.(*filePtr)
 	n, err := ptr.writer.Write(buffer)
 	ptr.lastError = err
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		return -1
 	}
@@ -245,9 +245,9 @@ func System_file_meta_prim__fileSize(f, w any) any {
 }
 
 func System_file_permissions_prim__chmod(f, p, w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	err := os.Chmod(f.(string), os.FileMode(p.(int)))
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		return 1
 	}
@@ -255,14 +255,14 @@ func System_file_permissions_prim__chmod(f, p, w any) int {
 }
 
 func System_file_process_prim__flush(f, w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	ptr := f.(*filePtr)
 	if ptr.writer == nil {
 		return 0
 	}
 	err := ptr.writer.Flush()
 	ptr.lastError = err
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		return 1
 	}
@@ -289,7 +289,7 @@ func System_file_process_prim__pclose(f, w any) int {
 }
 
 func System_file_process_prim__popen(c, m, w any) *filePtr {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	mode := m.(string)
 	read, write := false, false
 	switch mode {
@@ -312,7 +312,7 @@ func System_file_process_prim__popen(c, m, w any) *filePtr {
 	if write {
 		w, err := cmd.StdinPipe()
 		if err != nil {
-			world.lastError = err
+			world.SetLastError(err)
 			return nil
 		}
 		ptr.writer = bufio.NewWriter(w)
@@ -320,7 +320,7 @@ func System_file_process_prim__popen(c, m, w any) *filePtr {
 	if read {
 		r, err := cmd.StdoutPipe()
 		if err != nil {
-			world.lastError = err
+			world.SetLastError(err)
 			return nil
 		}
 		ptr.reader = bufio.NewReader(r)
@@ -328,17 +328,17 @@ func System_file_process_prim__popen(c, m, w any) *filePtr {
 
 	err := ptr.cmd.Start()
 	if err != nil {
-		world.lastError = err
+		world.SetLastError(err)
 		return nil
 	}
 	return &ptr
 }
 
 func System_file_readwrite_prim__removeFile(f, w any) int {
-	world := w.(*WorldType)
+	world := GetWorld(w)
 	fname := f.(string)
 	err := os.Remove(fname)
-	world.lastError = err
+	world.SetLastError(err)
 	if err != nil {
 		return 1
 	}
