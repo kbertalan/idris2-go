@@ -7,8 +7,21 @@ import (
 	"syscall"
 )
 
+// enableSignal is a workaround which uses the fact that an ignored signal is enabled again when attaching a channel using signal.Notify.
+// signal.Reset does not enable an ignored signal
+func enableSignal(s os.Signal) {
+	if signal.Ignored(s) {
+		ch := make(chan os.Signal, 0)
+		signal.Notify(ch, s)
+		signal.Stop(ch)
+		close(ch)
+	}
+}
+
 func System_signal_prim__defaultSignal(s, w any) int {
-	signal.Reset(syscall.Signal(s.(int)))
+	sig := syscall.Signal(s.(int))
+	enableSignal(sig)
+	signal.Reset(sig)
 	return 0
 }
 
@@ -24,6 +37,7 @@ func System_signal_prim__collectSignal(s, w any) int {
 	return 0
 }
 
+// System_signal_prim__handleNextCollectedSignal is not guaranteeing the order of signals, also it does not perform deduplication
 func System_signal_prim__handleNextCollectedSignal(w any) int {
 	select {
 	case s, ok := <-receivedSignals:
