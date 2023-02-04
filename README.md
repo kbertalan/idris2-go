@@ -13,7 +13,7 @@ Installation is not advised, but you can try to build it and do some experiments
 
 The provided make file assumes the presense of [idris2-pack](https://github.com/stefan-hoeck/idris2-pack) on your system.
 
-Currently it is developed on __linux__, using (almost) latest __Idris2__ and latest __go__ (version 1.19.x). If something is not working for you, then please consider to update your versions.
+Currently it is developed on __linux__, using (almost) latest __Idris2__ and latest __go__ (version 1.20.x). If something is not working for you, then please consider to update your versions.
 
 For the impatient you can check the below commands to build test runner and all tests using idris2-go:
 
