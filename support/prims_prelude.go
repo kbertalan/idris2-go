@@ -70,8 +70,14 @@ func Prelude_types_fastPack(v any) string {
 	return string(Idris2GoSlice[rune](v))
 }
 
-func Prelude_types_fastUnpack(v any) Value {
-	return Go2IdrisSlice([]rune(v.(string)))
+func Prelude_types_fastUnpack(v any) Vector {
+	runes := []rune(v.(string))
+	length := len(runes)
+	anys := make([]any, length)
+	for i, v := range runes {
+		anys[length-i-1] = v
+	}
+	return NewVector(5).Append(anys...)
 }
 
 func Primio_prim__nullAnyPtr(v any) int {
