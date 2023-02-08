@@ -56,17 +56,10 @@ func (w *WorldType) GetThreadStartTime() time.Time {
 }
 
 func Idris2GoSlice[E any](v any) []E {
-	var slice []E
-	for value := v.(Value); value.Tag == 1; value = value.Args[1].(Value) {
-		slice = append(slice, value.Args[0].(E))
+	vec := v.(Vector)
+	slice := make([]E, 0, vec.Len())
+	for iter := vec.ReverseIter(); iter.HasNext(); {
+		slice = append(slice, iter.Next().(E))
 	}
 	return slice
-}
-
-func Go2IdrisSlice[E any](v []E) Value {
-	value := Constructor(0)
-	for i := len(v) - 1; i >= 0; i-- {
-		value = Constructor(1, v[i], value)
-	}
-	return value
 }

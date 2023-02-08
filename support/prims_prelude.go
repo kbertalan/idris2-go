@@ -71,8 +71,14 @@ func Prelude_types_fastPack(v any) string {
 	return string(Idris2GoSlice[byte](v))
 }
 
-func Prelude_types_fastUnpack(v any) Value {
-	return Go2IdrisSlice([]byte(v.(string)))
+func Prelude_types_fastUnpack(v any) Vector {
+	bytes := []byte(v.(string))
+	length := len(bytes)
+	anys := make([]any, length)
+	for i, v := range bytes {
+		anys[length-i-1] = v
+	}
+	return NewVector(5).Append(anys...)
 }
 
 func Primio_prim__nullAnyPtr(v any) int {
