@@ -214,6 +214,16 @@ isNil : Core.Name.Name -> List a -> Bool
 isNil (NS _ (UN $ Basic "Nil")) [] = True
 isNil _ _ = False
 
+isSnoc : Core.Name.Name -> List a -> Bool
+isSnoc (NS n (UN $ Basic ":<")) xs =
+  show n == "Prelude.Basics" && length xs == 2
+isSnoc _ _ = False
+
+isLin : Core.Name.Name -> List a -> Bool
+isLin (NS n (UN $ Basic "Lin")) [] =
+  show n == "Prelude.Basics"
+isLin _ _ = False
+
 goExp _ (NmLocal _ n) = MkGoExp $ id_ $ value $ goName n
 goExp ctx (NmRef _ n) = ctx.project $ goName n
 goExp ctx (NmLam _ n exp) =
@@ -243,20 +253,33 @@ goExp ctx (NmCon fc n JUST tag xs) =
       tag' = fromMaybe (-1) tag
   in MkGoExp $ call con $ intL tag' :: args
 goExp ctx (NmCon fc n NIL tag xs) =
-  if isNil n xs then
-                  let MkGoExp con = ctx.support "NewVector"
-                      MkGoExpArgs args = goExpArgs ctx xs
-                  in MkGoExp $ call con $ intL 5 :: args
-                else
-                  goExp ctx $ NmCon fc n DATACON tag xs
+  cond [ (isNil n xs, nil)
+       , (isLin n xs, nil)
+       ]
+       (goExp ctx $ NmCon fc n DATACON tag xs)
+  where
+    nil : GoExp
+    nil = let MkGoExp con = ctx.support "NewVector"
+              MkGoExpArgs args = goExpArgs ctx xs
+          in MkGoExp $ call con $ intL 5 :: args
 goExp ctx exp@(NmCon fc n CONS tag xs) =
-  if isCons n xs then cons exp []
-                 else goExp ctx $ NmCon fc n DATACON tag xs
+  cond [ (isCons n xs, cons exp [])
+       , (isSnoc n xs, snoc exp [])
+       ]
+       (goExp ctx $ NmCon fc n DATACON tag xs)
   where
     cons : NamedCExp -> List NamedCExp -> GoExp
     cons (NmCon _ _ CONS _ [h,t]) vs = cons t $ h :: vs
     cons (NmCon _ _ CONS _ xs) vs = assert_total $ idris_crash $ "Unexpected number of arguments for cons: " ++ show xs
     cons exp vs =
+      let MkGoExpArgs args = goExpArgs ctx vs
+          MkGoExp exp' = goExp ctx exp
+      in MkGoExp $ call ((typeAssert (paren exp') (tid' "support.Vector")) /./ "Append") args
+
+    snoc : NamedCExp -> List NamedCExp -> GoExp
+    snoc (NmCon _ _ CONS _ [h,t]) vs = snoc h $ t :: vs
+    snoc (NmCon _ _ CONS _ xs) vs = assert_total $ idris_crash $ "Unexpected number of arguments for cons: " ++ show xs
+    snoc exp vs =
       let MkGoExpArgs args = goExpArgs ctx vs
           MkGoExp exp' = goExp ctx exp
       in MkGoExp $ call ((typeAssert (paren exp') (tid' "support.Vector")) /./ "Append") args
@@ -717,10 +740,36 @@ goListConAlt ctx v (MkNConAlt _ NIL _ _ exp :: alts) def =
 goListConAlt _ _ alts _ =
   assert_total $ idris_crash $ "unexpected con alt for list: " ++ show alts
 
+goSnocListConAlt : Go.Context -> String -> List NamedConAlt -> Maybe NamedCExp -> GoCaseStmtList
+goSnocListConAlt ctx _ [] (Just def) =
+  let MkGoExp defc = goExp ctx def
+  in [ default_ [ return [ defc ] ] ]
+goSnocListConAlt _ _ [] Nothing =
+  [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ] ]
+goSnocListConAlt ctx v (MkNConAlt name CONS _ args@[t,h] exp :: alts) def =
+  let MkGoStmts stmts = fromGoStmtList $ goStatement ctx exp
+      hn = value $ goName h
+      tn = value $ goName t
+      MkGoExpArgs args' = idArgList $ map id_ [hn, tn]
+  in (case_ [ call (id_ v /./ "Len") [] />/ intL 0 ]
+       [ decl $ vars [ var [ id_ hn, id_ tn ] (tid' "any") [ call (id_ v /./ "Last") [], call (id_ v /./ "Init") [] ] ]
+       , return [ call (funcL [fields [hn, tn] $ tid' "any"] [fieldT $ tid' "any"] stmts) args' ]
+       ]
+     ) :: goListConAlt ctx v alts def
+goSnocListConAlt _ _ (MkNConAlt _ CONS _ args _ :: _) _ =
+  assert_total $ idris_crash $ "unexpected arguments for snoc: " ++ show args
+goSnocListConAlt ctx v (MkNConAlt _ NIL _ _ exp :: alts) def =
+  let MkGoStmts stmts@(_::_) = fromGoStmtList $ goStatement ctx exp
+        | MkGoStmts [] => []
+  in (case_ [ call (id_ v /./ "Len") [] /==/ intL 0 ] stmts) :: goSnocListConAlt ctx v alts def
+goSnocListConAlt _ _ alts _ =
+  assert_total $ idris_crash $ "unexpected con alt for snoclist: " ++ show alts
+
 goConCase ctx exp alts def =
   cond [ (isMaybeCon alts, goMaybeConCase)
        , (isSingleAlt alts def, goSingleConCase)
        , (isListCon alts, goListConCase)
+       , (isSnocListCon alts, goSnocListConCase)
        ] goDefaultConCase
   where
     goDefaultConCase : GoStmtList
@@ -756,6 +805,18 @@ goConCase ctx exp alts def =
       let MkGoExp exp' = goExp ctx exp
           v = "__switch_list_var"
           MkGoCaseStmts alts' = fromGoCaseStmtList $ goListConAlt ctx v alts def
+      in [ switchS ([id_ v] /:=/ [typeAssert (paren exp') $ tid' "support.Vector"]) (boolL True) alts' ]
+
+    isSnocListCon : List NamedConAlt -> Bool
+    isSnocListCon (MkNConAlt n CONS _ args _ :: alts) = isSnoc n args
+    isSnocListCon (MkNConAlt n NIL _ args _ :: _) = isLin n args
+    isSnocListCon _ = False
+
+    goSnocListConCase : GoStmtList
+    goSnocListConCase =
+      let MkGoExp exp' = goExp ctx exp
+          v = "__switch_snoc_var"
+          MkGoCaseStmts alts' = fromGoCaseStmtList $ goSnocListConAlt ctx v alts def
       in [ switchS ([id_ v] /:=/ [typeAssert (paren exp') $ tid' "support.Vector"]) (boolL True) alts' ]
 
 goReturn : Go.Context -> GoExp -> GoStmtList
