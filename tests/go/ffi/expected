@@ -1,0 +1,4 @@
+1/1: Building FFI (FFI.idr)
+Now compiling the executable: test
+This is printed through FFI
+Second with multiple imports

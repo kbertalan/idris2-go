@@ -9,6 +9,7 @@ modules = Data.List.All,
   Go.AST.Combinators,
   Go.AST.Printer,
   Idris2.Compiler.Go,
+  Idris2.Compiler.Go.FFI,
   Idris2.Compiler.Go.GoC,
   Idris2.Compiler.Go.Import,
   Idris2.Compiler.Go.Name

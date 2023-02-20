@@ -56,7 +56,8 @@ make scheme-test
 - [x] Compiles itself (but extremely slowly and needs 20+ GB memory)
 - [ ] Windows support
 - [ ] Mac support
-- [ ] FFI support
+- [x] Basic FFI support
+- [ ] More mature FFI parsing and type support
 - [ ] Specialize constructor cases
 - [ ] Reduce function literal calls if possible
 - [ ] Implement missing FFI methods for libraries and Idris2 compiler

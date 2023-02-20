@@ -25,7 +25,7 @@ compileExpr :
   (outFile : String) ->
   Core (Maybe String)
 compileExpr c s tmpDir outDir tm outFile = do
-  cdata <- getCompileData False Cases tm
+  cdata <- getCompileDataWith ["go"] False Cases tm
   let defs = namedDefs cdata
   compileGo outDir outFile defs $ forget cdata.mainExpr
 
@@ -37,7 +37,7 @@ executeExpr :
   ClosedTerm -> 
   Core ()
 executeExpr c s execDir tm = do
-  cdata <- getCompileData False Cases tm
+  cdata <- getCompileDataWith ["go"] False Cases tm
   now <- coreLift $ clockTime UTC
   let defs = namedDefs cdata
       outFile = "expr_run_" ++ (show $ seconds now) ++ "_" ++ (show $ nanoseconds now)

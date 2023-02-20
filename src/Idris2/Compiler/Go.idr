@@ -17,6 +17,7 @@ import Go.AST
 import Go.AST.Combinators as Go
 import Go.AST.Printer
 
+import Idris2.Compiler.Go.FFI
 import Idris2.Compiler.Go.GoC
 import Idris2.Compiler.Go.Import
 import Idris2.Compiler.Go.Name as Go
@@ -593,19 +594,32 @@ namespace GoDecls
     let MkGoDecls {ts} {ds} {ps} xs' = fromGoDecls xs
     in MkGoDecls {ts=t::ts} {ds=d::ds} {ps=p::ps} $ x :: xs'
 
+record BuiltInForeign where
+  constructor MkBuiltInForeign
+  args : List CFType
+  type : CFType
+
 record Foreign where
   constructor MkForeign
-  ccs : List String
+  imports : List ForeignImport
+  expression: String
   args : List CFType
   type : CFType
 
 data Definition : Type where
   FN : Function -> Definition
+  BIFFI : BuiltInForeign -> Definition
   FFI : Foreign -> Definition
 
-namedDefToFFIDef : (Core.Name.Name, FC, NamedDef) -> Maybe (Core.Name.Name, Definition)
-namedDefToFFIDef (name, _, (MkNmForeign ccs args type)) = Just $ (name, FFI $ MkForeign ccs args type)
-namedDefToFFIDef _ = Nothing
+namedDefToFFIDef : (Core.Name.Name, FC, NamedDef) -> Core $ Maybe (Core.Name.Name, Definition)
+namedDefToFFIDef (name, _, (MkNmForeign ccs args type)) = do
+  let [str] = filter (isPrefixOf "go:") ccs
+        | [] => pure $ Just (name, BIFFI $ MkBuiltInForeign args type)
+        | xs => throw $ Fatal $ UserError "there are multiple go FFI definitions specified"
+      Right (imports, expression) = parseFFI str
+        | Left e => throw $ Fatal $ UserError $ "could not parse FFI string: " <+> show e
+  pure $ Just $ (name, FFI $ MkForeign imports expression args type)
+namedDefToFFIDef _ = pure Nothing
 
 functionToFNDef : Function -> (Core.Name.Name, Definition)
 functionToFNDef fn = (fn.name, FN fn)
@@ -632,7 +646,7 @@ goDefs pr (n, nd) = defs nd
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
-    defs (FFI $ MkForeign _ [] _) = do
+    defs (BIFFI $ MkBuiltInForeign [] _) = do
       let MkGoExp fn = pr.support $ capitalize n.value
           fnDecl = func n.value [] [fieldT $ tid' "any"]
                     [ return [call fn []]]
@@ -640,12 +654,28 @@ goDefs pr (n, nd) = defs nd
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
-    defs (FFI $ MkForeign _ args _) = do
+    defs (BIFFI $ MkBuiltInForeign args _) = do
       let args' = [ "v"++show v | v <- [0..cast (length args) - 1]]
           MkGoExp fn = pr.support $ capitalize n.value
           MkGoExpArgs as = idArgList $ map id_ args'
           fnDecl = func n.value [fields args' $ tid' "any"] [fieldT $ tid' "any"]
                     [ return [call fn as] ]
+                    |> docs [show n.original]
+      decls <- get Decls
+      put Decls (fnDecl :: decls)
+      pure ()
+    defs (FFI $ MkForeign _ exp [] _) = do
+      let fnDecl = func n.value [] [fieldT $ tid' "any"]
+                    [ return [call (paren $ id_ exp) []]]
+                    |> docs [show n.original]
+      decls <- get Decls
+      put Decls (fnDecl :: decls)
+      pure ()
+    defs (FFI $ MkForeign _ exp args _) = do
+      let args' = [ "v"++show v | v <- [0..cast (length args) - 1]]
+          MkGoExpArgs as = idArgList $ map id_ args'
+          fnDecl = func n.value [fields args' $ tid' "any"] [fieldT $ tid' "any"]
+                    [ return [call (paren $ id_ exp) as] ]
                     |> docs [show n.original]
       decls <- get Decls
       put Decls (fnDecl :: decls)
@@ -692,7 +722,14 @@ namespace GoImports
     merge (goImportDef mod x) $ goImportDefs mod xs
 
   goImportDef mod (n, (FN fn)) = goImportExp mod fn.body
-  goImportDef mod (n, (FFI ffi)) = addImport (importForSupport mod) empty -- TODO parse imports from FFI
+  goImportDef mod (n, (BIFFI _)) = addImport (importForSupport mod) empty
+  goImportDef mod (n, (FFI ffi)) = foldl (\acc => merge acc . ffiImport mod) empty (ffi.imports)
+    where
+      ffiImport : String -> ForeignImport -> Imports
+      ffiImport mod MkSupportImport = addImport (importForSupport mod) empty
+      ffiImport mod (MkModuleImport pkg path) = addImport (MkImport Project (mod ++ "/" ++ path) pkg) empty
+      ffiImport mod (MkPathImport pkg path) = addImport (importForExternal path pkg) empty
+
 
   goImportExp mod (NmLocal fc n) = empty
   goImportExp mod (NmRef fc n) = let name = goName n in addImport (importForProject mod name.location) empty
@@ -906,8 +943,9 @@ compileGo outDir outFile defs exp = do
 
   copySupportFiles ownOutDir
 
-  let ffiDefs = mapMaybe namedDefToFFIDef defs
-      fnDefs = map functionToFNDef $ TailRec.functions goTailRecName defs
+  ffiDefs <- map catMaybes $ traverse namedDefToFFIDef defs
+
+  let fnDefs = map functionToFNDef $ TailRec.functions goTailRecName defs
       grouppedDefs = getGrouppedDefs $ fnDefs ++ ffiDefs
   traverse_ (goFile ownOutDir moduleName) grouppedDefs
 
