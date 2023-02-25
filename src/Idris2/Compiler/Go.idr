@@ -564,7 +564,7 @@ goConMaybeAlt pr (MkGoExp exp) alts mDef =
     ([MkNConAlt _ JUST _ [arg] body], Just def) => conMaybeAlt arg body def
     ([MkNConAlt _ JUST _ [arg] justBody, MkNConAlt _ NOTHING _ _ nothingBody], _) => conMaybeAlt arg justBody nothingBody
     ([MkNConAlt _ NOTHING _ _ nothingBody, MkNConAlt _ JUST _ [arg] justBody], _) => conMaybeAlt arg justBody nothingBody
-    _ => [ expr $ stringL $ "unrecognized maybe case " ++ show ((\(MkNConAlt _ ci _ args _) => show ci ++ show args) <$> alts) ++ " " ++ show mDef ]
+    _ => [ expr $ stringL $ "unrecognized maybe case " ++ show ((\(MkNConAlt _ ci _ args _) => show ci ++ show args) <$> alts) ++ " " ++ show (isJust mDef) ]
   where
     conMaybeAlt : Core.Name.Name -> NamedCExp -> NamedCExp -> GoStmtList
     conMaybeAlt arg justBody nothingBody =
@@ -578,8 +578,36 @@ goConMaybeAlt pr (MkGoExp exp) alts mDef =
       in (ifS ([id_ v] /:=/ [call asValuePtr [exp]]) (id_ v /!=/ id_ "nil") justBody'')
          :: goStatement pr nothingBody
 
+goConSingleAlt : PackageResolver -> GoExp -> List NamedConAlt -> Maybe NamedCExp -> GoStmtList
+goConSingleAlt pr (MkGoExp exp) [MkNConAlt _ _ _ args body] Nothing =
+  case args of
+    [] => goStatement pr body
+    _  =>
+      let v = "__single_var"
+          MkGoExp asValue = pr.support "AsValue"
+      in ([ id_ v ] /:=/ [call asValue [exp]])
+         :: (generateBody v 0 args $ goStatement pr body)
+      where
+        generateBody : String -> Int -> List Core.Name.Name -> GoStmtList -> GoStmtList
+        generateBody v n [] body =
+          let MkGoStmts stmts = fromGoStmtList body
+              args' = map (value . goName) args
+              MkGoExpArgs goArgs = idArgList $ map id_ args'
+          in [ return
+               [ call
+                  (funcL [fields args' $ tid' "any"] [fieldT $ tid' "any"] stmts)
+                  goArgs
+               ]
+             ]
+        generateBody v n (name :: ns) body =
+          (decl $ vars [ var [ id_ $ value $ goName name ] (tid' "any") [id_ v /./ "Args" `index` intL n]])
+          :: generateBody v (n+1) ns body
+
+goConSingleAlt _ _ alts def = [ expr $ stringL "unrecognized single case" ]
+
 goConCase pr exp alts def =
   cond [ (isMaybeCon alts, goMaybeConCase)
+       , (isSingleAlt alts def, goSingleConCase)
        ] goDefaultConCase
   where
     goDefaultConCase : GoStmtList
@@ -599,6 +627,15 @@ goConCase pr exp alts def =
     goMaybeConCase =
       let exp' = goExp pr exp
       in goConMaybeAlt pr exp' alts def
+
+    isSingleAlt : List NamedConAlt -> Maybe NamedCExp -> Bool
+    isSingleAlt [_] Nothing = True
+    isSingleAlt _ _ = False
+
+    goSingleConCase : GoStmtList
+    goSingleConCase =
+      let exp' = goExp pr exp
+      in goConSingleAlt pr exp' alts def
 
 goStatement pr exp@(NmLocal _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
 goStatement pr exp@(NmRef _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
