@@ -550,9 +550,17 @@ goConAlt pr v ((MkNConAlt name _ mTag allArgs exp) :: alts) def n =
 goConMaybeAlt : PackageResolver -> GoExp -> List NamedConAlt -> Maybe NamedCExp -> GoStmtList
 goConMaybeAlt pr (MkGoExp exp) alts mDef =
   case (alts, mDef) of
+    ([MkNConAlt _ NOTHING _ _ body], Nothing) => goStatement pr body
     ([MkNConAlt _ NOTHING _ _ body], Just def) =>
       let MkGoStmts def' = fromGoStmtList $ goStatement pr def
       in (if_ (exp /!=/ id_ "nil") def') :: goStatement pr body
+    ([MkNConAlt _ JUST _ [arg] body], Nothing) =>
+      let arg' = value $ goName arg
+          MkGoStmts body' = fromGoStmtList $ goStatement pr body
+          MkGoExp asValuePtr = pr.support "AsValuePtr"
+      in [ decl $ vars [ var [ id_ arg' ] (tid' "any") [ (call asValuePtr [ exp ]) /./ "Args" `index` intL 0 ] ]
+         , return [ call (funcL [field arg' $ tid' "any"] [fieldT $ tid' "any"] body') [id_ arg'] ]
+         ]
     ([MkNConAlt _ JUST _ [arg] body], Just def) => conMaybeAlt arg body def
     ([MkNConAlt _ JUST _ [arg] justBody, MkNConAlt _ NOTHING _ _ nothingBody], _) => conMaybeAlt arg justBody nothingBody
     ([MkNConAlt _ NOTHING _ _ nothingBody, MkNConAlt _ JUST _ [arg] justBody], _) => conMaybeAlt arg justBody nothingBody
@@ -783,7 +791,12 @@ namespace GoImports
   goImportExp mod (NmLam fc x y) = goImportExp mod y
   goImportExp mod (NmLet fc x y z) = merge (goImportExp mod y) $ goImportExp mod z
   goImportExp mod (NmApp fc x xs) = foldl (\acc => merge acc . goImportExp mod) (goImportExp mod x) xs
-  goImportExp mod (NmCon fc n x tag xs) = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
+  goImportExp mod (NmCon fc n conInfo tag xs) =
+    case conInfo of
+      UNIT => empty
+      NOTHING => empty
+      JUST => foldl (\acc => merge acc . goImportExp mod) empty xs
+      _ => addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
   goImportExp mod (NmOp fc f xs) = goImportOp mod f xs
   goImportExp mod (NmExtPrim fc p xs) = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
   goImportExp mod (NmForce fc lz x) = goImportExp mod x
