@@ -766,10 +766,10 @@ goSnocListConAlt _ _ alts _ =
   assert_total $ idris_crash $ "unexpected con alt for snoclist: " ++ show alts
 
 goConCase ctx exp alts def =
-  cond [ (isMaybeCon alts, goMaybeConCase)
-       , (isSingleAlt alts def, goSingleConCase)
-       , (isListCon alts, goListConCase)
+  cond [ (isListCon alts, goListConCase)
        , (isSnocListCon alts, goSnocListConCase)
+       , (isMaybeCon alts, goMaybeConCase)
+       , (isSingleAlt alts def, goSingleConCase)
        ] goDefaultConCase
   where
     goDefaultConCase : GoStmtList
