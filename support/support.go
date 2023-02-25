@@ -15,8 +15,22 @@ func AsValue(v any) Value {
 	return v.(Value)
 }
 
+func AsValuePtr(v any) *Value {
+	if v == nil {
+		return nil
+	}
+	return v.(*Value)
+}
+
 func Constructor(tag int, args ...any) Value {
 	return Value{
+		Tag:  tag,
+		Args: args,
+	}
+}
+
+func ConstructorPtr(tag int, args ...any) *Value {
+	return &Value{
 		Tag:  tag,
 		Args: args,
 	}

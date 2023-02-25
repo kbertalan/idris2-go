@@ -162,6 +162,15 @@ goExp pr (NmApp _ fn args) =
   let MkGoExp fn' = goExp pr fn
       MkGoExpArgs args' = goExpArgs pr args
   in MkGoExp $ call (typeAssert fn' (func' [fields ["a" ++ show i | i <- [1..length args]] $ tid' "any"] [fieldT $ tid' "any"])) args'
+goExp pr (NmCon fc n UNIT tag xs) =
+  MkGoExp $ id_ "nil"
+goExp pr (NmCon fc n NOTHING tag xs) =
+  MkGoExp $ id_ "nil"
+goExp pr (NmCon fc n JUST tag xs) =
+  let MkGoExp con = pr.support "ConstructorPtr"
+      MkGoExpArgs args = goExpArgs pr xs
+      tag' = fromMaybe (-1) tag
+  in MkGoExp $ call con $ intL tag' :: args
 goExp pr (NmCon fc n x tag xs) =
   let MkGoExp con = pr.support "Constructor"
       MkGoExpArgs args = goExpArgs pr xs
@@ -538,12 +547,50 @@ goConAlt pr v ((MkNConAlt name _ mTag allArgs exp) :: alts) def n =
       (decl $ vars [ var [ id_ $ value $ goName name ] (tid' "any") [id_ v /./ "Args" `index` intL n]])
         :: goConAltBody args (n+1)
 
+goConMaybeAlt : PackageResolver -> GoExp -> List NamedConAlt -> Maybe NamedCExp -> GoStmtList
+goConMaybeAlt pr (MkGoExp exp) alts mDef =
+  case (alts, mDef) of
+    ([MkNConAlt _ NOTHING _ _ body], Just def) =>
+      let MkGoStmts def' = fromGoStmtList $ goStatement pr def
+      in (if_ (exp /!=/ id_ "nil") def') :: goStatement pr body
+    ([MkNConAlt _ JUST _ [arg] body], Just def) => conMaybeAlt arg body def
+    ([MkNConAlt _ JUST _ [arg] justBody, MkNConAlt _ NOTHING _ _ nothingBody], _) => conMaybeAlt arg justBody nothingBody
+    ([MkNConAlt _ NOTHING _ _ nothingBody, MkNConAlt _ JUST _ [arg] justBody], _) => conMaybeAlt arg justBody nothingBody
+    _ => [ expr $ stringL $ "unrecognized maybe case " ++ show ((\(MkNConAlt _ ci _ args _) => show ci ++ show args) <$> alts) ++ " " ++ show mDef ]
+  where
+    conMaybeAlt : Core.Name.Name -> NamedCExp -> NamedCExp -> GoStmtList
+    conMaybeAlt arg justBody nothingBody =
+      let v = "__if_maybe_var"
+          MkGoExp asValuePtr = pr.support "AsValuePtr"
+          arg' = value $ goName arg
+          MkGoStmts justBody' = fromGoStmtList $ goStatement pr justBody
+          MkGoStmts justBody'' = fromGoStmtList $
+            (decl $ vars [ var [ id_ arg' ] (tid' "any") [ id_ v /./ "Args" `index` intL 0]])
+            :: [ return [ call (funcL [field arg' $ tid' "any"] [fieldT $ tid' "any"] justBody') [ id_ arg' ] ] ]
+      in (ifS ([id_ v] /:=/ [call asValuePtr [exp]]) (id_ v /!=/ id_ "nil") justBody'')
+         :: goStatement pr nothingBody
+
 goConCase pr exp alts def =
-  let MkGoExp exp' = goExp pr exp
-      v = "__switch_con_var"
-      MkGoCaseStmts alts' = fromGoCaseStmtList $ goConAlt pr v alts def 0
-      MkGoExp asValue = pr.support "AsValue"
-  in [ switchS ([id_ v] /:=/ [call asValue [exp']]) (id_ v /./ "Tag") alts' ]
+  cond [ (isMaybeCon alts, goMaybeConCase)
+       ] goDefaultConCase
+  where
+    goDefaultConCase : GoStmtList
+    goDefaultConCase =
+      let MkGoExp exp' = goExp pr exp
+          v = "__switch_con_var"
+          MkGoCaseStmts alts' = fromGoCaseStmtList $ goConAlt pr v alts def 0
+          MkGoExp asValue = pr.support "AsValue"
+      in [ switchS ([id_ v] /:=/ [call asValue [exp']]) (id_ v /./ "Tag") alts' ]
+
+    isMaybeCon : List NamedConAlt -> Bool
+    isMaybeCon (MkNConAlt _ JUST _ _ _ :: _) = True
+    isMaybeCon (MkNConAlt _ NOTHING _ _ _ :: _) = True
+    isMaybeCon _ = False
+
+    goMaybeConCase : GoStmtList
+    goMaybeConCase =
+      let exp' = goExp pr exp
+      in goConMaybeAlt pr exp' alts def
 
 goStatement pr exp@(NmLocal _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
 goStatement pr exp@(NmRef _ _) = let MkGoExp x = goExp pr exp in [ return [x] ]
