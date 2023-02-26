@@ -11,7 +11,7 @@ export
 (|>) : a -> (a -> b) -> b
 (|>) a fn = fn a
 
-infixl 1 |>
+infixl 5 |>
 
 public export
 interface Commentable a where
