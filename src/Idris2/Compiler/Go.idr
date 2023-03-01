@@ -851,18 +851,14 @@ goDefs pr (n, nd) = defs nd
       put Decls (fnDecl :: decls)
       pure ()
     defs (TRFN [] initName initValue alts) = do
-      let MkGoExp initValue' = goExp pr initValue
-          v := value $ goName initName
-          MkGoStmts sts = fromGoStmtList $ goTailCallFnBody pr v initValue alts
+      let MkGoStmts sts = fromGoStmtList $ goTailCallFnBody pr (value $ goName initName) initValue alts
           fnDecl = docs [show alts, show n.original] $
                      func n.value [] [fieldT $ tid' "any"] sts
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
     defs (TRFN args initName initValue alts) = do
-      let MkGoExp initValue' = goExp pr initValue
-          v := value $ goName initName
-          MkGoStmts sts = fromGoStmtList $ goTailCallFnBody pr v initValue alts
+      let MkGoStmts sts = fromGoStmtList $ goTailCallFnBody pr (value $ goName initName) initValue alts
           fnDecl = docs [show alts, show n.original] $
                      func n.value [fields (map (value . goName) args) $ tid' "any"] [fieldT $ tid' "any"] sts
       decls <- get Decls
