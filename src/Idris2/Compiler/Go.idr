@@ -717,8 +717,9 @@ goConSingleAlt _ _ alts def = [ expr $ stringL "unrecognized single case" ]
 
 goListConAlt : Go.Context -> String -> List NamedConAlt -> Maybe NamedCExp -> GoCaseStmtList
 goListConAlt ctx _ [] (Just def) =
-  let MkGoExp defc = goExp ctx def
-  in [ default_ [ return [ defc ] ] ]
+  let MkGoStmts stmts@(_::_) = fromGoStmtList $ goStatement ctx def
+                             | _ => []
+  in [ default_ stmts ]
 goListConAlt _ _ [] Nothing =
   [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ] ]
 goListConAlt ctx v (MkNConAlt name CONS _ args@[h,t] exp :: alts) def =
@@ -742,8 +743,9 @@ goListConAlt _ _ alts _ =
 
 goSnocListConAlt : Go.Context -> String -> List NamedConAlt -> Maybe NamedCExp -> GoCaseStmtList
 goSnocListConAlt ctx _ [] (Just def) =
-  let MkGoExp defc = goExp ctx def
-  in [ default_ [ return [ defc ] ] ]
+  let MkGoStmts stmts@(_::_) = fromGoStmtList $ goStatement ctx def
+                             | _ => []
+  in [ default_ stmts ]
 goSnocListConAlt _ _ [] Nothing =
   [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ] ]
 goSnocListConAlt ctx v (MkNConAlt name CONS _ args@[t,h] exp :: alts) def =
@@ -760,7 +762,7 @@ goSnocListConAlt _ _ (MkNConAlt _ CONS _ args _ :: _) _ =
   assert_total $ idris_crash $ "unexpected arguments for snoc: " ++ show args
 goSnocListConAlt ctx v (MkNConAlt _ NIL _ _ exp :: alts) def =
   let MkGoStmts stmts@(_::_) = fromGoStmtList $ goStatement ctx exp
-        | MkGoStmts [] => []
+                             | _ => []
   in (case_ [ call (id_ v /./ "Len") [] /==/ intL 0 ] stmts) :: goSnocListConAlt ctx v alts def
 goSnocListConAlt _ _ alts _ =
   assert_total $ idris_crash $ "unexpected con alt for snoclist: " ++ show alts
