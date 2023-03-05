@@ -92,6 +92,10 @@ record Context where
   constructor MkContext
   project : Go.Name -> GoExp
   support : String -> GoExp
+  counter : Int
+
+(.nextCounter) : Go.Context -> (Int, Go.Context)
+(.nextCounter) ctx = (ctx.counter, { counter $= (+1) } ctx )
 
 tcVarName : String
 tcVarName = "__tc_var"
@@ -574,15 +578,16 @@ goConMaybeAlt ctx (MkGoExp exp) alts mDef =
   where
     conMaybeAlt : Core.Name.Name -> NamedCExp -> NamedCExp -> GoStmtList
     conMaybeAlt arg justBody nothingBody =
-      let v = "__if_maybe_var"
-          MkGoExp asValuePtr = ctx.support "AsValuePtr"
+      let (c, ctx') = ctx.nextCounter
+          v = "__if_maybe_var_" ++ show c
+          MkGoExp asValuePtr = ctx'.support "AsValuePtr"
           arg' = value $ goName arg
-          MkGoStmts justBody' = fromGoStmtList $ goStatement ctx justBody
-          MkGoStmts justBody'' = fromGoStmtList $
-            (decl $ vars [ var [ id_ arg' ] (tid' "any") [ id_ v /./ "Args" `index` intL 0]])
-            :: [ return [ call (funcL [field arg' $ tid' "any"] [fieldT $ tid' "any"] justBody') [ id_ arg' ] ] ]
-      in (ifS ([id_ v] /:=/ [call asValuePtr [exp]]) (id_ v /!=/ id_ "nil") justBody'')
-         :: goStatement ctx nothingBody
+          MkGoStmts justBody' = fromGoStmtList $ goStatement ctx' justBody
+          MkGoStmts nothingBody' = fromGoStmtList $ goStatement ctx' nothingBody
+      in ([id_ v] /:=/ [call asValuePtr [exp]])
+         :: (if_ (id_ v /==/ id_ "nil") nothingBody')
+         :: (decl $ vars [ var [ id_ arg' ] (tid' "any") [ id_ v /./ "Args" `index` intL 0]])
+         :: [ return [ call (funcL [field arg' $ tid' "any"] [fieldT $ tid' "any"] justBody') [ id_ arg' ] ] ]
 
 goConSingleAlt : Go.Context -> GoExp -> List NamedConAlt -> Maybe NamedCExp -> GoStmtList
 goConSingleAlt ctx (MkGoExp exp) [MkNConAlt _ _ _ args body] Nothing =
@@ -1085,6 +1090,7 @@ goFile outDir moduleName defs = do
       ctx = MkContext
               { project = goRef moduleName currentImport imports
               , support = goSupport moduleName imports
+              , counter = 0
               }
 
   _ <- newRef Decls []
@@ -1111,6 +1117,7 @@ goMainFile outDir outFile moduleName exp = do
       ctx = MkContext
               { project = goRef moduleName currentImport imports
               , support = goSupport moduleName imports
+              , counter = 0
               }
 
   let MkGoExp exp' = goExp ctx exp
