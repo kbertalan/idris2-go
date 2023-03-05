@@ -693,12 +693,8 @@ goStatement ctx (NmLet _ n val exp) =
 goStatement ctx exp@(NmApp fc x xs) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmCon fc n x tag xs) =
   if isTcDone n || isTcContinue n
-   then let MkGoExpArgs args = goExpArgs ctx xs
-         in [ [ id_ tcVarName /./ "Tag" ] /=/ [ intL $ fromMaybe (-1) tag ]
-            , [ id_ tcVarName /./ "Args" ] /=/ [ id_ tcVarName /./ "Args" `sliceH` intL 0 ]
-            , [ id_ tcVarName /./ "Args" ] /=/ [ call (id_ "append") ((id_ tcVarName /./ "Args") :: args) ]
-            , continue tcLabelName
-            ]
+    then [ id_ tcVarName /./ "Tag" ] /=/ [ intL $ fromMaybe (-1) tag ]
+         :: assignValues 0 xs [ continue tcLabelName ]
     else goReturn ctx $ goExp ctx exp
   where
     isTcDone : Core.Name.Name -> Bool
@@ -709,6 +705,11 @@ goStatement ctx exp@(NmCon fc n x tag xs) =
     isTcContinue (MN n _) = "TcContinue" `isPrefixOf` n
     isTcContinue _ = False
 
+    assignValues : Int -> List NamedCExp -> GoStmtList -> GoStmtList
+    assignValues _ [] rest = rest
+    assignValues n (exp :: xs) rest =
+      let MkGoExp exp' = goExp ({ returns := True} ctx) exp
+      in ([ (id_ tcVarName /./ "Args") `index` intL n ] /=/ [exp']) :: assignValues (n+1) xs rest
 goStatement ctx exp@(NmOp fc f xs) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmExtPrim fc p xs) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmForce fc lz x) = goReturn ctx $ goExp ctx exp
@@ -755,7 +756,7 @@ record Foreign where
 
 data Definition : Type where
   FN : Function -> Definition
-  TRFN : List Core.Name.Name -> Core.Name.Name -> NamedCExp -> List NamedConAlt -> Definition
+  TRFN : Int -> List Core.Name.Name -> List NamedConAlt -> Definition
   BIFFI : BuiltInForeign -> Definition
   FFI : Foreign -> Definition
 
@@ -774,20 +775,19 @@ functionToFNDef fn = (fn.name, FN fn)
 
 tailRecFunctionToFNDef : List Function -> Function -> Maybe (Core.Name.Name, Definition)
 tailRecFunctionToFNDef tcOptFns fn =
-  let Just (tcOptFnName, initValue) = tcOptFnFrom fn
+  let Just (tcOptFnName, tag) = tcOptFnFrom fn
         | Nothing => Nothing
       Just (MkFunction _ args tcOptFnDef) = find (nameMatcher tcOptFnName) tcOptFns
         | _ => Nothing
-      Just name@(MN _ _) = head' args
-        | _ => Nothing
       Just alts = extractAlts tcOptFnDef
         | Nothing => Nothing
-  in Just (fn.name, TRFN fn.args name initValue alts)
+  in Just (fn.name, TRFN tag fn.args alts)
   where
-    tcOptFnFrom : Function -> Maybe (Core.Name.Name, NamedCExp)
+    tcOptFnFrom : Function -> Maybe (Core.Name.Name, Int)
     tcOptFnFrom (MkFunction _ _ (NmApp _ (NmRef _ tcName) args)) =
       let [NmRef _ tcOptFnName, initValue] = args | _ => Nothing
-      in if tcName == goTailRecName then Just (tcOptFnName, initValue)
+          NmCon _ _ _ tag _ = initValue | _ => Nothing
+      in if tcName == goTailRecName then Just (tcOptFnName, fromMaybe (-1) tag)
                                     else Nothing
     tcOptFnFrom _ = Nothing
 
@@ -824,18 +824,22 @@ categorizeFns fns = go [] [] [] fns
 
 goTailCallFnBody :
   Go.Context ->
-  (initName : String) ->
-  (initValue : NamedCExp) ->
+  (tag : Int) ->
+  (args : List Core.Name.Name) ->
   List NamedConAlt ->
   GoStmtList
-goTailCallFnBody ctx initName initValue alts =
-  let MkGoExp initValue' = goExp ctx initValue
-      MkGoStmts sts = fromGoStmtList $ switchForAlts alts
-  in [ [ id_ initName ] /:=/ [ initValue' ]
-     , [ id_ tcVarName ] /:=/ [ ptrOf $ id_ initName ]
-     , label tcLabelName $ while ((id_ tcVarName /./ "Tag") /!=/ intL 0) sts
-     , return [ (id_ tcVarName /./ "Args") `index` intL 0 ]
-     ]
+goTailCallFnBody ctx tag args alts =
+  let MkGoStmts sts = fromGoStmtList $ switchForAlts alts
+      cap = capFromAlts alts 1
+  in [ id_ tcVarName ] /:=/ [ compositL (tid' "support.Value")
+         [ id_ "Tag" /:/ intL tag
+         , id_ "Args" /:/ make (array' (tid' "any")) [intL cap]
+         ]
+       ]
+     :: assignValues 0 args 
+         [ label tcLabelName $ while ((id_ tcVarName /./ "Tag") /!=/ intL 0) sts
+         , return [ (id_ tcVarName /./ "Args") `index` intL 0 ]
+         ]
   where
     deconstructArgs : Int -> List Core.Name.Name -> NamedCExp -> GoStmtList
     deconstructArgs n (name :: ns) exp =
@@ -859,6 +863,17 @@ goTailCallFnBody ctx initName initValue alts =
       let MkGoCaseStmts cases = fromGoCaseStmtList $ whileCases alts
       in [ switch (id_ tcVarName /./ "Tag") cases ]
 
+    capFromAlts : List NamedConAlt -> Int -> Int
+    capFromAlts [] m = m
+    capFromAlts (MkNConAlt _ _ _ args _ :: alts) m =
+      let l = fromInteger $ natToInteger $ length args
+      in capFromAlts alts $ if m < l then l else m
+
+    assignValues : Int -> List Core.Name.Name -> GoStmtList -> GoStmtList
+    assignValues _ [] rest = rest
+    assignValues n (name :: ns) rest =
+      ([ (id_ tcVarName /./ "Args") `index` intL n ] /=/ [id_ $ value $ goName name]) :: assignValues (n+1) ns rest
+
 goDefs :
   {auto s : Ref Decls GoDeclList} ->
   Go.Context ->
@@ -881,15 +896,15 @@ goDefs ctx (n, nd) = defs nd
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
-    defs (TRFN [] initName initValue alts) = do
-      let MkGoStmts sts = fromGoStmtList $ goTailCallFnBody ctx (value $ goName initName) initValue alts
+    defs (TRFN tag [] alts) = do
+      let MkGoStmts sts = fromGoStmtList $ goTailCallFnBody ctx tag [] alts
           fnDecl = docs [show alts, show n.original] $
                      func n.value [] [fieldT $ tid' "any"] sts
       decls <- get Decls
       put Decls (fnDecl :: decls)
       pure ()
-    defs (TRFN args initName initValue alts) = do
-      let MkGoStmts sts = fromGoStmtList $ goTailCallFnBody ctx (value $ goName initName) initValue alts
+    defs (TRFN tag args alts) = do
+      let MkGoStmts sts = fromGoStmtList $ goTailCallFnBody ctx tag args alts
           fnDecl = docs [show alts, show n.original] $
                      func n.value [fields (map (value . goName) args) $ tid' "any"] [fieldT $ tid' "any"] sts
       decls <- get Decls
@@ -971,9 +986,7 @@ namespace GoImports
     merge (goImportDef mod x) $ goImportDefs mod xs
 
   goImportDef mod (n, (FN fn)) = goImportExp mod fn.body
-  goImportDef mod (n, (TRFN _ _ initialValue alts)) =
-    merge (goImportExp mod initialValue)
-     $ foldl (\acc => merge acc . goImportConAlt mod) empty alts
+  goImportDef mod (n, (TRFN _ _ alts)) = foldl (\acc => merge acc . goImportConAlt mod) empty alts
   goImportDef mod (n, (BIFFI _)) = addImport (importForSupport mod) empty
   goImportDef mod (n, (FFI ffi)) = foldl (\acc => merge acc . ffiImport mod) empty (ffi.imports)
     where

@@ -419,6 +419,7 @@ implementation Statement (LabeledStatement s) => Printer s => Printer (LabeledSt
   print file ls = do
     pPutStr $ ls.label.name ++ ": "
     printNewLine
+    printIndent
     print file ls.statement
 
 export
