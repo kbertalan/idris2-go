@@ -510,6 +510,14 @@ namespace Statement
   decl d = MkDeclarationStatement d
 
   export
+  label :
+    Statement s =>
+    String ->
+    s ->
+    LabeledStatement s
+  label str s = MkLabeledStatement (id_ str) s
+
+  export
   defer :
     CallExpression f as e ->
     DeferStatement f as e
@@ -521,6 +529,16 @@ namespace Statement
     HList es ->
     ReturnStatement es
   return es = MkReturnStatement Nothing es
+
+  export
+  continue :
+    String ->
+    BranchStatement MkContinue
+  continue label = MkBranchStatement IsContinue $ Just $ id_ label
+
+  export
+  continue_ : BranchStatement MkContinue
+  continue_ = MkBranchStatement IsContinue Nothing
 
   export
   for_ :

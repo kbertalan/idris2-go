@@ -131,12 +131,16 @@ record Context where
   project : Go.Name -> GoExp
   support : String -> GoExp
   counter : Int
+  returns : Bool
 
 (.nextCounter) : Go.Context -> (Int, Go.Context)
 (.nextCounter) ctx = (ctx.counter, { counter $= (+1) } ctx )
 
 tcVarName : String
 tcVarName = "__tc_var"
+
+tcLabelName : String
+tcLabelName = "__tc_label"
 
 goExpArgs : Go.Context -> List NamedCExp -> GoExpArgs
 goExp : Go.Context -> NamedCExp -> GoExp
@@ -148,7 +152,7 @@ goConstCase : Go.Context -> NamedCExp -> List NamedConstAlt -> Maybe NamedCExp -
 goExpArgs _ [] = MkGoExpArgs []
 goExpArgs ctx (x::xs) =
   let MkGoExpArgs {ts} {es} {ps} xs' = goExpArgs ctx xs
-      MkGoExp {t} {e} {p} x' = goExp ctx x
+      MkGoExp {t} {e} {p} x' = goExp ({ returns := True} ctx) x
   in MkGoExpArgs {ts=t::ts} {es=e::es} {ps=p::ps} $ x' :: xs'
 
 goPrimConst : Go.Context -> Constant -> GoExp
@@ -543,7 +547,7 @@ goConstCase ctx exp alts def = cond [(isIntegerConst alts, goIntegerConstCase)] 
   where
     goDefaultConstCase : GoStmtList
     goDefaultConstCase =
-      let MkGoExp exp' = goExp ctx exp
+      let MkGoExp exp' = goExp ({ returns := True } ctx) exp
           MkGoCaseStmts alts' = fromGoCaseStmtList $ goConstAlt ctx alts def
       in [ switch exp' alts' ]
 
@@ -584,20 +588,22 @@ goConAlt ctx v ((MkNConAlt name _ mTag allArgs exp) :: alts) def n =
         then ([ id_ $ value $ goName name ] /:=/ [id_ v /./ "Args" `index` intL n]) :: goConAltBody args (n+1)
         else goConAltBody args (n+1)
 
-goConMaybeAlt : Go.Context -> GoExp -> List NamedConAlt -> Maybe NamedCExp -> GoStmtList
-goConMaybeAlt ctx (MkGoExp exp) alts mDef =
+goConMaybeAlt : Go.Context -> NamedCExp -> List NamedConAlt -> Maybe NamedCExp -> GoStmtList
+goConMaybeAlt ctx exp alts mDef =
   case (alts, mDef) of
     ([MkNConAlt _ NOTHING _ _ body], Nothing) => goStatement ctx body
     ([MkNConAlt _ NOTHING _ _ body], Just def) =>
       let MkGoStmts def' = fromGoStmtList $ goStatement ctx def
-      in (if_ (exp /!=/ id_ "nil") def') :: goStatement ctx body
+          MkGoExp exp' = goExp ({ returns := True } ctx) exp
+      in (if_ (exp' /!=/ id_ "nil") def') :: goStatement ctx body
     ([MkNConAlt _ JUST _ [arg] body], Nothing) =>
       let referenced = used arg body
           arg' = value $ goName arg
           body' = goStatement ctx body
           MkGoExp asValuePtr = ctx.support "AsValuePtr"
+          MkGoExp exp' = goExp ({ returns := True } ctx) exp
       in if referenced
-            then ([ id_ arg' ] /:=/ [ (call asValuePtr [ exp ]) /./ "Args" `index` intL 0 ]) :: body'
+            then ([ id_ arg' ] /:=/ [ (call asValuePtr [ exp' ]) /./ "Args" `index` intL 0 ]) :: body'
             else body'
     ([MkNConAlt _ JUST _ [arg] body], Just def) => conMaybeAlt arg body def
     ([MkNConAlt _ JUST _ [arg] justBody, MkNConAlt _ NOTHING _ _ nothingBody], _) => conMaybeAlt arg justBody nothingBody
@@ -609,25 +615,27 @@ goConMaybeAlt ctx (MkGoExp exp) alts mDef =
       let (c, ctx') = ctx.nextCounter
           v = "__if_maybe_var_" ++ show c
           MkGoExp asValuePtr = ctx'.support "AsValuePtr"
+          MkGoExp exp' = goExp ({ returns := True } ctx) exp
           referenced = used arg justBody
           arg' = value $ goName arg
           justBody' = goStatement ctx' justBody
           MkGoStmts nothingBody' = fromGoStmtList $ goStatement ctx' nothingBody
-      in ([id_ v] /:=/ [call asValuePtr [exp]])
+      in ([id_ v] /:=/ [call asValuePtr [exp']])
          :: (if_ (id_ v /==/ id_ "nil") nothingBody')
          :: ( if referenced
                 then ([ id_ arg' ] /:=/ [ id_ v /./ "Args" `index` intL 0]) :: justBody'
                 else justBody'
             )
 
-goConSingleAlt : Go.Context -> GoExp -> List NamedConAlt -> Maybe NamedCExp -> GoStmtList
-goConSingleAlt ctx (MkGoExp exp) [MkNConAlt _ _ _ args body] Nothing =
+goConSingleAlt : Go.Context -> NamedCExp -> List NamedConAlt -> Maybe NamedCExp -> GoStmtList
+goConSingleAlt ctx exp [MkNConAlt _ _ _ args body] Nothing =
   if any (flip used body) args
     then
       let (c, ctx') = ctx.nextCounter
           v = "__single_var_" ++ show c
           MkGoExp asValue = ctx'.support "AsValue"
-      in ([ id_ v ] /:=/ [call asValue [exp]]) :: (generateBody ctx' v 0 args)
+          MkGoExp exp' = goExp ({ returns := True } ctx) exp
+      in ([ id_ v ] /:=/ [call asValue [exp']]) :: (generateBody ctx' v 0 args)
     else goStatement ctx body
   where
     generateBody : Go.Context -> String -> Int -> List Core.Name.Name ->  GoStmtList
@@ -647,7 +655,7 @@ goConCase ctx exp alts def =
   where
     goDefaultConCase : GoStmtList
     goDefaultConCase =
-      let MkGoExp exp' = goExp ctx exp
+      let MkGoExp exp' = goExp ({ returns := True} ctx) exp
           v = "__switch_con_var"
           MkGoCaseStmts alts' = fromGoCaseStmtList $ goConAlt ctx v alts def 0
           MkGoExp asValue = ctx.support "AsValue"
@@ -659,37 +667,39 @@ goConCase ctx exp alts def =
     isMaybeCon _ = False
 
     goMaybeConCase : GoStmtList
-    goMaybeConCase =
-      let exp' = goExp ctx exp
-      in goConMaybeAlt ctx exp' alts def
+    goMaybeConCase = goConMaybeAlt ctx exp alts def
 
     isSingleAlt : List NamedConAlt -> Maybe NamedCExp -> Bool
     isSingleAlt [_] Nothing = True
     isSingleAlt _ _ = False
 
     goSingleConCase : GoStmtList
-    goSingleConCase =
-      let exp' = goExp ctx exp
-      in goConSingleAlt ctx exp' alts def
+    goSingleConCase = goConSingleAlt ctx exp alts def
 
-goStatement ctx exp@(NmLocal _ _) = let MkGoExp x = goExp ctx exp in [ return [x] ]
-goStatement ctx exp@(NmRef _ _) = let MkGoExp x = goExp ctx exp in [ return [x] ]
-goStatement ctx exp@(NmLam _ _ _) = let MkGoExp x = goExp ctx exp in [ return [x] ]
+goReturn : Go.Context -> GoExp -> GoStmtList
+goReturn ctx (MkGoExp exp) =
+  if ctx.returns
+    then [ return [ exp ] ]
+    else [ expr exp ]
+
+goStatement ctx exp@(NmLocal _ _) = goReturn ctx $ goExp ctx exp
+goStatement ctx exp@(NmRef _ _) = goReturn ctx $ goExp ctx exp
+goStatement ctx exp@(NmLam _ _ _) = goReturn ctx $ goExp ctx exp
 goStatement ctx (NmLet _ n val exp) =
-  let MkGoExp val' = goExp ctx val
+  let MkGoExp val' = goExp ({ returns := True } ctx) val
   in if used n exp
        then ([id_ $ value $ goName n] /:=/ [cast_ (tid' "any") val']) :: goStatement ctx exp
        else expr val' :: goStatement ctx exp
-goStatement ctx exp@(NmApp fc x xs) = let MkGoExp x = goExp ctx exp in [ return [x] ]
+goStatement ctx exp@(NmApp fc x xs) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmCon fc n x tag xs) =
   if isTcDone n || isTcContinue n
-    then let MkGoExpArgs args = goExpArgs ctx xs
+   then let MkGoExpArgs args = goExpArgs ctx xs
          in [ [ id_ tcVarName /./ "Tag" ] /=/ [ intL $ fromMaybe (-1) tag ]
             , [ id_ tcVarName /./ "Args" ] /=/ [ id_ tcVarName /./ "Args" `sliceH` intL 0 ]
             , [ id_ tcVarName /./ "Args" ] /=/ [ call (id_ "append") ((id_ tcVarName /./ "Args") :: args) ]
-            , return [ id_ "nil" ]
+            , continue tcLabelName
             ]
-    else let MkGoExp x = goExp ctx exp in [ return [x] ]
+    else goReturn ctx $ goExp ctx exp
   where
     isTcDone : Core.Name.Name -> Bool
     isTcDone (MN n _) = n == "TcDone"
@@ -699,13 +709,13 @@ goStatement ctx exp@(NmCon fc n x tag xs) =
     isTcContinue (MN n _) = "TcContinue" `isPrefixOf` n
     isTcContinue _ = False
 
-goStatement ctx exp@(NmOp fc f xs) = let MkGoExp x = goExp ctx exp in [ return [x] ]
-goStatement ctx exp@(NmExtPrim fc p xs) = let MkGoExp x = goExp ctx exp in [ return [x] ]
-goStatement ctx exp@(NmForce fc lz x) = let MkGoExp x = goExp ctx exp in [ return [x] ]
-goStatement ctx exp@(NmDelay fc lz x) = let MkGoExp x = goExp ctx exp in [ return [x] ]
+goStatement ctx exp@(NmOp fc f xs) = goReturn ctx $ goExp ctx exp
+goStatement ctx exp@(NmExtPrim fc p xs) = goReturn ctx $ goExp ctx exp
+goStatement ctx exp@(NmForce fc lz x) = goReturn ctx $ goExp ctx exp
+goStatement ctx exp@(NmDelay fc lz x) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmConCase fc sc xs x) = goConCase ctx sc xs x
 goStatement ctx exp@(NmConstCase fc sc xs x) = goConstCase ctx sc xs x
-goStatement ctx exp@(NmPrimVal fc cst) = let MkGoExp x = goExp ctx exp in [ return [x] ]
+goStatement ctx exp@(NmPrimVal fc cst) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmErased _) = [ expr $ call (id_ "panic") [stringL "executing erased term"] ]
 goStatement ctx exp@(NmCrash _ str) = [ expr $ call (id_ "panic") [stringL str] ]
 
@@ -823,29 +833,28 @@ goTailCallFnBody ctx initName initValue alts =
       MkGoStmts sts = fromGoStmtList $ switchForAlts alts
   in [ [ id_ initName ] /:=/ [ initValue' ]
      , [ id_ tcVarName ] /:=/ [ ptrOf $ id_ initName ]
-     , while ((id_ tcVarName /./ "Tag") /!=/ intL 0) sts
+     , label tcLabelName $ while ((id_ tcVarName /./ "Tag") /!=/ intL 0) sts
      , return [ (id_ tcVarName /./ "Args") `index` intL 0 ]
      ]
   where
-    deconstructArgs : Int -> List Core.Name.Name -> List Core.Name.Name -> NamedCExp -> GoStmtList
-    deconstructArgs n (name :: ns) allArgs exp =
-      ([ id_ $ value $ goName name ] /:=/ [ (id_ tcVarName /./ "Args") `index` intL n ]) :: deconstructArgs (n+1) ns allArgs exp
-    deconstructArgs _ [] allArgs exp =
-      let MkGoStmts sts = fromGoStmtList $ goStatement ctx exp
-          allArgs' = value . goName <$> allArgs
-          MkGoExpArgs args = idArgList $ map id_ allArgs'
-      in [expr $ call (funcL [fields allArgs' $ tid' "any"] [fieldT $ tid' "any"] sts) args]
+    deconstructArgs : Int -> List Core.Name.Name -> NamedCExp -> GoStmtList
+    deconstructArgs n (name :: ns) exp =
+      if used name exp
+        then ([ id_ $ value $ goName name ] /:=/ [ (id_ tcVarName /./ "Args") `index` intL n ]) :: deconstructArgs (n+1) ns exp
+        else deconstructArgs (n+1) ns exp
+    deconstructArgs _ [] exp = goStatement ({ returns := False } ctx) exp
+
     whileCases : List NamedConAlt -> GoCaseStmtList
     whileCases (MkNConAlt _ _ mTag args exp :: as) =
       let tag = fromMaybe (-1) mTag
-          MkGoStmts body@(_::_) = fromGoStmtList $ deconstructArgs 0 args args exp
+          MkGoStmts body@(_::_) = fromGoStmtList $ deconstructArgs 0 args exp
                                 | _ => []
       in (case_ [intL tag] body) :: whileCases as
     whileCases [] = []
 
     switchForAlts : List NamedConAlt -> GoStmtList
     switchForAlts [] = []
-    switchForAlts [MkNConAlt _ _ _ args exp] = deconstructArgs 0 args args exp
+    switchForAlts [MkNConAlt _ _ _ args exp] = deconstructArgs 0 args exp
     switchForAlts alts =
       let MkGoCaseStmts cases = fromGoCaseStmtList $ whileCases alts
       in [ switch (id_ tcVarName /./ "Tag") cases ]
@@ -1108,6 +1117,7 @@ goFile outDir moduleName defs = do
               { project = goRef moduleName currentImport imports
               , support = goSupport moduleName imports
               , counter = 0
+              , returns = True
               }
 
   _ <- newRef Decls []
@@ -1135,6 +1145,7 @@ goMainFile outDir outFile moduleName exp = do
               { project = goRef moduleName currentImport imports
               , support = goSupport moduleName imports
               , counter = 0
+              , returns = True
               }
 
   let MkGoExp exp' = goExp ctx exp

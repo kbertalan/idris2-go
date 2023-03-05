@@ -415,6 +415,26 @@ implementation Statement (DeferStatement f as e) => Printer (CallExpression f as
     print file ds.call
 
 export
+implementation Statement (LabeledStatement s) => Printer s => Printer (LabeledStatement s) where
+  print file ls = do
+    pPutStr $ ls.label.name ++ ": "
+    printNewLine
+    print file ls.statement
+
+export
+implementation Statement (BranchStatement kw) => Printer (BranchStatement kw) where
+  print file bs = do
+    let kw = case bs.token of
+                IsBreak => "break"
+                IsContinue => "continue"
+                IsGoto => "goto"
+                IsFallthrough => "fallthrough"
+        label = case bs.label of
+                  Just l => " " ++ l.name
+                  Nothing => ""
+    pPutStr $ kw ++ label
+
+export
 implementation Statement (ForStatement i c p sts) => Printer i => Printer c => Printer p => Printer (BlockStatement sts) => Printer (ForStatement i c p sts) where
   print file fs = do
     pPutStr "for"
