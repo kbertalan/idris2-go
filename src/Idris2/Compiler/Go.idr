@@ -722,21 +722,28 @@ goListConAlt ctx _ [] (Just def) =
   in [ default_ stmts ]
 goListConAlt _ _ [] Nothing =
   [ default_ [ expr $ call (id_ "panic") [ stringL "reaching impossible default case" ] ] ]
-goListConAlt ctx v (MkNConAlt name CONS _ args@[h,t] exp :: alts) def =
-  let MkGoStmts stmts = fromGoStmtList $ goStatement ctx exp
-      hn = value $ goName h
+goListConAlt ctx v (MkNConAlt name CONS _ [h,t] exp :: alts) def =
+  let hn = value $ goName h
+      uhn = used h exp
       tn = value $ goName t
-      MkGoExpArgs args' = idArgList $ map id_ [hn, tn]
-  in (case_ [ call (id_ v /./ "Len") [] />/ intL 0 ]
-       [ decl $ vars [ var [ id_ hn, id_ tn ] (tid' "any") [ call (id_ v /./ "Last") [], call (id_ v /./ "Init") [] ] ]
-       , return [ call (funcL [fields [hn, tn] $ tid' "any"] [fieldT $ tid' "any"] stmts) args' ]
-       ]
-     ) :: goListConAlt ctx v alts def
+      utn = used t exp
+      MkGoStmts body@(_::_) = fromGoStmtList $ declareHead uhn hn $ declareTail utn tn $ goStatement ctx exp
+                            | _ => []
+  in (case_ [ call (id_ v /./ "Len") [] />/ intL 0 ] body) :: goListConAlt ctx v alts def
+  where
+    declareHead : Bool -> String -> GoStmtList -> GoStmtList
+    declareHead True hn rest = ([id_ hn] /:=/ [ call (id_ v /./ "Last") [] ]) :: rest
+    declareHead _ _ rest = rest
+
+    declareTail : Bool -> String -> GoStmtList -> GoStmtList
+    declareTail True tn rest = ([id_ tn] /:=/ [ call (id_ v /./ "Init") [] ]) :: rest
+    declareTail _ _ rest = rest
+
 goListConAlt _ _ (MkNConAlt _ CONS _ args _ :: _) _ =
   assert_total $ idris_crash $ "unexpected arguments for cons: " ++ show args
 goListConAlt ctx v (MkNConAlt _ NIL _ _ exp :: alts) def =
   let MkGoStmts stmts@(_::_) = fromGoStmtList $ goStatement ctx exp
-        | MkGoStmts [] => []
+                             | _ => []
   in (case_ [ call (id_ v /./ "Len") [] /==/ intL 0 ] stmts) :: goListConAlt ctx v alts def
 goListConAlt _ _ alts _ =
   assert_total $ idris_crash $ "unexpected con alt for list: " ++ show alts
@@ -751,13 +758,20 @@ goSnocListConAlt _ _ [] Nothing =
 goSnocListConAlt ctx v (MkNConAlt name CONS _ args@[t,h] exp :: alts) def =
   let MkGoStmts stmts = fromGoStmtList $ goStatement ctx exp
       hn = value $ goName h
+      uhn = used h exp
       tn = value $ goName t
-      MkGoExpArgs args' = idArgList $ map id_ [hn, tn]
-  in (case_ [ call (id_ v /./ "Len") [] />/ intL 0 ]
-       [ decl $ vars [ var [ id_ hn, id_ tn ] (tid' "any") [ call (id_ v /./ "Last") [], call (id_ v /./ "Init") [] ] ]
-       , return [ call (funcL [fields [hn, tn] $ tid' "any"] [fieldT $ tid' "any"] stmts) args' ]
-       ]
-     ) :: goListConAlt ctx v alts def
+      utn = used t exp
+      MkGoStmts body@(_::_) = fromGoStmtList $ declareHead uhn hn $ declareTail utn tn $ goStatement ctx exp
+                            | _ => []
+  in (case_ [ call (id_ v /./ "Len") [] />/ intL 0 ] body) :: goListConAlt ctx v alts def
+  where
+    declareHead : Bool -> String -> GoStmtList -> GoStmtList
+    declareHead True hn rest = ([id_ hn] /:=/ [ call (id_ v /./ "Last") [] ]) :: rest
+    declareHead _ _ rest = rest
+
+    declareTail : Bool -> String -> GoStmtList -> GoStmtList
+    declareTail True tn rest = ([id_ tn] /:=/ [ call (id_ v /./ "Init") [] ]) :: rest
+    declareTail _ _ rest = rest
 goSnocListConAlt _ _ (MkNConAlt _ CONS _ args _ :: _) _ =
   assert_total $ idris_crash $ "unexpected arguments for snoc: " ++ show args
 goSnocListConAlt ctx v (MkNConAlt _ NIL _ _ exp :: alts) def =
