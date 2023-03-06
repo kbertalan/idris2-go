@@ -693,7 +693,7 @@ goStatement ctx (NmLet _ n val exp) =
 goStatement ctx exp@(NmApp fc x xs) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmCon fc n x tag xs) =
   if isTcDone n || isTcContinue n
-    then [ id_ tcVarName /./ "Tag" ] /=/ [ intL $ fromMaybe (-1) tag ]
+    then [ id_ tcVarName ] /=/ [ intL $ fromMaybe (-1) tag ]
          :: assignValues 0 xs [ continue tcLabelName ]
     else goReturn ctx $ goExp ctx exp
   where
@@ -709,7 +709,7 @@ goStatement ctx exp@(NmCon fc n x tag xs) =
     assignValues _ [] rest = rest
     assignValues n (exp :: xs) rest =
       let MkGoExp exp' = goExp ({ returns := True} ctx) exp
-      in ([ (id_ tcVarName /./ "Args") `index` intL n ] /=/ [exp']) :: assignValues (n+1) xs rest
+      in ([ id_ $ tcVarName ++ show n ] /=/ [exp']) :: assignValues (n+1) xs rest
 goStatement ctx exp@(NmOp fc f xs) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmExtPrim fc p xs) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmForce fc lz x) = goReturn ctx $ goExp ctx exp
@@ -831,20 +831,16 @@ goTailCallFnBody :
 goTailCallFnBody ctx tag args alts =
   let MkGoStmts sts = fromGoStmtList $ switchForAlts alts
       cap = capFromAlts alts 1
-  in [ id_ tcVarName ] /:=/ [ compositL (tid' "support.Value")
-         [ id_ "Tag" /:/ intL tag
-         , id_ "Args" /:/ make (array' (tid' "any")) [intL cap]
-         ]
-       ]
-     :: assignValues 0 args 
-         [ label tcLabelName $ while ((id_ tcVarName /./ "Tag") /!=/ intL 0) sts
-         , return [ (id_ tcVarName /./ "Args") `index` intL 0 ]
+  in [ id_ tcVarName ] /:=/ [ intL tag ]
+     :: assignValues 0 cap args 
+         [ label tcLabelName $ while (id_ tcVarName /!=/ intL 0) sts
+         , return [ id_ $ tcVarName ++ "0" ]
          ]
   where
     deconstructArgs : Int -> List Core.Name.Name -> NamedCExp -> GoStmtList
     deconstructArgs n (name :: ns) exp =
       if used name exp
-        then ([ id_ $ value $ goName name ] /:=/ [ (id_ tcVarName /./ "Args") `index` intL n ]) :: deconstructArgs (n+1) ns exp
+        then ([ id_ $ value $ goName name ] /:=/ [ id_ $ tcVarName ++ show n ]) :: deconstructArgs (n+1) ns exp
         else deconstructArgs (n+1) ns exp
     deconstructArgs _ [] exp = goStatement ({ returns := False } ctx) exp
 
@@ -861,7 +857,7 @@ goTailCallFnBody ctx tag args alts =
     switchForAlts [MkNConAlt _ _ _ args exp] = deconstructArgs 0 args exp
     switchForAlts alts =
       let MkGoCaseStmts cases = fromGoCaseStmtList $ whileCases alts
-      in [ switch (id_ tcVarName /./ "Tag") cases ]
+      in [ switch (id_ tcVarName) cases ]
 
     capFromAlts : List NamedConAlt -> Int -> Int
     capFromAlts [] m = m
@@ -869,10 +865,13 @@ goTailCallFnBody ctx tag args alts =
       let l = fromInteger $ natToInteger $ length args
       in capFromAlts alts $ if m < l then l else m
 
-    assignValues : Int -> List Core.Name.Name -> GoStmtList -> GoStmtList
-    assignValues _ [] rest = rest
-    assignValues n (name :: ns) rest =
-      ([ (id_ tcVarName /./ "Args") `index` intL n ] /=/ [id_ $ value $ goName name]) :: assignValues (n+1) ns rest
+    assignValues : Int -> Int -> List Core.Name.Name -> GoStmtList -> GoStmtList
+    assignValues n cap [] rest =
+      if n >= cap then rest
+                  else
+      ([ id_ $ tcVarName ++ show n ] /:=/ [cast_ (tid' "any") $ id_ "nil"]) :: assignValues (n+1) cap [] rest
+    assignValues n cap (name :: ns) rest =
+      ([ id_ $ tcVarName ++ show n ] /:=/ [ id_ $ value $ goName name]) :: assignValues (n+1) cap ns rest
 
 goDefs :
   {auto s : Ref Decls GoDeclList} ->
