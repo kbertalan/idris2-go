@@ -155,6 +155,9 @@ goExpArgs ctx (x::xs) =
       MkGoExp {t} {e} {p} x' = goExp ({ returns := True} ctx) x
   in MkGoExpArgs {ts=t::ts} {es=e::es} {ps=p::ps} $ x' :: xs'
 
+isInt64 : Integer -> Bool
+isInt64 i = i <= 9223372036854775807 && i >= -9223372036854775808
+
 goPrimConst : Go.Context -> Constant -> GoExp
 goPrimConst ctx (I i) = MkGoExp $ intL i
 goPrimConst ctx (I8 i) = MkGoExp $ cast_ int8 $ MkBasicLiteral MkInt $ show i
@@ -162,8 +165,12 @@ goPrimConst ctx (I16 i) = MkGoExp $ cast_ int16 $ MkBasicLiteral MkInt $ show i
 goPrimConst ctx (I32 i) = MkGoExp $ cast_ int32 $ MkBasicLiteral MkInt $ show i
 goPrimConst ctx (I64 i) = MkGoExp $ cast_ int64 $ MkBasicLiteral MkInt $ show i
 goPrimConst ctx (BI i) =
-  let MkGoExp fn = ctx.support "IntegerLiteral"
-  in MkGoExp $ call fn [stringL $ show i]
+  if isInt64 i
+    then
+      MkGoExp $ cast_ int64 $ MkBasicLiteral MkInt $ show i
+    else
+      let MkGoExp fn = ctx.support "IntegerLiteral"
+      in MkGoExp $ call fn [stringL $ show i]
 goPrimConst ctx (B8 m) = MkGoExp $ cast_ uint8 $ MkBasicLiteral MkInt $ show m
 goPrimConst ctx (B16 m) = MkGoExp $ cast_ uint16 $ MkBasicLiteral MkInt $ show m
 goPrimConst ctx (B32 m) = MkGoExp $ cast_ uint32 $ MkBasicLiteral MkInt $ show m
@@ -1018,7 +1025,7 @@ namespace GoImports
     let ix = maybe empty (goImportExp mod) x
         isc = merge ix $ goImportExp mod sc
     in foldl (\acc => merge acc . goImportConstAlt mod) isc xs
-  goImportExp mod (NmPrimVal fc (BI _)) = addImport (importForSupport mod) empty
+  goImportExp mod (NmPrimVal fc (BI i)) = if isInt64 i then empty else addImport (importForSupport mod) empty
   goImportExp mod (NmPrimVal fc WorldVal) = addImport (importForSupport mod) empty
   goImportExp mod (NmPrimVal fc cst) = empty
   goImportExp mod (NmErased fc) = empty

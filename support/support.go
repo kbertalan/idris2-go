@@ -36,17 +36,6 @@ func ConstructorPtr(tag int, args ...any) *Value {
 	}
 }
 
-type IntegerType *big.Int
-
-func IntegerLiteral(i string) IntegerType {
-	z := &big.Int{}
-	n, ok := z.SetString(i, 10)
-	if !ok {
-		panic(fmt.Sprintf("could not create big.Int from %s", i))
-	}
-	return n
-}
-
 type TypeValue int
 
 const (
@@ -83,78 +72,386 @@ func Delay(fn func() any) any {
 	}
 }
 
-func IntegerAdd(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := y.(IntegerType)
+type IntegerType any
+
+func IntegerLiteral(i string) IntegerType {
+	z := &big.Int{}
+	n, ok := z.SetString(i, 10)
+	if !ok {
+		panic(fmt.Sprintf("could not create big.Int from %s", i))
+	}
+	if n.IsInt64() {
+		return n.Int64()
+	}
+	return n
+}
+
+func integerAdd(i, j int64) IntegerType {
+	if i >= 0 && j >= 0 {
+		if i <= math.MaxInt64-j {
+			return i + j
+		}
+	}
+	if i >= 0 && j < 0 || i < 0 && j >= 0 {
+		return i + j
+	}
+	if i < 0 && j < 0 {
+		if i >= math.MinInt64-j {
+			return i + j
+		}
+	}
+
 	z := big.Int{}
-	return z.Add(a, b)
+	return z.Add(big.NewInt(i), big.NewInt(j))
+}
+
+func IntegerAdd(x, y any) IntegerType {
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return integerAdd(i, j)
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
+	z := &big.Int{}
+	r := z.Add(a, b)
+	if r.IsInt64() {
+		return r.Int64()
+	}
+	return r
 }
 
 func IntegerSub(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := y.(IntegerType)
-	z := big.Int{}
-	return z.Sub(a, b)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return integerAdd(i, -j)
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
+	z := &big.Int{}
+	r := z.Sub(a, b)
+	if r.IsInt64() {
+		return r.Int64()
+	}
+	return r
+}
+
+func integerMul(i, j int64) IntegerType {
+	if i == 0 || j == 0 {
+		return 0
+	}
+	if i > 0 && j > 0 {
+		if i <= math.MaxInt64/j {
+			return i * j
+		}
+	}
+	if i > 0 && j < 0 {
+		if i <= math.MinInt64/j {
+			return i * j
+		}
+	}
+
+	if i < 0 && j > 0 {
+		if i >= math.MinInt64/j {
+			return i * j
+		}
+	}
+
+	if i < 0 && j < 0 {
+		if i >= math.MaxInt64/j {
+			return i * j
+		}
+	}
+
+	z := &big.Int{}
+	return z.Mul(big.NewInt(i), big.NewInt(j))
 }
 
 func IntegerMul(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return integerMul(i, j)
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	z := big.Int{}
-	return z.Mul(a, b)
+	r := z.Mul(a, b)
+	if r.IsInt64() {
+		return r.Int64()
+	}
+	return r
 }
 
 func IntegerDiv(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return i / j
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	z := big.Int{}
-	return z.Div(a, b)
+	r := z.Div(a, b)
+	if r.IsInt64() {
+		return r.Int64()
+	}
+	return r
 }
 
 func IntegerMod(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return i % j
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	z := big.Int{}
-	return z.Mod(a, b)
+	r := z.Mod(a, b)
+	if r.IsInt64() {
+		return r.Int64()
+	}
+	return r
 }
 
 func IntegerNeg(x any) IntegerType {
-	a := x.(IntegerType)
+	var a *big.Int
+	switch i := x.(type) {
+	case int64:
+		return -i
+	case *big.Int:
+		a = i
+	}
+
 	z := big.Int{}
 	return z.Neg(a)
 }
 
+func integerShiftL(i int64, j uint) IntegerType {
+	if j < 64 {
+		hi := i >> (64 - j)
+		lo := i << j
+		if hi == 0 && lo >= 0 {
+			return lo
+		}
+	}
+
+	z := &big.Int{}
+	r := z.Lsh(big.NewInt(i), j)
+	if r.IsInt64() {
+		return r.Int64()
+	}
+	return r
+}
+
 func IntegerShiftL(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := (*big.Int)(y.(IntegerType)).Uint64()
+	var a *big.Int
+	var b uint
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return integerShiftL(i, uint(j))
+		case *big.Int:
+			if !j.IsUint64() {
+				panic("cannot shift left with big integer")
+			}
+			return integerShiftL(i, uint(j.Uint64()))
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = uint(j)
+		case *big.Int:
+			if !j.IsInt64() {
+				panic("cannot shift left with big integer")
+			}
+			b = uint(j.Int64())
+		}
+	}
+
 	z := big.Int{}
-	return z.Lsh(a, uint(b))
+	r := z.Lsh(a, b)
+	if r.IsInt64() {
+		return r.Int64()
+	}
+	return r
 }
 
 func IntegerShiftR(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := (*big.Int)(y.(IntegerType)).Uint64()
+	var a *big.Int
+	var b uint
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return i >> uint(j)
+		case *big.Int:
+			if !j.IsUint64() {
+				panic("cannot shift right with big integer")
+			}
+			return i >> uint(j.Uint64())
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = uint(j)
+		case *big.Int:
+			if !j.IsInt64() {
+				panic("cannot shift right with big integer")
+			}
+			b = uint(j.Int64())
+		}
+	}
+
 	z := big.Int{}
-	return z.Rsh(a, uint(b))
+	r := z.Rsh(a, b)
+	if r.IsInt64() {
+		return r.Int64()
+	}
+	return r
 }
 
 func IntegerBAnd(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return i & j
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	z := big.Int{}
 	return z.And(a, b)
 }
 
 func IntegerBOr(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return i | j
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	z := big.Int{}
 	return z.Or(a, b)
 }
 
 func IntegerBXOr(x, y any) IntegerType {
-	a := x.(IntegerType)
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return i ^ j
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	z := big.Int{}
 	return z.Xor(a, b)
 }
@@ -167,36 +464,126 @@ func BoolAsInt(b bool) uint8 {
 }
 
 func IntegerLT(x, y any) uint8 {
-	a := (*big.Int)(x.(IntegerType))
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return BoolAsInt(i < j)
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	c := a.Cmp(b)
 	return BoolAsInt(c < 0)
 }
 
 func IntegerLTE(x, y any) uint8 {
-	a := (*big.Int)(x.(IntegerType))
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return BoolAsInt(i <= j)
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	c := a.Cmp(b)
 	return BoolAsInt(c <= 0)
 }
 
 func IntegerEQ(x, y any) uint8 {
-	a := (*big.Int)(x.(IntegerType))
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return BoolAsInt(i == j)
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	c := a.Cmp(b)
 	return BoolAsInt(c == 0)
 }
 
 func IntegerGTE(x, y any) uint8 {
-	a := (*big.Int)(x.(IntegerType))
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return BoolAsInt(i >= j)
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	c := a.Cmp(b)
 	return BoolAsInt(c >= 0)
 }
 
 func IntegerGT(x, y any) uint8 {
-	a := (*big.Int)(x.(IntegerType))
-	b := y.(IntegerType)
+	var a, b *big.Int
+	switch i := x.(type) {
+	case int64:
+		switch j := y.(type) {
+		case int64:
+			return BoolAsInt(i > j)
+		case *big.Int:
+			a = big.NewInt(i)
+			b = j
+		}
+	case *big.Int:
+		a = i
+		switch j := y.(type) {
+		case int64:
+			b = big.NewInt(j)
+		case *big.Int:
+			b = j
+		}
+	}
+
 	c := a.Cmp(b)
 	return BoolAsInt(c > 0)
 }

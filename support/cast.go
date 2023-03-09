@@ -183,60 +183,88 @@ func CastCharToFloat64(x byte) float64 {
 
 // Integer
 
-func asBigInt(v any) *big.Int {
-	return (*big.Int)(v.(IntegerType))
+func asInt64(v any) int64 {
+	switch a := v.(type) {
+	case int64:
+		return a
+	case *big.Int:
+		return a.Int64()
+	}
+	panic(fmt.Sprintf("unknown integer implementation: %T", v))
+}
+
+func asUint64(v any) uint64 {
+	switch a := v.(type) {
+	case int64:
+		return uint64(a)
+	case *big.Int:
+		return a.Uint64()
+	}
+	panic(fmt.Sprintf("unknown integer implementation: %T", v))
 }
 
 func CastIntegerToInt(x any) int {
-	return int(asBigInt(x).Int64())
+	return int(asInt64(x))
 }
 
 func CastIntegerToInt8(x any) int8 {
-	return int8(asBigInt(x).Int64())
+	return int8(asInt64(x))
 }
 
 func CastIntegerToInt16(x any) int16 {
-	return int16(asBigInt(x).Int64())
+	return int16(asInt64(x))
 }
 
 func CastIntegerToInt32(x any) int32 {
-	return int32(asBigInt(x).Int64())
+	return int32(asInt64(x))
 }
 
 func CastIntegerToInt64(x any) int64 {
-	return asBigInt(x).Int64()
+	return asInt64(x)
 }
 
 func CastIntegerToUInt8(x any) uint8 {
-	return uint8(asBigInt(x).Uint64())
+	return uint8(asUint64(x))
 }
 
 func CastIntegerToUInt16(x any) uint16 {
-	return uint16(asBigInt(x).Uint64())
+	return uint16(asUint64(x))
 }
 
 func CastIntegerToUInt32(x any) uint32 {
-	return uint32(asBigInt(x).Uint64())
+	return uint32(asUint64(x))
 }
 
 func CastIntegerToUInt64(x any) uint64 {
-	return uint64(asBigInt(x).Uint64())
+	return uint64(asUint64(x))
 }
 
 func CastIntegerToInteger(x any) IntegerType {
-	return big.NewInt(CastIntegerToInt64(x))
+	switch a := x.(type) {
+	case int64:
+		return a
+	case *big.Int:
+		return a
+	}
+	panic(fmt.Sprintf("unknown integer implementation: %T", x))
 }
 
 func CastIntegerToString(x any) string {
-	return asBigInt(x).String()
+	switch a := x.(type) {
+	case int64:
+		return CastNumberToString(a)
+	case *big.Int:
+		return a.String()
+	}
+	panic(fmt.Sprintf("unknown integer implementation: %T", x))
 }
 
 func CastIntegerToChar(x any) byte {
-	return byte(asBigInt(x).Int64())
+	return byte(asInt64(x))
 }
 
 func CastIntegerToFloat64(x any) float64 {
-	return float64(CastIntegerToInt64(x))
+	return float64(asInt64(x))
 }
 
 // String
@@ -278,7 +306,7 @@ func CastStringToUInt64(x any) uint64 {
 }
 
 func CastStringToInteger(x any) IntegerType {
-	return big.NewInt(CastStringToInt64(x))
+	return IntegerLiteral(x.(string))
 }
 
 func CastStringToString(x any) string {
