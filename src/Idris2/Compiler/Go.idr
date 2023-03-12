@@ -4,6 +4,7 @@ import Compiler.ES.TailRec
 
 import Core.CompileExpr
 import Core.Context
+import Core.Context.Log
 import Core.Directory
 import Core.Options
 
@@ -884,7 +885,16 @@ goTailCallFnBody ctx tag args alts =
     assignValues n (name :: ns) rest =
       ([ id_ tcArgName `index` intL n ] /=/ [ id_ $ value $ goName name]) :: assignValues (n+1) ns rest
 
+goLog : 
+  {auto c : Ref Ctxt Defs} ->
+  Nat ->
+  String ->
+  Core ()
+goLog n str =
+  log' (mkUnverifiedLogLevel "compiler.go" n) str
+
 goDefs :
+  {auto c : Ref Ctxt Defs} ->
   {auto s : Ref Decls GoDeclList} ->
   Go.Context ->
   (Go.Name, Definition) ->
@@ -893,6 +903,8 @@ goDefs ctx (n, nd) = defs nd
   where
     defs : Definition -> Core ()
     defs (FN $ MkFunction _ [] exp) = do
+      goLog 10 "generate function for: \{show n.value}"
+      goLog 20 "generate from expression: \{show exp}"
       let MkGoStmts sts = fromGoStmtList $ goStatement ctx exp
           fnDecl = docs [show exp, show n.original] $
                      func n.value [] [fieldT $ tid' "any"] sts
@@ -900,6 +912,8 @@ goDefs ctx (n, nd) = defs nd
       put Decls (fnDecl :: decls)
       pure ()
     defs (FN $ MkFunction _ args exp) = do
+      goLog 10 "generate function for: \{show n.value}"
+      goLog 20 "generate from expression: \{show exp}"
       let MkGoStmts sts = fromGoStmtList $ goStatement ctx exp
           fnDecl = docs [show exp, show n.original] $
                      func n.value [fields (map (value . goName) args) $ tid' "any"] [fieldT $ tid' "any"] sts
@@ -907,6 +921,8 @@ goDefs ctx (n, nd) = defs nd
       put Decls (fnDecl :: decls)
       pure ()
     defs (TRFN tag [] alts) = do
+      goLog 10 "generate recursive function for: \{show n.value}"
+      goLog 20 "generate from alts: \{show alts}"
       let MkGoStmts sts = fromGoStmtList $ goTailCallFnBody ctx tag [] alts
           fnDecl = docs [show alts, show n.original] $
                      func n.value [] [fieldT $ tid' "any"] sts
@@ -914,6 +930,8 @@ goDefs ctx (n, nd) = defs nd
       put Decls (fnDecl :: decls)
       pure ()
     defs (TRFN tag args alts) = do
+      goLog 10 "generate recursive function for: \{show n.value}"
+      goLog 20 "generate from alts: \{show alts}"
       let MkGoStmts sts = fromGoStmtList $ goTailCallFnBody ctx tag args alts
           fnDecl = docs [show alts, show n.original] $
                      func n.value [fields (map (value . goName) args) $ tid' "any"] [fieldT $ tid' "any"] sts
@@ -921,6 +939,7 @@ goDefs ctx (n, nd) = defs nd
       put Decls (fnDecl :: decls)
       pure ()
     defs (BIFFI $ MkBuiltInForeign [] _) = do
+      goLog 10 "generate built-in foreign function for: \{show n.value}"
       let MkGoExp fn = ctx.support $ capitalize n.value
           fnDecl = func n.value [] [fieldT $ tid' "any"]
                     [ return [call fn []]]
@@ -929,6 +948,7 @@ goDefs ctx (n, nd) = defs nd
       put Decls (fnDecl :: decls)
       pure ()
     defs (BIFFI $ MkBuiltInForeign args _) = do
+      goLog 10 "generate built-in foreign function for: \{show n.value}"
       let args' = [ "v"++show v | v <- [0..cast (length args) - 1]]
           MkGoExp fn = ctx.support $ capitalize n.value
           MkGoExpArgs as = idArgList $ map id_ args'
@@ -939,6 +959,7 @@ goDefs ctx (n, nd) = defs nd
       put Decls (fnDecl :: decls)
       pure ()
     defs (FFI $ MkForeign _ exp [] _) = do
+      goLog 10 "generate foreign function for: \{show n.value}"
       let fnDecl = func n.value [] [fieldT $ tid' "any"]
                     [ return [call (paren $ id_ exp) []]]
                     |> docs [show n.original]
@@ -946,6 +967,7 @@ goDefs ctx (n, nd) = defs nd
       put Decls (fnDecl :: decls)
       pure ()
     defs (FFI $ MkForeign _ exp args _) = do
+      goLog 10 "generate foreign function for: \{show n.value}"
       let args' = [ "v"++show v | v <- [0..cast (length args) - 1]]
           MkGoExpArgs as = idArgList $ map id_ args'
           fnDecl = func n.value [fields args' $ tid' "any"] [fieldT $ tid' "any"]
@@ -1127,12 +1149,14 @@ namespace GoImports
       go (x::xs) = goPackage (SortedSet.toList $ snd x) ++ go xs
 
 goFile :
+  {auto c : Ref Ctxt Defs} ->
   (outDir : String) ->
   (moduleName : String) ->
   (List1 (Go.Name, Definition)) ->
   Core (Maybe String)
 goFile outDir moduleName defs = do
   let (name, _) = head defs
+  goLog 5 "prepare \{show name.location.fileName}"
   ensureDirectoryExists (outDir </> name.location.dir)
   let currentImport = importForProject moduleName name.location
       imports = goImportDefs moduleName $ forget defs
@@ -1143,6 +1167,7 @@ goFile outDir moduleName defs = do
               , returns = True
               }
 
+  goLog 5 "generate \{show name.location.fileName}"
   _ <- newRef Decls []
   traverse_ (goDefs ctx) $ forget defs
 
@@ -1150,18 +1175,22 @@ goFile outDir moduleName defs = do
   let MkGoDecls decls = fromGoDecls goDecls
       src = Go.file (name.location.dir </> name.location.fileName) (package name.location.package) (goImportSpecList currentImport imports) decls
 
+  goLog 5 "write \{show name.location.fileName}"
   result <- coreLift $ printFile outDir src
   case result of
     Right () => pure Nothing
     Left e => pure $ Just $ show e
 
 goMainFile :
+  {auto c : Ref Ctxt Defs} ->
   (outDir : String) ->
   (outFile : String) ->
   (moduleName : String) ->
   NamedCExp ->
   Core (Maybe String)
 goMainFile outDir outFile moduleName exp = do
+  let fileName = outFile ++ ".go"
+  goLog 5 "prepare \{show fileName}"
   let currentImport = importForMain moduleName
       imports = goImportExp moduleName exp
       ctx = MkContext
@@ -1171,10 +1200,13 @@ goMainFile outDir outFile moduleName exp = do
               , returns = True
               }
 
+  goLog 5 "generate \{show fileName}"
+  goLog 10 "generate from: \{show exp}"
   let MkGoExp exp' = goExp ctx exp
       src = Go.file (outFile ++ ".go") (package "main") (goImportSpecList currentImport imports)
               [ func "main" [] void [expr exp'] ]
 
+  goLog 5 "write \{show fileName}"
   result <- coreLift $ printFile outDir src
   case result of
     Right () => pure Nothing
@@ -1238,8 +1270,10 @@ compileGo outDir outFile defs exp = do
 
   _ <- goMainFile ownOutDir outFile moduleName exp
 
+  goLog 5 "compile \{show outFile}"
   Just _ <- GoC.compileProgram ds moduleName ownOutDir $ ".." </> outFile
     | Nothing => pure $ Just "go compilation failed"
 
+  goLog 5 "completed \{show outFile}"
   pure Nothing
 
