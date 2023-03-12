@@ -1037,7 +1037,6 @@ namespace GoImports
     case conInfo of
       UNIT => empty
       NOTHING => empty
-      JUST => foldl (\acc => merge acc . goImportExp mod) empty xs
       _ => addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
   goImportExp mod (NmOp fc f xs) = goImportOp mod f xs
   goImportExp mod (NmExtPrim fc p xs) = addImport (importForSupport mod) $ foldl (\acc => merge acc . goImportExp mod) empty xs
