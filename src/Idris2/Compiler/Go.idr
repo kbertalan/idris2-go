@@ -26,8 +26,6 @@ import Idris2.Compiler.Go.Support.Gen
 
 import Libraries.Utils.Path
 
-%hide Core.Core.cond
-
 namespace GoExp
 
   public export
@@ -562,10 +560,6 @@ goIntegerConstAlt ctx v ((MkNConstAlt c exp) :: alts) def =
       MkGoExp equals = ctx.support "IntegerEQ"
   in (case_ [ (call equals [id_ v, c']) /==/ intL 1 ] sts) :: goIntegerConstAlt ctx v alts def
 
-cond : List (Lazy Bool, Lazy a) -> Lazy a -> a
-cond [] def = def
-cond ((x,y) :: xs) def = if x then y else cond xs def
-
 goConstCase ctx exp alts def = cond [(isIntegerConst alts, goIntegerConstCase)] goDefaultConstCase
   where
     goDefaultConstCase : GoStmtList
@@ -1089,7 +1083,14 @@ namespace GoImports
   goImportOp mod (EQ IntegerType) xs = addSupportForOp mod xs
   goImportOp mod (GTE IntegerType) xs = addSupportForOp mod xs
   goImportOp mod (GT IntegerType) xs = addSupportForOp mod xs
+  goImportOp mod StrLength xs = addSupportForOp mod xs
+  goImportOp mod StrHead xs = addSupportForOp mod xs
+  goImportOp mod StrTail xs = addSupportForOp mod xs
+  goImportOp mod StrIndex xs = addSupportForOp mod xs
+  goImportOp mod StrCons xs = addSupportForOp mod xs
+  -- goImportOp mod StrAppend xs = addSupportForOp mod xs
   goImportOp mod StrReverse xs = addSupportForOp mod xs
+  goImportOp mod StrSubstr xs = addSupportForOp mod xs
   goImportOp mod DoubleExp xs = addSupportForOp mod xs
   goImportOp mod DoubleLog xs = addSupportForOp mod xs
   goImportOp mod DoublePow xs = addSupportForOp mod xs

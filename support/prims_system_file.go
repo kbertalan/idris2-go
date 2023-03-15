@@ -25,10 +25,12 @@ var (
 		reader: bufio.NewReader(os.Stdin),
 	}
 	stdout = &filePtr{
-		file: os.Stdout,
+		file:   os.Stdout,
+		writer: bufio.NewWriter(os.Stdout),
 	}
 	stderr = &filePtr{
-		file: os.Stderr,
+		file:   os.Stderr,
+		writer: bufio.NewWriter(os.Stderr),
 	}
 )
 

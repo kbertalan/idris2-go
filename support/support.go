@@ -166,7 +166,7 @@ func IntegerSub(x, y any) IntegerType {
 
 func integerMul(i, j int64) IntegerType {
 	if i == 0 || j == 0 {
-		return 0
+		return int64(0)
 	}
 	if i > 0 && j > 0 {
 		if i <= math.MaxInt64/j {

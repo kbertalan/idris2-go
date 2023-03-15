@@ -101,7 +101,7 @@ goSupportLocation = (MkLocation ("_gen" </> "idris2" </> "support") "support.go"
 
 export
 goTailRecName : Core.Name.Name
-goTailRecName = NS goSupportNamespace (UN $ Basic "TailRec")
+goTailRecName = NS goSupportNamespace (UN $ Basic "unused_should_panic")
 
 export
 goLocationFromNS :
@@ -110,7 +110,8 @@ goLocationFromNS :
 goLocationFromNS ns =
   let parts = map toLower $ reverse $ unsafeUnfoldNamespace ns
       name = concat $ intersperse "_" parts
-  in MkLocation "" (name ++ ".go") "main"
+      name' = if name == "test" then "test_" else name
+  in MkLocation "" ("module_" ++ name' ++ ".go") "main"
 
 export
 goNameFromNS :
@@ -132,10 +133,7 @@ export
 goName :
   Core.Name.Name ->
   Go.Name.Name
-goName orig@(NS ns n) = 
-  case orig == goTailRecName of
-    True => let sub = goName n in MkName goSupportLocation sub.value orig
-    False => let sub = goName n in MkName (goLocationFromNS ns) (safeGoIdentifier $ goNameFromNS ns ++ "_" ++ sub.value) orig
+goName orig@(NS ns n) = let sub = goName n in MkName (goLocationFromNS ns) (safeGoIdentifier $ goNameFromNS ns ++ "_" ++ sub.value) orig
 goName orig@(UN un) = MkName (MkLocation "" "user_generated_.go" "main") (goUserName un) orig
 goName orig@(MN mn i) = MkName (MkLocation "" "machine_generated_.go" "main") (safeGoIdentifier $ mn ++ show i) orig
 goName orig@(PV n i) = let sub = goName n in MkName sub.location (sub.value ++ "_" ++ show i) orig
