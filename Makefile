@@ -1,4 +1,6 @@
 IDRIS2 ?= idris2
+IDRIS2_PACKAGE_PATH ?= `pack package-path`
+IDRIS2_LIBS ?= `pack libs-path`
 package=idris2-go
 ipkg=${package}.ipkg
 
@@ -39,11 +41,19 @@ test:
 
 # test using idris2-go (scheme executable) which builds go executables for tests
 scheme-test: build/scheme/idris2-go
-	IDRIS2="${PWD}/build/scheme/idris2-go" IDRIS2_DATA="${PWD}/support" threads=4 make -C tests test
+	IDRIS2="${PWD}/build/scheme/idris2-go" \
+		IDRIS2_DATA="${PWD}/support" \
+		IDRIS2_PACKAGE_PATH=${IDRIS2_PACKAGE_PATH} \
+		IDRIS2_LIBS=${IDRIS2_LIBS} \
+		threads=4 make -C tests test
 
 # test using idris2-go (go executable) which builds go executables for tests
 go-test: build/go/idris2-go
-	IDRIS2="${PWD}/build/go/idris2-go" IDRIS2_DATA="${PWD}/support" threads=4 make -C tests test
+	IDRIS2="${PWD}/build/go/idris2-go" \
+		IDRIS2_DATA="${PWD}/support" \
+		IDRIS2_PACKAGE_PATH=${IDRIS2_PACKAGE_PATH} \
+		IDRIS2_LIBS=${IDRIS2_LIBS} \
+		threads=4 make -C tests test
 
 
 build/exec/idris2-go:

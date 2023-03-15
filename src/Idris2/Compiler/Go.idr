@@ -26,6 +26,8 @@ import Idris2.Compiler.Go.Support.Gen
 
 import Libraries.Utils.Path
 
+%hide Core.Core.cond
+
 namespace GoExp
 
   public export
@@ -555,6 +557,10 @@ goIntegerConstAlt ctx v ((MkNConstAlt c exp) :: alts) def =
       MkGoExp c' = goPrimConst ctx c
       MkGoExp equals = ctx.support "IntegerEQ"
   in (case_ [ (call equals [id_ v, c']) /==/ intL 1 ] sts) :: goIntegerConstAlt ctx v alts def
+
+cond : List (Lazy Bool, Lazy a) -> Lazy a -> a
+cond [] def = def
+cond ((x,y) :: xs) def = if x then y else cond xs def
 
 goConstCase ctx exp alts def = cond [(isIntegerConst alts, goIntegerConstCase)] goDefaultConstCase
   where
