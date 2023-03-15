@@ -9,7 +9,7 @@ import "fmt"
 const Pi = 3.14
 
 func main() {
-	const World = "\xe4\xb8\x96\xe7\x95\x8c"
+	const World = "\u4e16\u754c"
 	fmt.Println("Hello", World)
 	fmt.Println("Happy", Pi, "Day")
 	const Truth = true

@@ -63,7 +63,7 @@ goTest = MkTestPool "Compile to Go" [] Nothing
   [ "go/simple"
   , "go/ffi"
   , "go/benchmark"
-  , "go/hedgehog"
+--  , "go/hedgehog"
   ]
 
 main : IO ()

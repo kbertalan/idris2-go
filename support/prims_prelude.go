@@ -17,19 +17,18 @@ func Prelude_io_prim__getString(v any) string {
 }
 
 func Prelude_io_prim__putChar(v, world any) any {
-	_, err := os.Stdout.Write([]byte{v.(byte)})
+	_, err := os.Stdout.WriteString(string(v.(rune)))
 	if err != nil {
 		panic(err)
 	}
 	return nil
 }
 
-func Prelude_io_prim__getChar(w any) byte {
+func Prelude_io_prim__getChar(w any) rune {
 	world := GetWorld(w)
-	data := make([]byte, 1)
-	_, err := stdin.reader.Read(data)
+	r, _, err := stdin.reader.ReadRune()
 	world.SetLastError(err)
-	return data[0]
+	return r
 }
 
 func Prelude_io_prim__getStr(world any) string {
@@ -68,11 +67,11 @@ func Prelude_io_prim__threadWait(v any, world any) any {
 }
 
 func Prelude_types_fastPack(v any) string {
-	return string(Idris2GoSlice[byte](v))
+	return string(Idris2GoSlice[rune](v))
 }
 
 func Prelude_types_fastUnpack(v any) Value {
-	return Go2IdrisSlice([]byte(v.(string)))
+	return Go2IdrisSlice([]rune(v.(string)))
 }
 
 func Primio_prim__nullAnyPtr(v any) int {

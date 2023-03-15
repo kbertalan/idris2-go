@@ -588,8 +588,29 @@ func IntegerGT(x, y any) uint8 {
 	return BoolAsInt(c > 0)
 }
 
+func StrLength(v any) int {
+	str := []rune(v.(string))
+	return len(str)
+}
+
+func StrHead(v any) rune {
+	str := []rune(v.(string))
+	return str[0]
+}
+
+func StrTail(v any) string {
+	str := []rune(v.(string))
+	return string(str[1:])
+}
+
+func StrIndex(v, i any) rune {
+	str := []rune(v.(string))
+	idx := i.(int)
+	return str[idx]
+}
+
 func StrCons(vch any, v any) string {
-	ch := rune(vch.(uint8))
+	ch := vch.(rune)
 	str := v.(string)
 	return string([]rune{ch}) + str
 }
@@ -615,12 +636,12 @@ func StrSubstr(o, l, s any) string {
 	offset := o.(int)
 	length := l.(int)
 	till := offset + length
-	str := s.(string)
+	str := []rune(s.(string))
 	strLen := len(str)
 	if till > strLen {
 		till = strLen
 	}
-	return str[offset:till]
+	return string(str[offset:till])
 }
 
 func DoubleExp(x any) float64 {
@@ -669,17 +690,4 @@ func DoubleFloor(x any) float64 {
 
 func DoubleCeiling(x any) float64 {
 	return math.Ceil(x.(float64))
-}
-
-func TailRec(f, v any) any {
-	fn := f.(func(any) any)
-	value := v.(Value)
-	for {
-		switch value.Tag {
-		case 0:
-			return value.Args[0]
-		default:
-			value = fn(value).(Value)
-		}
-	}
 }

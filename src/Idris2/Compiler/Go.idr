@@ -184,7 +184,7 @@ goPrimConst ctx (B16 m) = MkGoExp $ cast_ uint16 $ MkBasicLiteral MkInt $ show m
 goPrimConst ctx (B32 m) = MkGoExp $ cast_ uint32 $ MkBasicLiteral MkInt $ show m
 goPrimConst ctx (B64 m) = MkGoExp $ cast_ uint64 $ MkBasicLiteral MkInt $ show m
 goPrimConst ctx (Str str) = MkGoExp $ stringL str
-goPrimConst ctx (Ch c) = MkGoExp $ cast_ uint8 $ charL c
+goPrimConst ctx (Ch c) = MkGoExp $ charL c
 goPrimConst ctx (Db dbl) = MkGoExp $ floatL dbl
 goPrimConst ctx (PrT pty) = 
   let tyName = case pty of
@@ -280,7 +280,7 @@ goPrimType Bits16Type = uint16
 goPrimType Bits32Type = uint32
 goPrimType Bits64Type = uint64
 goPrimType StringType = string
-goPrimType CharType = uint8
+goPrimType CharType = rune
 goPrimType DoubleType = float64
 goPrimType WorldType = tid' "support.WorldType"
 
@@ -409,17 +409,21 @@ goOp ctx (GT ty) [x, y] =
         _ => MkGoExp $ call boolFn [goCastPrimType x' ty />/ goCastPrimType y' ty]
 goOp ctx StrLength [x] =
   let MkGoExp x' = goExp ctx x
-  in MkGoExp $ call (id_ "len") [supportCast x' string]
+      MkGoExp strLength = ctx.support "StrLength"
+  in MkGoExp $ call strLength [x']
 goOp ctx StrHead [x] =
   let MkGoExp x' = goExp ctx x
-  in MkGoExp $ (supportCast x' string) `index` intL 0
+      MkGoExp strHead = ctx.support "StrHead"
+  in MkGoExp $ call strHead [x']
 goOp ctx StrTail [x] =
   let MkGoExp x' = goExp ctx x
-  in MkGoExp $ sliceL (supportCast x' string) $ intL 1
+      MkGoExp strTail = ctx.support "StrTail"
+  in MkGoExp $ call strTail [x']
 goOp ctx StrIndex [x, y] =
   let MkGoExp x' = goExp ctx x
       MkGoExp y' = goExp ctx y
-  in MkGoExp $ supportCast x' string `index` (supportCast y' int)
+      MkGoExp strIndex = ctx.support "StrIndex"
+  in MkGoExp $ call strIndex [x',y']
 goOp ctx StrCons [x, y] =
   let MkGoExp x' = goExp ctx x
       MkGoExp y' = goExp ctx y

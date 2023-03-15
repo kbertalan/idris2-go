@@ -57,8 +57,8 @@ func CastNumberToString[T intType](x T) string {
 	return fmt.Sprintf("%d", x)
 }
 
-func CastNumberToChar[T intType](x T) byte {
-	return byte(x)
+func CastNumberToChar[T intType](x T) rune {
+	return rune(x)
 }
 
 func CastNumberToFloat64[T intType](x T) float64 {
@@ -119,8 +119,8 @@ func CastDoubleToString[T doubleType](x T) string {
 	return str
 }
 
-func CastDoubleToChar[T doubleType](x T) byte {
-	return byte(x)
+func CastDoubleToChar[T doubleType](x T) rune {
+	return rune(x)
 }
 
 func CastDoubleToFloat64[T doubleType](x T) float64 {
@@ -129,55 +129,55 @@ func CastDoubleToFloat64[T doubleType](x T) float64 {
 
 // Char
 
-func CastCharToInt(x byte) int {
+func CastCharToInt(x rune) int {
 	return int(x)
 }
 
-func CastCharToInt8(x byte) int8 {
+func CastCharToInt8(x rune) int8 {
 	return int8(x)
 }
 
-func CastCharToInt16(x byte) int16 {
+func CastCharToInt16(x rune) int16 {
 	return int16(x)
 }
 
-func CastCharToInt32(x byte) int32 {
+func CastCharToInt32(x rune) int32 {
 	return int32(x)
 }
 
-func CastCharToInt64(x byte) int64 {
+func CastCharToInt64(x rune) int64 {
 	return int64(x)
 }
 
-func CastCharToUInt8(x byte) uint8 {
+func CastCharToUInt8(x rune) uint8 {
 	return uint8(x)
 }
 
-func CastCharToUInt16(x byte) uint16 {
+func CastCharToUInt16(x rune) uint16 {
 	return uint16(x)
 }
 
-func CastCharToUInt32(x byte) uint32 {
+func CastCharToUInt32(x rune) uint32 {
 	return uint32(x)
 }
 
-func CastCharToUInt64(x byte) uint64 {
+func CastCharToUInt64(x rune) uint64 {
 	return uint64(x)
 }
 
-func CastCharToInteger(x byte) IntegerType {
+func CastCharToInteger(x rune) IntegerType {
 	return big.NewInt(int64(x))
 }
 
-func CastCharToString(x byte) string {
-	return string([]byte{x})
+func CastCharToString(x rune) string {
+	return string([]rune{x})
 }
 
-func CastCharToChar(x byte) byte {
-	return byte(x)
+func CastCharToChar(x rune) rune {
+	return x
 }
 
-func CastCharToFloat64(x byte) float64 {
+func CastCharToFloat64(x rune) float64 {
 	return float64(x)
 }
 
@@ -259,8 +259,8 @@ func CastIntegerToString(x any) string {
 	panic(fmt.Sprintf("unknown integer implementation: %T", x))
 }
 
-func CastIntegerToChar(x any) byte {
-	return byte(asInt64(x))
+func CastIntegerToChar(x any) rune {
+	return rune(asInt64(x))
 }
 
 func CastIntegerToFloat64(x any) float64 {
