@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"unicode/utf8"
 )
 
 type Value struct {
@@ -589,13 +590,12 @@ func IntegerGT(x, y any) uint8 {
 }
 
 func StrLength(v any) int {
-	str := []rune(v.(string))
-	return len(str)
+	return utf8.RuneCountInString(v.(string))
 }
 
 func StrHead(v any) rune {
-	str := []rune(v.(string))
-	return str[0]
+	r, _ := utf8.DecodeRuneInString(v.(string))
+	return r
 }
 
 func StrTail(v any) string {
