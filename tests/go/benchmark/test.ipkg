@@ -1,6 +1,5 @@
 package test
 
-depends = idris2-go
 modules = Benchmark
 main = Benchmark
 executable = test

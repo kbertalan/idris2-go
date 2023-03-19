@@ -1,6 +1,6 @@
 package test
 
-depends = idris2-go
+depends = idris2-go-lib
 modules = Basics15
 main = Basics15
 executable = test

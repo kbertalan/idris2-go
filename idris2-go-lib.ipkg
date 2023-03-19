@@ -1,0 +1,12 @@
+package idris2-go-lib
+version = 0.0.1
+brief = "Library for generating Go source code"
+
+modules = Data.List.All,
+  Go.Token,
+  Go.AST,
+  Go.AST.Combinators,
+  Go.AST.Printer
+
+sourcedir = "src"
+

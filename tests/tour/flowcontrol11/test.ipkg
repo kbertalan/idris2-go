@@ -1,6 +1,6 @@
 package test
 
-depends = idris2-go
+depends = idris2-go-lib
 modules = FlowControl11
 main = FlowControl11
 executable = test

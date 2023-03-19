@@ -1,0 +1,13 @@
+[custom.all.idris2-go]
+type        = "local"
+path        = "."
+ipkg        = "idris2-go.ipkg"
+# test        = "tests/runtests.ipkg"
+packagePath = true
+
+[custom.all.idris2-go-lib]
+type   = "local"
+path   = "."
+ipkg   = "idris2-go-lib.ipkg"
+# test   = "test/runtest.ipkg"
+

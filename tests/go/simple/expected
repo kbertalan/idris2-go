@@ -31,10 +31,9 @@ run
 test.ipkg
 listing directory ended
 testing file reading and buffers
-187
+167
 package test
 
-depends = idris2-go
 modules = Simple
 main = Simple
 executable = test

@@ -19,11 +19,12 @@ For the impatient you can check the below commands to build test runner and all 
 
 ```sh
 make clean
-make test-clean
 make build
+make install
 make install-lib
-make scheme-test-build
-make scheme-test
+make test-clean
+IDRIS2=idris2-go make test-build
+IDRIS2=idris2-go make test
 ```
 
 ## Current state and ideas
@@ -54,12 +55,12 @@ make scheme-test
 - [x] Compile test lib, and run tests using it
 - [x] Tail call optimozation from Idris2 ES
 - [x] Compiles itself (but extremely slowly and needs 20+ GB memory)
+- [x] Basic FFI support
+- [x] Specialize constructor cases
+- [x] Reduce function literal calls if possible
 - [ ] Windows support
 - [ ] Mac support
-- [x] Basic FFI support
 - [ ] More mature FFI parsing and type support
-- [ ] Specialize constructor cases
-- [ ] Reduce function literal calls if possible
 - [ ] Implement missing FFI methods for libraries and Idris2 compiler
 - [ ] Persistent data structures for list
 - [ ] Performance tests and tuning
