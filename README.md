@@ -7,11 +7,15 @@ While some Idris2 programs might work with this tool, there are major features m
 
 ## Installation
 
-Installation is not advised, but you can try to build it and do some experiments on your own.
+The easiest way to install `idris2-go` is to use [idris2-pack](https://github.com/stefan-hoeck/idris2-pack):
+
+```sh
+pack install-app idris2-go
+```
 
 ## Build
 
-The provided make file assumes the presense of [idris2-pack](https://github.com/stefan-hoeck/idris2-pack) on your system.
+The provided Makefile also assumes the presense of [idris2-pack](https://github.com/stefan-hoeck/idris2-pack) on your system.
 
 Currently it is developed on __linux__, using (almost) latest __Idris2__ and latest __go__ (version 1.20.x). If something is not working for you, then please consider to update your versions.
 
@@ -67,6 +71,6 @@ IDRIS2=idris2-go make test
 
 ### Project
 
-- [ ] Build / Test pipeline
-- [ ] Install via pack
+- [x] Install via pack
+- [x] Build / Test pipeline
 

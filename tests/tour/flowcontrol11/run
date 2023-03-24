@@ -1,4 +1,3 @@
-set -eo pipefail
 rm -rf build
 
 mkdir -p build/go
@@ -7,6 +6,7 @@ $1 --build test.ipkg
 build/exec/test
 
 file=$(ls -1 build/go/*.go)
-echo -e "printing source:\n"
+echo "printing source:"
+echo
 cat $file
 
