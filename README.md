@@ -58,7 +58,7 @@ IDRIS2=idris2-go make test
 - [x] Expression compiler for REPL
 - [x] Compile test lib, and run tests using it
 - [x] Tail call optimozation from Idris2 ES
-- [x] Compiles itself (but extremely slowly and needs 20+ GB memory)
+- [x] Compiles itself (about 2x slower than compiling with chez backend, and it uses about 10GB ram)
 - [x] Basic FFI support
 - [x] Specialize constructor cases
 - [x] Reduce function literal calls if possible
