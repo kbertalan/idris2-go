@@ -3,7 +3,7 @@
 [Idris2 Go](https://github.com/kbertalan/idris2-go) is a library for generating [go](https://go.dev) programs and an [Idris2](https://idris-lang.org) compiler backend for generating __go__ programs from __Idris2__ source code.
 
 This tool is for __experimental__ use only, relying on it in production systems is not advised.
-While some Idris2 programs might work with this tool, there are major features missing, which can make the generated programs unstable or slow.
+While some Idris2 programs might work with this tool, there are some features missing, which can make the generated programs unusable (mainly on non-Linux OS-es) or slow (compared to other backends).
 
 ## Installation
 
