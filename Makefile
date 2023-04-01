@@ -14,12 +14,8 @@ install-lib:
 clean:
 	rm -rf build
 
-test-clean:
-	make -C tests clean
-
-test-build:
-	make -C tests build
-
 test:
-	threads=4 make -C tests test
+	NUM_THREADS=4 pack --no-prompt test idris2-go
 
+test-lib:
+	NUM_THREADS=4 pack --no-prompt test idris2-go-lib

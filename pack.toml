@@ -2,12 +2,12 @@
 type        = "local"
 path        = "."
 ipkg        = "idris2-go.ipkg"
-# test        = "tests/runtests.ipkg"
+test        = "tests/compilertests.ipkg"
 packagePath = true
 
 [custom.all.idris2-go-lib]
 type   = "local"
 path   = "."
 ipkg   = "idris2-go-lib.ipkg"
-# test   = "test/runtest.ipkg"
+test   = "tests/libtests.ipkg"
 

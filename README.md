@@ -24,11 +24,12 @@ For the impatient you can check the below commands to build test runner and all 
 ```sh
 make clean
 make build
+
 make install
+make test
+
 make install-lib
-make test-clean
-IDRIS2=idris2-go make test-build
-IDRIS2=idris2-go make test
+IDRIS2=idris2-go make test-lib
 ```
 
 ## Current state and ideas

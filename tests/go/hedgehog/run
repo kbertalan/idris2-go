@@ -1,5 +1,6 @@
 rm -rf build
 
+pack -q install-deps test.ipkg
 $1 --build test.ipkg
 build/exec/test
 
