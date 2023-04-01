@@ -37,7 +37,6 @@ jobs:
       - name: Run test
         run: |
           apt-get update && apt-get install --yes golang-go make
-          pack install contrib test hedgehog
-          IDRIS2=$PACK_DIR/bin/idris2-go make -C tests build
-          IDRIS2=$PACK_DIR/bin/idris2-go make -C tests test INTERACTIVE=
+          pack --no-prompt test idris2-go
+          pack --no-prompt test idris2-go-lib
 
