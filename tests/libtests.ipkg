@@ -1,6 +1,6 @@
 package libtests
 
-depends = golden-runner-helper, idris2-go-lib
+depends = golden-runner-helper
 
 main = LibTests
 executable = libtests
