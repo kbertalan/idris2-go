@@ -711,7 +711,6 @@ goStatement ctx exp@(NmApp fc x xs) = goReturn ctx $ goExp ctx exp
 goStatement ctx exp@(NmCon fc n x tag xs) =
   if isTcDone n || isTcContinue n
     then [ id_ tcVarName ] /=/ [ intL $ fromMaybe (-1) tag ]
-         :: [ id_ tcArgName ] /=/ [ id_ tcArgName `sliceH` intL (fromInteger $ natToInteger $ length xs)]
          :: assignValues 0 xs [ continue tcLabelName ]
     else goReturn ctx $ goExp ctx exp
   where
@@ -850,7 +849,7 @@ goTailCallFnBody ctx tag args alts =
   let MkGoStmts sts = fromGoStmtList $ switchForAlts alts
       cap = capFromAlts alts 1
   in [ id_ tcVarName ] /:=/ [ intL tag ]
-     :: [ id_ tcArgName ] /:=/ [ make (array' $ tid' "any") [intL $ fromInteger $ natToInteger $ length args, intL cap] ]
+     :: decl (vars [ var [ id_ tcArgName ] (array (intL cap) (tid' "any")) [] ])
      :: assignValues 0 args 
          [ label tcLabelName $ while (id_ tcVarName /!=/ intL 0) sts
          , return [ id_ tcArgName `index` intL 0 ]
