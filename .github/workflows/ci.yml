@@ -11,7 +11,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: '0 1 * * *'
+    - cron: '0 4 * * *'
 
 defaults:
   run:
@@ -31,12 +31,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Build lib
-        run: pack install idris2-go-lib
+        run: pack build idris2-go-lib.ipkg
       - name: Build compiler
-        run: pack --no-prompt install-app idris2-go
-      - name: Run test
+        run: pack --no-prompt build idris2-go.ipkg
+      - name: Install runtime dependencies
+        run: apt-get update && apt-get install --yes golang-go
+      - name: Run lib test
+        run: pack --no-prompt test idris2-go-lib
+      - name: Run compiler test
         run: |
-          apt-get update && apt-get install --yes golang-go make
+          pack --no-prompt install-app idris2-go
           pack --no-prompt test idris2-go
-          pack --no-prompt test idris2-go-lib
 
