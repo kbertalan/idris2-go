@@ -34,8 +34,10 @@ jobs:
         run: pack build idris2-go-lib.ipkg
       - name: Build compiler
         run: pack --no-prompt build idris2-go.ipkg
-      - name: Install runtime dependencies
-        run: apt-get update && apt-get install --yes golang-go
+      - name: Install test dependencies
+        run: |
+          apt-get update && apt-get install --yes golang-go
+          pack install idris2-go-lib
       - name: Run lib test
         run: pack --no-prompt test idris2-go-lib
       - name: Run compiler test
