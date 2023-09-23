@@ -7,6 +7,6 @@ import Test.Golden.RunnerHelper
 
 main : IO ()
 main = do
-  _ <- MkRunScriptArg <$> idris2Command "idris2"
+  _ <- MkRunScriptArg . const <$> idris2Command "idris2"
   goldenRunner [ "Tour of Go" `atDir` "tour" ]
 
