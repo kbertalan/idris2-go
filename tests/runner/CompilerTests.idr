@@ -1,6 +1,5 @@
 module CompilerTests
 
-import BaseDir
 import Idris2Command
 
 import Test.Golden.RunnerHelper
