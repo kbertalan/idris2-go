@@ -1,3 +1,4 @@
 build/
 src/Idris2/Compiler/Go/Support
-
+.direnv/
+.pack/
