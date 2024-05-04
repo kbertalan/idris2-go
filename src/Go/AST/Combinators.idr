@@ -11,7 +11,7 @@ export
 (|>) : a -> (a -> b) -> b
 (|>) a fn = fn a
 
-infixl 5 |>
+export infixl 5 |>
 
 public export
 interface Commentable a where
@@ -831,7 +831,7 @@ export
   KeyValueExpression e1 e2
 (/:/) e1 e2 = MkKeyValueExpression e1 e2
 
-infixl 3 /./, /:/
+export infixl 3 /./, /:/
 
 export
 (/==/) :
@@ -887,7 +887,7 @@ export
   BinaryExpression e1 e2
 (/>=/) e1 e2 = MkBinaryExpression e1 MkGreaterThanOrEqual e2
 
-infixl 7 /==/, /!=/, /</, /<=/, />/, />=/
+export infixl 7 /==/, /!=/, /</, /<=/, />/, />=/
 
 export
 (/+/) :
@@ -925,7 +925,7 @@ export
   BinaryExpression e1 e2
 (/^/) e1 e2 = MkBinaryExpression e1 MkXor e2
 
-infixl 8 /+/, /-/, /|/, /^/
+export infixl 8 /+/, /-/, /|/, /^/
 
 export
 (/*/) :
@@ -981,7 +981,7 @@ export
   BinaryExpression e1 e2
 (/&/) e1 e2 = MkBinaryExpression e1 MkAnd e2
 
-infixl 9 /*/, ///, /%/, /<</, />>/, /&/
+export infixl 9 /*/, ///, /%/, /<</, />>/, /&/
 
 export
 (/:=/) :
@@ -1027,7 +1027,7 @@ export
   AssignmentStatement ls rs
 (/-=/) ls rs = MkAssignmentStatement Nothing ls MkSubAssign rs Nothing
 
-infixl 7 /:=/, /=/, /+=/, /-=/
+export infixl 7 /:=/, /=/, /+=/, /-=/
 
 export
 ptrOf :
@@ -1042,4 +1042,3 @@ star :
   e ->
   StarExpression e
 star e = MkStarExpression e
-
