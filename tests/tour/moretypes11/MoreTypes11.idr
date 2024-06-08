@@ -3,13 +3,16 @@ module MoreTypes11
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
 
+%hide Prelude.Ops.infixl.(|>)
+%hide Prelude.(|>)
+
 main : IO ()
 main = do
   let src = file "slice-len-cap.go"
               (package "main")
               [ import_ "fmt" ]
               [ func "main" [] void
-                [ [ id_ "s" ] /:=/ [ compositL (array' int) 
+                [ [ id_ "s" ] /:=/ [ compositL (array' int)
                     [ intL 2
                     , intL 3
                     , intL 5
@@ -41,4 +44,3 @@ main = do
   Right () <- printFile "build/go" src
     | Left e => putStrLn $ show e
   pure ()
-

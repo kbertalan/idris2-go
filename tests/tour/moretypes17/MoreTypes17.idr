@@ -3,6 +3,9 @@ module MoreTypes17
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
 
+%hide Prelude.Ops.infixl.(|>)
+%hide Prelude.(|>)
+
 main : IO ()
 main = do
   let src = file "range-continued.go"
@@ -23,4 +26,3 @@ main = do
   Right () <- printFile "build/go" src
     | Left e => putStrLn $ show e
   pure ()
-

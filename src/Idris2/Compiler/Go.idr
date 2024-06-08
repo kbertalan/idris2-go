@@ -26,6 +26,9 @@ import Idris2.Compiler.Go.Support.Gen
 
 import Libraries.Utils.Path
 
+%hide Prelude.Ops.infixl.(|>)
+%hide Prelude.(|>)
+
 namespace GoExp
 
   public export
@@ -111,7 +114,7 @@ namespace Usage
   used name (NmDelay _ _ exp) = used name exp
   used name (NmConCase _ condition [MkNConAlt _ _ _ xs exp] Nothing) =
     (used name condition && any (flip used exp) xs) || used name exp
-  used name (NmConCase _ exp alts mDef) = used name exp || usedConAlts name alts || fromMaybe False (used name <$> mDef) 
+  used name (NmConCase _ exp alts mDef) = used name exp || usedConAlts name alts || fromMaybe False (used name <$> mDef)
   used name (NmConstCase _ exp alts mDef) = used name exp || usedConstAlts name alts || fromMaybe False (used name <$> mDef)
   used name (NmPrimVal _ cst) = False
   used name (NmErased _) = False
@@ -184,7 +187,7 @@ goPrimConst ctx (B64 m) = MkGoExp $ cast_ uint64 $ MkBasicLiteral MkInt $ show m
 goPrimConst ctx (Str str) = MkGoExp $ stringL str
 goPrimConst ctx (Ch c) = MkGoExp $ charL c
 goPrimConst ctx (Db dbl) = MkGoExp $ floatL dbl
-goPrimConst ctx (PrT pty) = 
+goPrimConst ctx (PrT pty) =
   let tyName = case pty of
                  IntType => "IntTypeValue"
                  Int8Type => "Int8TypeValue"
@@ -850,7 +853,7 @@ goTailCallFnBody ctx tag args alts =
       cap = capFromAlts alts 1
   in [ id_ tcVarName ] /:=/ [ intL tag ]
      :: decl (vars [ var [ id_ tcArgName ] (array (intL cap) (tid' "any")) [] ])
-     :: assignValues 0 args 
+     :: assignValues 0 args
          [ label tcLabelName $ while (id_ tcVarName /!=/ intL 0) sts
          , return [ id_ tcArgName `index` intL 0 ]
          ]
@@ -888,7 +891,7 @@ goTailCallFnBody ctx tag args alts =
     assignValues n (name :: ns) rest =
       ([ id_ tcArgName `index` intL n ] /=/ [ id_ $ value $ goName name]) :: assignValues (n+1) ns rest
 
-goLog : 
+goLog :
   {auto c : Ref Ctxt Defs} ->
   Nat ->
   String ->
@@ -1285,4 +1288,3 @@ compileGo outDir outFile defs exp = do
 
   goLog 5 "completed \{show outFile}"
   pure Nothing
-
