@@ -26,9 +26,6 @@ import Idris2.Compiler.Go.Support.Gen
 
 import Libraries.Utils.Path
 
-%hide Prelude.Ops.infixl.(|>)
-%hide Prelude.(|>)
-
 namespace GoExp
 
   public export

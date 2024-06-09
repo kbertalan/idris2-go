@@ -7,15 +7,6 @@ import public Data.List.Quantifiers
 import public Go.AST
 import public Go.Token
 
-%hide Prelude.Ops.infixl.(|>)
-%hide Prelude.(|>)
-
-export
-(|>) : a -> (a -> b) -> b
-(|>) a fn = fn a
-
-export infixl 5 |>
-
 public export
 interface Commentable a where
   setComments : CommentGroup -> a -> a

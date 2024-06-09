@@ -3,9 +3,6 @@ module MoreTypes1
 import Go.AST.Printer as Go
 import Go.AST.Combinators as Go
 
-%hide Prelude.Ops.infixl.(|>)
-%hide Prelude.(|>)
-
 main : IO ()
 main = do
   let src = file "pointers.go"
